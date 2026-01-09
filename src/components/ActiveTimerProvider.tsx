@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { supabase } from "@/lib/supabase/client";
@@ -68,6 +69,8 @@ export function ActiveTimerProvider({
   const [activeEntry, setActiveEntry] = useState<ActiveTimeEntry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pendingStartRef = useRef<Promise<{ id: string } | null> | null>(null);
+  const pendingOptimisticIdRef = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
@@ -101,23 +104,51 @@ export function ActiveTimerProvider({
         return { error: "Please log in to start a timer." };
       }
 
-      const { data, error: insertError } = await supabase
+      const startedAt = new Date().toISOString();
+      const optimisticId = `optimistic-${Date.now()}`;
+      const previousEntry = activeEntry;
+
+      setActiveEntry({
+        id: optimisticId,
+        goal_id: goalId ?? null,
+        context_id: contextId,
+        started_at: startedAt,
+      });
+
+      const insertPromise = supabase
         .from("time_entries")
         .insert({
           user_id: userId,
           context_id: contextId,
           goal_id: goalId ?? null,
-          started_at: new Date().toISOString(),
+          started_at: startedAt,
         })
         .select("id")
-        .single();
+        .single()
+        .then((result) => (result.error ? null : result.data));
 
-      if (insertError) {
-        return { error: insertError.message };
+      pendingStartRef.current = insertPromise;
+      pendingOptimisticIdRef.current = optimisticId;
+
+      const data = await insertPromise;
+
+      pendingStartRef.current = null;
+      pendingOptimisticIdRef.current = null;
+
+      if (!data?.id) {
+        setActiveEntry(previousEntry ?? null);
+        return { error: "Failed to start timer." };
       }
 
+      setActiveEntry({
+        id: data.id,
+        goal_id: goalId ?? null,
+        context_id: contextId,
+        started_at: startedAt,
+      });
+
       await refresh();
-      return { entryId: data?.id };
+      return { entryId: data.id };
     },
     [activeEntry, refresh],
   );
@@ -125,6 +156,32 @@ export function ActiveTimerProvider({
   const stopTimer = useCallback(async () => {
     if (!activeEntry) {
       return { error: "No active timer to stop." };
+    }
+
+    const optimisticId = pendingOptimisticIdRef.current;
+    if (optimisticId && activeEntry.id === optimisticId) {
+      const pendingStart = pendingStartRef.current;
+      if (!pendingStart) {
+        setActiveEntry(null);
+        return {};
+      }
+      const data = await pendingStart;
+      if (!data?.id) {
+        setActiveEntry(null);
+        return { error: "Failed to stop timer." };
+      }
+      const { error: updateError } = await supabase
+        .from("time_entries")
+        .update({ ended_at: new Date().toISOString() })
+        .eq("id", data.id);
+
+      if (updateError) {
+        return { error: updateError.message };
+      }
+
+      setActiveEntry(null);
+      await refresh();
+      return {};
     }
 
     const { error: updateError } = await supabase

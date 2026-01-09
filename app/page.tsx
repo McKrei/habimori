@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { getCurrentUserId } from "@/src/components/auth";
@@ -15,6 +15,7 @@ import {
 } from "@/src/components/formatters";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
+import ToastStack, { type Toast } from "@/src/components/ToastStack";
 
 type GoalSummary = {
   id: string;
@@ -54,9 +55,18 @@ export default function Home() {
   const [goals, setGoals] = useState<GoalSummary[]>([]);
   const [checkStates, setCheckStates] = useState<CheckStateMap>({});
   const [statusMap, setStatusMap] = useState<StatusMap>({});
+  const [optimisticDeltas, setOptimisticDeltas] = useState<
+    Record<string, number>
+  >({});
+  const [optimisticStatus, setOptimisticStatus] = useState<
+    Record<string, string>
+  >({});
+  const [pendingByGoal, setPendingByGoal] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [errorByGoal, setErrorByGoal] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [workingGoalId, setWorkingGoalId] = useState<string | null>(null);
   const [counterInputs, setCounterInputs] = useState<Record<string, string>>(
     {},
   );
@@ -65,6 +75,15 @@ export default function Home() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [isTagsOpen, setIsTagsOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const counterBatchRef = useRef<
+    Record<string, { delta: number; timer: number | null; mutationId: number }>
+  >({});
+  const counterMutationRef = useRef<Record<string, number>>({});
+  const checkMutationRef = useRef<Record<string, number>>({});
+  const timeMutationRef = useRef<Record<string, number>>({});
+  const recalcTimersRef = useRef<Record<string, number>>({});
 
   const activeGoalId = activeEntry?.goal_id ?? null;
 
@@ -129,6 +148,71 @@ export default function Home() {
     void loadGoals();
   }, []);
 
+  const pushToast = useCallback(
+    (message: string, tone: Toast["tone"] = "info") => {
+      const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      setToasts((prev) => [...prev, { id, message, tone }]);
+    },
+    [],
+  );
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  const computeStatusForGoal = useCallback(
+    (goal: GoalSummary, actualValue: number) => {
+      const { end } = getPeriodRangeForDate(goal.period, new Date());
+      const nowTime = new Date();
+      if (goal.target_op === "gte") {
+        if (actualValue >= goal.target_value) return "success";
+        return nowTime < end ? "in_progress" : "fail";
+      }
+      if (actualValue > goal.target_value) return "fail";
+      return nowTime < end ? "in_progress" : "success";
+    },
+    [],
+  );
+
+  const refreshStatus = useCallback(async (goal: GoalSummary) => {
+    const { period_start, period_end } = getPeriodRangeForDate(
+      goal.period,
+      new Date(),
+    );
+    const { data, error: statusError } = await supabase
+      .from("goal_periods")
+      .select("goal_id, status, actual_value")
+      .eq("goal_id", goal.id)
+      .eq("period_start", period_start)
+      .eq("period_end", period_end)
+      .maybeSingle();
+
+    if (statusError || !data?.goal_id) {
+      return;
+    }
+
+    setStatusMap((prev) => ({
+      ...prev,
+      [goal.id]: {
+        status: data.status,
+        actual_value: data.actual_value ?? null,
+      },
+    }));
+  }, []);
+
+  const scheduleRecalc = useCallback(
+    async (goal: GoalSummary) => {
+      if (recalcTimersRef.current[goal.id]) {
+        window.clearTimeout(recalcTimersRef.current[goal.id]);
+      }
+      recalcTimersRef.current[goal.id] = window.setTimeout(async () => {
+        await recalcGoalPeriods(goal.id);
+        await refreshStatus(goal);
+      }, 1200);
+    },
+    [refreshStatus],
+  );
+
   useEffect(() => {
     if (!activeEntry?.started_at) return;
     const interval = window.setInterval(() => {
@@ -190,113 +274,227 @@ export default function Home() {
     }
   };
 
-  const handleCounterEvent = async (goal: GoalSummary, delta: number) => {
+  const handleCounterEvent = (goal: GoalSummary, delta: number) => {
     if (delta <= 0 || !Number.isInteger(delta)) {
-      setError("Counter value must be a positive integer.");
+      pushToast("Enter a positive integer.", "error");
       return;
     }
 
-    setWorkingGoalId(goal.id);
-    setError(null);
-    const { userId, error: userError } = await getCurrentUserId();
-    if (userError) {
-      setError(userError);
-      setWorkingGoalId(null);
-      return;
+    const nextMutationId = (counterMutationRef.current[goal.id] ?? 0) + 1;
+    counterMutationRef.current[goal.id] = nextMutationId;
+
+    setPendingByGoal((prev) => ({ ...prev, [goal.id]: true }));
+    setErrorByGoal((prev) => ({ ...prev, [goal.id]: false }));
+
+    setOptimisticDeltas((prev) => {
+      const nextDelta = (prev[goal.id] ?? 0) + delta;
+      const baseActual = statusMap[goal.id]?.actual_value ?? 0;
+      const nextActual = baseActual + nextDelta;
+      setOptimisticStatus((statusPrev) => ({
+        ...statusPrev,
+        [goal.id]: computeStatusForGoal(goal, nextActual),
+      }));
+      return { ...prev, [goal.id]: nextDelta };
+    });
+
+    const existingBatch = counterBatchRef.current[goal.id];
+    const batch = existingBatch ?? { delta: 0, timer: null, mutationId: 0 };
+    batch.delta += delta;
+    batch.mutationId = nextMutationId;
+    if (batch.timer) {
+      window.clearTimeout(batch.timer);
     }
-    if (!userId) {
-      setError("Please log in to log counter events.");
-      setWorkingGoalId(null);
-      return;
-    }
-    const { error: insertError } = await supabase
-      .from("counter_events")
-      .insert({
-        user_id: userId,
-        goal_id: goal.id,
-        context_id: goal.context_id,
-        occurred_at: new Date().toISOString(),
-        value_delta: delta,
+    batch.timer = window.setTimeout(async () => {
+      const current = counterBatchRef.current[goal.id];
+      const batchDelta = current?.delta ?? 0;
+      const mutationId = current?.mutationId ?? 0;
+      counterBatchRef.current[goal.id] = {
+        delta: 0,
+        timer: null,
+        mutationId: 0,
+      };
+
+      const { userId, error: userError } = await getCurrentUserId();
+      if (userError || !userId) {
+        if (counterMutationRef.current[goal.id] === mutationId) {
+          setOptimisticDeltas((prev) => ({ ...prev, [goal.id]: 0 }));
+          setOptimisticStatus((prev) => {
+            const next = { ...prev };
+            delete next[goal.id];
+            return next;
+          });
+          setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
+          setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
+          pushToast(
+            userError ?? "Please log in to log counter events.",
+            "error",
+          );
+        }
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from("counter_events")
+        .insert({
+          user_id: userId,
+          goal_id: goal.id,
+          context_id: goal.context_id,
+          occurred_at: new Date().toISOString(),
+          value_delta: batchDelta,
+        });
+
+      if (counterMutationRef.current[goal.id] !== mutationId) {
+        return;
+      }
+
+      if (insertError) {
+        setOptimisticDeltas((prev) => ({ ...prev, [goal.id]: 0 }));
+        setOptimisticStatus((prev) => {
+          const next = { ...prev };
+          delete next[goal.id];
+          return next;
+        });
+        setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
+        setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
+        pushToast(insertError.message, "error");
+        return;
+      }
+
+      setStatusMap((prev) => {
+        const base = prev[goal.id]?.actual_value ?? 0;
+        return {
+          ...prev,
+          [goal.id]: {
+            status: prev[goal.id]?.status ?? "in_progress",
+            actual_value: base + batchDelta,
+          },
+        };
       });
-
-    if (insertError) {
-      setError(insertError.message);
-    } else {
-      await recalcGoalPeriods(goal.id);
-      await loadStatuses(goals);
-    }
-
-    setWorkingGoalId(null);
+      setOptimisticDeltas((prev) => ({ ...prev, [goal.id]: 0 }));
+      setOptimisticStatus((prev) => {
+        const next = { ...prev };
+        delete next[goal.id];
+        return next;
+      });
+      setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
+      scheduleRecalc(goal);
+    }, 500);
+    counterBatchRef.current[goal.id] = batch;
   };
 
-  const handleCounterSubmit = async (goal: GoalSummary) => {
+  const handleCounterSubmit = (goal: GoalSummary) => {
     const rawValue = counterInputs[goal.id]?.trim() ?? "";
     const parsed = rawValue === "" ? 1 : Number.parseInt(rawValue, 10);
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      setError("Enter a positive integer.");
+      pushToast("Enter a positive integer.", "error");
       return;
     }
-    await handleCounterEvent(goal, parsed);
+    handleCounterEvent(goal, parsed);
     setCounterInputs((prev) => ({ ...prev, [goal.id]: "" }));
   };
 
-  const handleStartTimer = async (goal: GoalSummary) => {
-    setWorkingGoalId(goal.id);
-    setError(null);
-    const { error: startError } = await startTimer({
+  const handleStartTimer = (goal: GoalSummary) => {
+    const mutationId = (timeMutationRef.current[goal.id] ?? 0) + 1;
+    timeMutationRef.current[goal.id] = mutationId;
+    setPendingByGoal((prev) => ({ ...prev, [goal.id]: true }));
+    setErrorByGoal((prev) => ({ ...prev, [goal.id]: false }));
+
+    void startTimer({
       contextId: goal.context_id,
       goalId: goal.id,
+    }).then(({ error: startError }) => {
+      if (timeMutationRef.current[goal.id] !== mutationId) return;
+      if (startError) {
+        setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
+        pushToast(startError, "error");
+      } else {
+        scheduleRecalc(goal);
+      }
+      setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
     });
-    if (startError) {
-      setError(startError);
-    }
-    setWorkingGoalId(null);
   };
 
-  const handleStopTimer = async () => {
-    setWorkingGoalId(activeGoalId ?? "");
-    setError(null);
-    const { error: stopError } = await stopTimer();
-    if (stopError) {
-      setError(stopError);
-    } else if (activeGoalId) {
-      await recalcGoalPeriods(activeGoalId);
-      await loadStatuses(goals);
-    }
-    setWorkingGoalId(null);
+  const handleStopTimer = (goal: GoalSummary) => {
+    const mutationId = (timeMutationRef.current[goal.id] ?? 0) + 1;
+    timeMutationRef.current[goal.id] = mutationId;
+    setPendingByGoal((prev) => ({ ...prev, [goal.id]: true }));
+    setErrorByGoal((prev) => ({ ...prev, [goal.id]: false }));
+
+    void stopTimer().then(({ error: stopError }) => {
+      if (timeMutationRef.current[goal.id] !== mutationId) return;
+      if (stopError) {
+        setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
+        pushToast(stopError, "error");
+      } else {
+        scheduleRecalc(goal);
+      }
+      setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
+    });
   };
 
-  const handleCheckToggle = async (goal: GoalSummary, nextState: boolean) => {
-    setWorkingGoalId(goal.id);
-    setError(null);
-    const { userId, error: userError } = await getCurrentUserId();
-    if (userError) {
-      setError(userError);
-      setWorkingGoalId(null);
-      return;
-    }
-    if (!userId) {
-      setError("Please log in to log check events.");
-      setWorkingGoalId(null);
-      return;
-    }
-    const { error: insertError } = await supabase.from("check_events").insert({
-      user_id: userId,
-      goal_id: goal.id,
-      context_id: goal.context_id,
-      occurred_at: new Date().toISOString(),
-      state: nextState,
-    });
+  const handleCheckToggle = (goal: GoalSummary, nextState: boolean) => {
+    const mutationId = (checkMutationRef.current[goal.id] ?? 0) + 1;
+    checkMutationRef.current[goal.id] = mutationId;
+    const previousState = checkStates[goal.id] ?? false;
 
-    if (insertError) {
-      setError(insertError.message);
-    } else {
-      setCheckStates((prev) => ({ ...prev, [goal.id]: nextState }));
-      await recalcGoalPeriods(goal.id);
-      await loadStatuses(goals);
-    }
+    setPendingByGoal((prev) => ({ ...prev, [goal.id]: true }));
+    setErrorByGoal((prev) => ({ ...prev, [goal.id]: false }));
+    setCheckStates((prev) => ({ ...prev, [goal.id]: nextState }));
+    setOptimisticStatus((prev) => ({
+      ...prev,
+      [goal.id]: computeStatusForGoal(goal, nextState ? 1 : 0),
+    }));
 
-    setWorkingGoalId(null);
+    void (async () => {
+      const { userId, error: userError } = await getCurrentUserId();
+      if (userError || !userId) {
+        if (checkMutationRef.current[goal.id] === mutationId) {
+          setCheckStates((prev) => ({ ...prev, [goal.id]: previousState }));
+          setOptimisticStatus((prev) => {
+            const next = { ...prev };
+            delete next[goal.id];
+            return next;
+          });
+          setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
+          setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
+          pushToast(userError ?? "Please log in to log check events.", "error");
+        }
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from("check_events")
+        .insert({
+          user_id: userId,
+          goal_id: goal.id,
+          context_id: goal.context_id,
+          occurred_at: new Date().toISOString(),
+          state: nextState,
+        });
+
+      if (checkMutationRef.current[goal.id] !== mutationId) return;
+
+      if (insertError) {
+        setCheckStates((prev) => ({ ...prev, [goal.id]: previousState }));
+        setOptimisticStatus((prev) => {
+          const next = { ...prev };
+          delete next[goal.id];
+          return next;
+        });
+        setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
+        setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
+        pushToast(insertError.message, "error");
+        return;
+      }
+
+      setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
+      setOptimisticStatus((prev) => {
+        const next = { ...prev };
+        delete next[goal.id];
+        return next;
+      });
+      scheduleRecalc(goal);
+    })();
   };
 
   const filteredGoals = useMemo(() => {
@@ -307,12 +505,20 @@ export default function Home() {
         selectedTags.length === 0 ||
         goal.tags.some((tag) => selectedTags.includes(tag.id));
       const statusEntry = statusMap[goal.id];
+      const effectiveStatus = optimisticStatus[goal.id] ?? statusEntry?.status;
       const statusOk =
         selectedStatus === "" ||
-        (statusEntry ? selectedStatus === statusEntry.status : false);
+        (effectiveStatus ? selectedStatus === effectiveStatus : false);
       return contextOk && tagsOk && statusOk;
     });
-  }, [goals, selectedContext, selectedTags, selectedStatus, statusMap]);
+  }, [
+    goals,
+    optimisticStatus,
+    selectedContext,
+    selectedTags,
+    selectedStatus,
+    statusMap,
+  ]);
 
   const emptyState = useMemo(
     () => !isLoading && filteredGoals.length === 0,
@@ -452,16 +658,25 @@ export default function Home() {
           const contextLabel = goal.context?.name ?? "Unknown context";
           const isActiveTimer = activeGoalId === goal.id;
           const isTimerBlocked = Boolean(activeEntry) && !isActiveTimer;
-          const isWorking = workingGoalId === goal.id;
           const checkState = checkStates[goal.id] ?? false;
           const statusEntry = statusMap[goal.id];
+          const optimisticDelta = optimisticDeltas[goal.id] ?? 0;
+          const effectiveStatus =
+            optimisticStatus[goal.id] ?? statusEntry?.status;
+          const baseActual = statusEntry?.actual_value ?? 0;
+          const effectiveActual =
+            goal.goal_type === "counter"
+              ? baseActual + optimisticDelta
+              : baseActual;
+          const isPending = pendingByGoal[goal.id] ?? false;
+          const hasError = errorByGoal[goal.id] ?? false;
           const isPositive = goal.target_op === "gte";
           const borderColor =
-            statusEntry?.status === "success"
+            effectiveStatus === "success"
               ? "border-emerald-400"
-              : statusEntry?.status === "fail"
+              : effectiveStatus === "fail"
                 ? "border-rose-400"
-                : statusEntry?.status === "in_progress"
+                : effectiveStatus === "in_progress"
                   ? "border-amber-400"
                   : "border-slate-200";
           const accentColor = isPositive ? "text-emerald-500" : "text-rose-500";
@@ -469,7 +684,7 @@ export default function Home() {
             ? "border-emerald-400 text-emerald-500"
             : "border-rose-400 text-rose-500";
           const actionText = isPositive ? "text-emerald-500" : "text-rose-500";
-          const actualValue = statusEntry?.actual_value ?? 0;
+          const actualValue = effectiveActual;
           const displayValue =
             goal.goal_type === "time"
               ? formatMinutesAsHHMM(actualValue)
@@ -479,12 +694,19 @@ export default function Home() {
               ? (now.getTime() - new Date(activeEntry.started_at).getTime()) /
                 1000
               : 0;
+          const totalSeconds =
+            goal.goal_type === "time" ? actualValue * 60 + activeSeconds : 0;
 
           return (
             <div
               key={goal.id}
-              className={`rounded-2xl border-2 bg-white p-5 ${borderColor}`}
+              className={`relative rounded-2xl border-2 bg-white p-5 ${borderColor}`}
             >
+              {hasError ? (
+                <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-rose-500" />
+              ) : isPending ? (
+                <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-amber-400" />
+              ) : null}
               <div className="grid grid-cols-[1fr_1fr] items-center gap-3">
                 <div className="min-w-0">
                   <Link
@@ -532,7 +754,6 @@ export default function Home() {
                         className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
                         type="button"
                         onClick={() => handleCounterSubmit(goal)}
-                        disabled={isWorking}
                       >
                         +
                       </button>
@@ -545,15 +766,14 @@ export default function Home() {
                         className={`text-xl font-semibold md:text-2xl ${accentColor}`}
                       >
                         {isActiveTimer
-                          ? formatSecondsAsHHMMSS(activeSeconds)
+                          ? formatSecondsAsHHMMSS(totalSeconds)
                           : displayValue}
                       </div>
                       {isActiveTimer ? (
                         <button
                           className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
                           type="button"
-                          onClick={handleStopTimer}
-                          disabled={isWorking}
+                          onClick={() => handleStopTimer(goal)}
                           title="Stop"
                         >
                           ⏸
@@ -563,7 +783,7 @@ export default function Home() {
                           className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
                           type="button"
                           onClick={() => handleStartTimer(goal)}
-                          disabled={isTimerBlocked || isWorking}
+                          disabled={isTimerBlocked}
                           title={
                             isTimerBlocked ? "Another timer is running" : "Play"
                           }
@@ -579,7 +799,6 @@ export default function Home() {
                       className={`h-9 w-9 rounded-lg border-2 ${actionBorder} bg-white text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
                       type="button"
                       onClick={() => handleCheckToggle(goal, !checkState)}
-                      disabled={isWorking}
                     >
                       <span className={actionText}>
                         {checkState ? "✓" : ""}
@@ -592,6 +811,8 @@ export default function Home() {
           );
         })}
       </div>
+
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </section>
   );
 }
