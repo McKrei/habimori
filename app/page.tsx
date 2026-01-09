@@ -58,6 +58,12 @@ export default function Home() {
   const [optimisticStatus, setOptimisticStatus] = useState<
     Record<string, string>
   >({});
+  const [activeBaseSeconds, setActiveBaseSeconds] = useState<
+    Record<string, number>
+  >({});
+  const [timeOverrides, setTimeOverrides] = useState<
+    Record<string, number | null>
+  >({});
   const [timeSecondsMap, setTimeSecondsMap] = useState<Record<string, number>>(
     {},
   );
@@ -147,12 +153,37 @@ export default function Home() {
 
   useEffect(() => {
     void loadGoals();
-  }, []);
+  }, [activeEntry?.goal_id]);
 
   useEffect(() => {
     if (goals.length === 0) return;
     void loadTimeSeconds(goals);
   }, [activeEntry?.goal_id, goals]);
+
+  useEffect(() => {
+    if (!activeEntry?.goal_id) {
+      setActiveBaseSeconds({});
+      return;
+    }
+    setActiveBaseSeconds((prev) => ({
+      ...prev,
+      [activeEntry.goal_id]: timeSecondsMap[activeEntry.goal_id] ?? 0,
+    }));
+  }, [activeEntry?.goal_id]);
+
+  useEffect(() => {
+    if (!activeEntry?.goal_id) return;
+    const goalId = activeEntry.goal_id;
+    const nextBase = timeSecondsMap[goalId] ?? 0;
+    if (nextBase === 0) return;
+    setActiveBaseSeconds((prev) => {
+      const currentBase = prev[goalId] ?? 0;
+      if (nextBase <= currentBase) {
+        return prev;
+      }
+      return { ...prev, [goalId]: nextBase };
+    });
+  }, [activeEntry?.goal_id, timeSecondsMap]);
 
   const pushToast = useCallback(
     (message: string, tone: Toast["tone"] = "info") => {
@@ -225,42 +256,68 @@ export default function Home() {
     for (const [goalId, seconds] of results) {
       nextMap[goalId] = seconds;
     }
-    setTimeSecondsMap(nextMap);
+    setTimeSecondsMap((prev) => {
+      const merged = { ...prev };
+      for (const [goalId, seconds] of Object.entries(nextMap)) {
+        merged[goalId] = Math.max(prev[goalId] ?? 0, seconds);
+      }
+      return merged;
+    });
   };
 
-  const refreshTimeSeconds = useCallback(async (goal: GoalSummary) => {
-    if (goal.goal_type !== "time") return;
-    const { start, end } = getPeriodRangeForDate(goal.period, new Date());
-    const { data, error: timeError } = await supabase
-      .from("time_entries")
-      .select("started_at, ended_at")
-      .eq("goal_id", goal.id)
-      .lt("started_at", end.toISOString())
-      .or(`ended_at.is.null,ended_at.gte.${start.toISOString()}`);
+  const refreshTimeSeconds = useCallback(
+    async (goal: GoalSummary, overrideValue?: number) => {
+      if (goal.goal_type !== "time") return;
+      if (activeEntry?.goal_id === goal.id) return;
+      const { start, end } = getPeriodRangeForDate(goal.period, new Date());
+      const { data, error: timeError } = await supabase
+        .from("time_entries")
+        .select("started_at, ended_at")
+        .eq("goal_id", goal.id)
+        .lt("started_at", end.toISOString())
+        .or(`ended_at.is.null,ended_at.gte.${start.toISOString()}`);
 
-    if (timeError || !data) {
-      return;
-    }
-
-    let totalMs = 0;
-    for (const entry of data) {
-      if (!entry.ended_at) {
-        continue;
+      if (timeError || !data) {
+        return;
       }
-      const startedAt = new Date(entry.started_at);
-      const endedAt = entry.ended_at ? new Date(entry.ended_at) : new Date();
-      const overlapStart = startedAt > start ? startedAt : start;
-      const overlapEnd = endedAt < end ? endedAt : end;
-      if (overlapEnd > overlapStart) {
-        totalMs += overlapEnd.getTime() - overlapStart.getTime();
-      }
-    }
 
-    setTimeSecondsMap((prev) => ({
-      ...prev,
-      [goal.id]: Math.ceil(totalMs / 1000),
-    }));
-  }, []);
+      let totalMs = 0;
+      for (const entry of data) {
+        if (!entry.ended_at) {
+          continue;
+        }
+        const startedAt = new Date(entry.started_at);
+        const endedAt = entry.ended_at ? new Date(entry.ended_at) : new Date();
+        const overlapStart = startedAt > start ? startedAt : start;
+        const overlapEnd = endedAt < end ? endedAt : end;
+        if (overlapEnd > overlapStart) {
+          totalMs += overlapEnd.getTime() - overlapStart.getTime();
+        }
+      }
+
+      const nextSeconds = Math.max(
+        timeSecondsMap[goal.id] ?? 0,
+        Math.ceil(totalMs / 1000),
+      );
+      setTimeSecondsMap((prev) => ({
+        ...prev,
+        [goal.id]: Math.max(prev[goal.id] ?? 0, nextSeconds),
+      }));
+      if (overrideValue !== undefined) {
+        setTimeOverrides((prev) => {
+          const current = prev[goal.id];
+          if (current == null) return prev;
+          if (nextSeconds >= current) {
+            const next = { ...prev };
+            next[goal.id] = null;
+            return next;
+          }
+          return prev;
+        });
+      }
+    },
+    [activeEntry?.goal_id, timeSecondsMap],
+  );
 
   const refreshStatus = useCallback(async (goal: GoalSummary) => {
     const { period_start, period_end } = getPeriodRangeForDate(
@@ -286,6 +343,16 @@ export default function Home() {
         actual_value: data.actual_value ?? null,
       },
     }));
+    setOptimisticStatus((prev) => {
+      const optimistic = prev[goal.id];
+      if (!optimistic) return prev;
+      if (optimistic !== data.status) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[goal.id];
+      return next;
+    });
   }, []);
 
   const scheduleRecalc = useCallback(
@@ -461,11 +528,7 @@ export default function Home() {
         };
       });
       setOptimisticDeltas((prev) => ({ ...prev, [goal.id]: 0 }));
-      setOptimisticStatus((prev) => {
-        const next = { ...prev };
-        delete next[goal.id];
-        return next;
-      });
+      // Keep optimistic status until refreshStatus lands to avoid flicker.
       setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
       scheduleRecalc(goal);
     }, 500);
@@ -517,10 +580,11 @@ export default function Home() {
             1000,
         ),
       );
-      setTimeSecondsMap((prev) => ({
+      const baseSeconds =
+        activeBaseSeconds[goal.id] ?? timeSecondsMap[goal.id] ?? 0;
+      setTimeOverrides((prev) => ({
         ...prev,
-        [goal.id]:
-          (prev[goal.id] ?? timeSecondsMap[goal.id] ?? 0) + elapsedSeconds,
+        [goal.id]: baseSeconds + elapsedSeconds,
       }));
     }
     setPendingByGoal((prev) => ({ ...prev, [goal.id]: true }));
@@ -532,7 +596,7 @@ export default function Home() {
         setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
         pushToast(stopError, "error");
       } else {
-        void refreshTimeSeconds(goal);
+        void refreshTimeSeconds(goal, timeOverrides[goal.id] ?? undefined);
         scheduleRecalc(goal);
       }
       setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
@@ -595,11 +659,7 @@ export default function Home() {
       }
 
       setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
-      setOptimisticStatus((prev) => {
-        const next = { ...prev };
-        delete next[goal.id];
-        return next;
-      });
+      // Keep optimistic status until refreshStatus lands to avoid flicker.
       scheduleRecalc(goal);
     })();
   };
@@ -649,7 +709,7 @@ export default function Home() {
         </div>
       ) : null}
 
-      {isLoading ? (
+      {isLoading && goals.length === 0 ? (
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
           Loading goals…
         </div>
@@ -789,12 +849,16 @@ export default function Home() {
             : "border-rose-400 text-rose-500";
           const actionText = isPositive ? "text-emerald-500" : "text-rose-500";
           const actualValue = effectiveActual;
+          const baseTimeSeconds =
+            goal.goal_type === "time"
+              ? isActiveTimer
+                ? (activeBaseSeconds[goal.id] ?? timeSecondsMap[goal.id] ?? 0)
+                : (timeOverrides[goal.id] ?? timeSecondsMap[goal.id] ?? 0)
+              : 0;
           const displayValue =
             goal.goal_type === "time"
-              ? formatSecondsAsHHMMSS(actualValue * 60)
+              ? formatSecondsAsHHMMSS(baseTimeSeconds)
               : `${actualValue}`;
-          const baseTimeSeconds =
-            goal.goal_type === "time" ? (timeSecondsMap[goal.id] ?? 0) : 0;
           const activeSeconds =
             isActiveTimer && activeEntry?.started_at
               ? Math.max(
