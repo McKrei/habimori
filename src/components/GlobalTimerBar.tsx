@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { useContexts } from "@/src/components/useContexts";
@@ -101,7 +102,7 @@ export default function GlobalTimerBar() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-3">
+      <div className="mx-auto grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3">
         <div className="text-sm text-slate-600">
           {activeEntry ? (
             <span>
@@ -113,7 +114,7 @@ export default function GlobalTimerBar() {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           {activeEntry ? (
             <button
               className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
@@ -133,6 +134,15 @@ export default function GlobalTimerBar() {
               Play
             </button>
           )}
+        </div>
+
+        <div className="flex items-center justify-end">
+          <Link
+            className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+            href="/goals/new"
+          >
+            Add goal
+          </Link>
         </div>
       </div>
 

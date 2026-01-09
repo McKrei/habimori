@@ -694,15 +694,6 @@ export default function Home() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-          href="/goals/new"
-        >
-          Add goal
-        </Link>
-      </div>
-
       {error ? (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
           {error}
@@ -876,7 +867,7 @@ export default function Home() {
           return (
             <div
               key={goal.id}
-              className={`relative rounded-2xl border-2 bg-white p-5 ${borderColor}`}
+              className={`relative rounded-2xl border bg-white px-5 py-2 ${borderColor}`}
             >
               {hasError ? (
                 <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-rose-500" />
@@ -886,7 +877,7 @@ export default function Home() {
               <div className="grid grid-cols-[1fr_1fr] items-center gap-3">
                 <div className="min-w-0">
                   <Link
-                    className="block truncate text-[clamp(1.15rem,2.4vw,1.6rem)] font-semibold text-slate-900 hover:text-slate-700"
+                    className="block max-h-[3.2rem] overflow-hidden break-words text-[clamp(1.15rem,2.4vw,1.6rem)] font-semibold leading-snug text-slate-900 hover:text-slate-700"
                     href={`/goals/${goal.id}`}
                   >
                     {goal.title}
