@@ -109,7 +109,7 @@ actual_value:
   - lte: actual_value <= target_value
 - fail иначе
 
-status ∈ {in_progress, success, fail}
+status ∈ {in_progress, success, fail, archived}
 
 Правило определения status:
 1) Если период текущий (период ещё не закончился по времени пользователя):
@@ -118,6 +118,9 @@ status ∈ {in_progress, success, fail}
 
 2) Если период закончился:
    - status = success или fail по правилу сравнения
+
+3) Если цель архивирована:
+   - status = archived для всех периодов цели
 
 Правило “защёлкивания” (опционально, но удобно в UI):
 - Для lte (негативные цели): если actual_value > target_value, статус можно сразу помечать как fail до конца периода.

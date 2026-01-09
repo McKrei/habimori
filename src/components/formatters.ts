@@ -17,6 +17,14 @@ export function formatDurationMinutes(minutes: number) {
   return `${hours.toFixed(1)} h`;
 }
 
+export function formatMinutesAsHHMM(minutes: number) {
+  if (!Number.isFinite(minutes)) return "--:--";
+  const total = Math.max(0, Math.round(minutes));
+  const hours = Math.floor(total / 60);
+  const mins = total % 60;
+  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+}
+
 export function formatGoalTarget(goal: {
   goal_type: string;
   target_value: number;

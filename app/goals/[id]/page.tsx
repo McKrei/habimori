@@ -4,7 +4,9 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { getCurrentUserId } from "@/src/components/auth";
-import { useParams } from "next/navigation";
+import { recalcGoalPeriods } from "@/src/components/goalPeriods";
+import { useTags } from "@/src/components/useTags";
+import { useParams, useRouter } from "next/navigation";
 import {
   formatDate,
   formatDateTime,
@@ -22,6 +24,7 @@ type GoalDetails = {
   start_date: string;
   end_date: string;
   context_id: string;
+  is_archived: boolean;
   context: { id: string; name: string } | null;
 };
 
@@ -80,6 +83,16 @@ function formatLocalInputDateTime(value: Date) {
   )}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
 }
 
+function getTodayDateString() {
+  const now = new Date();
+  const localMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  return localMidnight.toISOString().slice(0, 10);
+}
+
 function calculateTimeMinutes(entries: TimeEntry[], start: Date, end: Date) {
   let totalMinutes = 0;
   for (const entry of entries) {
@@ -95,8 +108,10 @@ function calculateTimeMinutes(entries: TimeEntry[], start: Date, end: Date) {
 }
 
 export default function GoalDetailsPage() {
+  const router = useRouter();
   const params = useParams();
   const goalId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const { tags, ensureTag, isLoading: tagsLoading } = useTags();
   const [goal, setGoal] = useState<GoalDetails | null>(null);
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [counterEvents, setCounterEvents] = useState<CounterEvent[]>([]);
@@ -104,6 +119,12 @@ export default function GoalDetailsPage() {
   const [progress, setProgress] = useState<ProgressSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [selectedTags, setSelectedTags] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [timeStart, setTimeStart] = useState(
     formatLocalInputDateTime(new Date()),
   );
@@ -117,6 +138,8 @@ export default function GoalDetailsPage() {
   );
   const [checkState, setCheckState] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   const loadGoal = async () => {
     if (!goalId || typeof goalId !== "string") {
@@ -131,7 +154,7 @@ export default function GoalDetailsPage() {
     const { data, error: fetchError } = await supabase
       .from("goals")
       .select(
-        "id, title, goal_type, period, target_value, target_op, start_date, end_date, context_id, context:contexts(id, name)",
+        "id, title, goal_type, period, target_value, target_op, start_date, end_date, context_id, is_archived, context:contexts(id, name)",
       )
       .eq("id", goalId)
       .single();
@@ -143,8 +166,29 @@ export default function GoalDetailsPage() {
       return;
     }
 
-    setGoal(data as GoalDetails);
+    const loadedGoal = data as GoalDetails;
+    setGoal(loadedGoal);
+    setEditTitle(loadedGoal.title);
+    setEditEndDate(loadedGoal.end_date);
+    await loadGoalTags(loadedGoal.id);
     setIsLoading(false);
+  };
+
+  const loadGoalTags = async (id: string) => {
+    const { data, error: tagsError } = await supabase
+      .from("goal_tags")
+      .select("tag:tags(id, name)")
+      .eq("goal_id", id);
+
+    if (tagsError) {
+      setError(tagsError.message);
+      return;
+    }
+
+    const loadedTags =
+      data?.map((item: { tag: { id: string; name: string } }) => item.tag) ??
+      [];
+    setSelectedTags(loadedTags);
   };
 
   const loadEvents = async (goalData: GoalDetails) => {
@@ -302,6 +346,7 @@ export default function GoalDetailsPage() {
     } else {
       await loadEvents(goal);
       await loadProgress(goal);
+      await recalcGoalPeriods(goal.id);
     }
 
     setIsSubmitting(false);
@@ -345,6 +390,7 @@ export default function GoalDetailsPage() {
     } else {
       await loadEvents(goal);
       await loadProgress(goal);
+      await recalcGoalPeriods(goal.id);
     }
 
     setIsSubmitting(false);
@@ -380,9 +426,145 @@ export default function GoalDetailsPage() {
     } else {
       await loadEvents(goal);
       await loadProgress(goal);
+      await recalcGoalPeriods(goal.id);
     }
 
     setIsSubmitting(false);
+  };
+
+  const handleSaveGoal = async () => {
+    if (!goal) return;
+
+    const trimmedTitle = editTitle.trim();
+    if (!trimmedTitle) {
+      setError("Title is required.");
+      return;
+    }
+
+    const today = getTodayDateString();
+    if (editEndDate < today) {
+      setError("End date cannot be before today.");
+      return;
+    }
+    if (editEndDate < goal.start_date) {
+      setError("End date must be after start date.");
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+
+    const { error: updateError } = await supabase
+      .from("goals")
+      .update({
+        title: trimmedTitle,
+        end_date: editEndDate,
+      })
+      .eq("id", goal.id);
+
+    if (updateError) {
+      setError(updateError.message);
+      setIsSaving(false);
+      return;
+    }
+
+    const existingIds = new Set(selectedTags.map((tag) => tag.id));
+    const { data: currentTags } = await supabase
+      .from("goal_tags")
+      .select("tag_id")
+      .eq("goal_id", goal.id);
+
+    const currentIds = new Set(
+      (currentTags ?? []).map((item: { tag_id: string }) => item.tag_id),
+    );
+
+    const toAdd = [...existingIds].filter((id) => !currentIds.has(id));
+    const toRemove = [...currentIds].filter((id) => !existingIds.has(id));
+
+    if (toAdd.length > 0) {
+      const { error: addError } = await supabase.from("goal_tags").insert(
+        toAdd.map((tagId) => ({
+          goal_id: goal.id,
+          tag_id: tagId,
+        })),
+      );
+      if (addError) {
+        setError(addError.message);
+      }
+    }
+
+    if (toRemove.length > 0) {
+      const { error: removeError } = await supabase
+        .from("goal_tags")
+        .delete()
+        .eq("goal_id", goal.id)
+        .in("tag_id", toRemove);
+      if (removeError) {
+        setError(removeError.message);
+      }
+    }
+
+    await recalcGoalPeriods(goal.id);
+    setGoal((prev) =>
+      prev
+        ? {
+            ...prev,
+            title: trimmedTitle,
+            end_date: editEndDate,
+          }
+        : prev,
+    );
+    setIsSaving(false);
+  };
+
+  const handleArchiveGoal = async () => {
+    if (!goal) return;
+    setIsArchiving(true);
+    setError(null);
+
+    const { error: archiveError } = await supabase
+      .from("goals")
+      .update({ is_archived: true })
+      .eq("id", goal.id);
+
+    if (archiveError) {
+      setError(archiveError.message);
+      setIsArchiving(false);
+      return;
+    }
+
+    await recalcGoalPeriods(goal.id);
+    setIsArchiving(false);
+    router.push("/");
+  };
+
+  const handleDeleteEvent = async (
+    type: "time" | "counter" | "check",
+    id: string,
+  ) => {
+    if (!goal) return;
+    setError(null);
+
+    const table =
+      type === "time"
+        ? "time_entries"
+        : type === "counter"
+          ? "counter_events"
+          : "check_events";
+
+    const { error: deleteError } = await supabase
+      .from(table)
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      setError(deleteError.message);
+      return;
+    }
+
+    await loadEvents(goal);
+    await loadProgress(goal);
+    await recalcGoalPeriods(goal.id);
   };
 
   const progressValue = useMemo(() => {
@@ -412,6 +594,23 @@ export default function GoalDetailsPage() {
         <div className="rounded-lg border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
           {error ?? "Goal not found."}
         </div>
+      </section>
+    );
+  }
+
+  if (goal.is_archived) {
+    return (
+      <section className="space-y-4">
+        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
+          This goal is archived and hidden from active views.
+        </div>
+        <button
+          className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
+          type="button"
+          onClick={() => router.push("/")}
+        >
+          Back to Home
+        </button>
       </section>
     );
   }
@@ -468,9 +667,22 @@ export default function GoalDetailsPage() {
                         <span>
                           {started} → {ended}
                         </span>
-                        <span className="text-xs text-slate-500">
-                          {formatDurationMinutes(minutes)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500">
+                            {formatDurationMinutes(minutes)}
+                          </span>
+                          {!goal.is_archived ? (
+                            <button
+                              className="text-xs text-rose-600 hover:text-rose-700"
+                              type="button"
+                              onClick={() =>
+                                handleDeleteEvent("time", entry.id)
+                              }
+                            >
+                              Delete
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
                     );
                   })
@@ -491,9 +703,22 @@ export default function GoalDetailsPage() {
                       className="flex items-center justify-between"
                     >
                       <span>{formatDateTime(event.occurred_at)}</span>
-                      <span className="text-xs text-slate-500">
-                        +{event.value_delta}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500">
+                          +{event.value_delta}
+                        </span>
+                        {!goal.is_archived ? (
+                          <button
+                            className="text-xs text-rose-600 hover:text-rose-700"
+                            type="button"
+                            onClick={() =>
+                              handleDeleteEvent("counter", event.id)
+                            }
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
                   ))
                 )}
@@ -511,9 +736,20 @@ export default function GoalDetailsPage() {
                       className="flex items-center justify-between"
                     >
                       <span>{formatDateTime(event.occurred_at)}</span>
-                      <span className="text-xs text-slate-500">
-                        {event.state ? "Done" : "Not done"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500">
+                          {event.state ? "Done" : "Not done"}
+                        </span>
+                        {!goal.is_archived ? (
+                          <button
+                            className="text-xs text-rose-600 hover:text-rose-700"
+                            type="button"
+                            onClick={() => handleDeleteEvent("check", event.id)}
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
                   ))
                 )}
@@ -523,7 +759,133 @@ export default function GoalDetailsPage() {
         </div>
 
         <div className="space-y-4">
-          {goal.goal_type === "time" ? (
+          {!goal.is_archived ? (
+            <div className="rounded-lg border border-slate-200 bg-white p-5">
+              <h2 className="text-base font-semibold">Edit goal</h2>
+              <label className="mt-3 block text-sm font-medium text-slate-700">
+                Title
+                <input
+                  className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                  value={editTitle}
+                  onChange={(event) => setEditTitle(event.target.value)}
+                />
+              </label>
+              <label className="mt-3 block text-sm font-medium text-slate-700">
+                End date
+                <input
+                  className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                  type="date"
+                  min={getTodayDateString()}
+                  value={editEndDate}
+                  onChange={(event) => setEditEndDate(event.target.value)}
+                />
+              </label>
+              <label className="mt-3 block text-sm font-medium text-slate-700">
+                Tags
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <input
+                    className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm"
+                    list="goal-tag-options"
+                    placeholder="Add a tag"
+                    value={tagInput}
+                    onChange={(event) => setTagInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        const name = tagInput.trim();
+                        if (!name) return;
+                        void (async () => {
+                          const { tag, error: tagError } =
+                            await ensureTag(name);
+                          if (tagError || !tag) {
+                            setError(tagError ?? "Failed to add tag.");
+                            return;
+                          }
+                          setSelectedTags((prev) => {
+                            if (prev.some((item) => item.id === tag.id))
+                              return prev;
+                            return [...prev, tag];
+                          });
+                          setTagInput("");
+                        })();
+                      }
+                    }}
+                  />
+                  <button
+                    className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
+                    type="button"
+                    onClick={() => {
+                      const name = tagInput.trim();
+                      if (!name) return;
+                      void (async () => {
+                        const { tag, error: tagError } = await ensureTag(name);
+                        if (tagError || !tag) {
+                          setError(tagError ?? "Failed to add tag.");
+                          return;
+                        }
+                        setSelectedTags((prev) => {
+                          if (prev.some((item) => item.id === tag.id))
+                            return prev;
+                          return [...prev, tag];
+                        });
+                        setTagInput("");
+                      })();
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+                <datalist id="goal-tag-options">
+                  {tags.map((tag) => (
+                    <option key={tag.id} value={tag.name} />
+                  ))}
+                </datalist>
+                {tagsLoading ? (
+                  <p className="mt-1 text-xs text-slate-500">Loading tags…</p>
+                ) : null}
+                {selectedTags.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedTags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700 hover:border-slate-300"
+                        type="button"
+                        onClick={() =>
+                          setSelectedTags((prev) =>
+                            prev.filter((item) => item.id !== tag.id),
+                          )
+                        }
+                      >
+                        {tag.name} ✕
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-slate-500">No tags yet.</p>
+                )}
+              </label>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  type="button"
+                  onClick={handleSaveGoal}
+                  disabled={isSaving}
+                >
+                  Save changes
+                </button>
+                <button
+                  className="rounded-md border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 hover:border-rose-300"
+                  type="button"
+                  onClick={handleArchiveGoal}
+                  disabled={isArchiving}
+                >
+                  Archive goal
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {!goal.is_archived && goal.goal_type === "time" ? (
             <form
               className="rounded-lg border border-slate-200 bg-white p-5"
               onSubmit={handleAddTimeEntry}
@@ -557,7 +919,7 @@ export default function GoalDetailsPage() {
             </form>
           ) : null}
 
-          {goal.goal_type === "counter" ? (
+          {!goal.is_archived && goal.goal_type === "counter" ? (
             <form
               className="rounded-lg border border-slate-200 bg-white p-5"
               onSubmit={handleAddCounterEvent}
@@ -591,7 +953,7 @@ export default function GoalDetailsPage() {
             </form>
           ) : null}
 
-          {goal.goal_type === "check" ? (
+          {!goal.is_archived && goal.goal_type === "check" ? (
             <form
               className="rounded-lg border border-slate-200 bg-white p-5"
               onSubmit={handleAddCheckEvent}

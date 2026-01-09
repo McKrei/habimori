@@ -70,6 +70,7 @@ RLS:
 - `end_date` date
 - `context_id` uuid, FK -> `contexts(id)`, `on delete restrict`
 - `is_active` boolean, default `true`
+- `is_archived` boolean, default `false`
 - `created_at` timestamptz, default `now()`
 
 Ограничения:
@@ -218,7 +219,7 @@ RLS:
 - `period_start` date
 - `period_end` date
 - `actual_value` integer
-- `status` varchar(16), значения: `success | fail | in_progress`
+- `status` varchar(16), значения: `success | fail | in_progress | archived`
 - `calculated_at` timestamptz
 
 Ограничения:

@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 import { getCurrentUserId } from "@/src/components/auth";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
+import { recalcGoalPeriods } from "@/src/components/goalPeriods";
 
 type GoalType = "" | "time" | "counter" | "check";
 type GoalPeriod = "day" | "week" | "month";
@@ -181,6 +182,7 @@ export default function NewGoalPage() {
       }
     }
 
+    await recalcGoalPeriods(data.id);
     router.push(`/goals/${data.id}`);
   };
 
