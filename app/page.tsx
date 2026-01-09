@@ -724,11 +724,9 @@ export default function Home() {
                   {goal.goal_type === "counter" ? (
                     <>
                       <div className="text-xl font-semibold md:text-2xl">
-                        <span className={accentColor}>{displayValue}</span>
+                        <span className="text-slate-900">{displayValue}</span>
                         <span className="text-slate-300"> / </span>
-                        <span className="text-slate-900">
-                          {goal.target_value}
-                        </span>
+                        <span className={accentColor}>{goal.target_value}</span>
                       </div>
                       <input
                         className={`w-12 rounded-md border px-2 py-1 text-sm md:w-16 ${actionBorder}`}
