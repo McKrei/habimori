@@ -549,29 +549,15 @@ export default function Home() {
       ) : null}
 
       <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-slate-700">Filters</h2>
-          <button
-            className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
-            type="button"
-            onClick={() => {
-              setSelectedContext("");
-              setSelectedTags([]);
-              setSelectedStatus("");
-            }}
-          >
-            Reset
-          </button>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <label className="text-xs font-semibold text-slate-500">
-            Context
+            <span className="sr-only">Context</span>
             <select
-              className="ml-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700"
+              className="h-9 w-44 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
               value={selectedContext}
               onChange={(event) => setSelectedContext(event.target.value)}
             >
-              <option value="">All</option>
+              <option value="">Context</option>
               {contexts.map((context) => (
                 <option key={context.id} value={context.id}>
                   {context.name}
@@ -580,16 +566,31 @@ export default function Home() {
             </select>
           </label>
 
+          <label className="text-xs font-semibold text-slate-500">
+            <span className="sr-only">Status</span>
+            <select
+              className="h-9 w-44 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
+              value={selectedStatus}
+              onChange={(event) => setSelectedStatus(event.target.value)}
+            >
+              <option value="">Status</option>
+              {["success", "fail", "in_progress", "archived"].map((status) => (
+                <option key={status} value={status}>
+                  {status.replace("_", " ")}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <div className="relative">
-            <label className="text-xs font-semibold text-slate-500">Tags</label>
             <button
-              className="ml-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700"
+              className="h-9 w-42 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
               type="button"
               onClick={() => setIsTagsOpen((prev) => !prev)}
             >
               {selectedTags.length > 0
                 ? `Selected (${selectedTags.length})`
-                : "All"}
+                : "Tags"}
             </button>
             {isTagsOpen ? (
               <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
@@ -623,21 +624,17 @@ export default function Home() {
             ) : null}
           </div>
 
-          <label className="text-xs font-semibold text-slate-500">
-            Status
-            <select
-              className="ml-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700"
-              value={selectedStatus}
-              onChange={(event) => setSelectedStatus(event.target.value)}
-            >
-              <option value="">All</option>
-              {["success", "fail", "in_progress", "archived"].map((status) => (
-                <option key={status} value={status}>
-                  {status.replace("_", " ")}
-                </option>
-              ))}
-            </select>
-          </label>
+          <button
+            className="ml-auto h-9 rounded-md bg-slate-900 px-4 text-xs font-medium text-white hover:bg-slate-800"
+            type="button"
+            onClick={() => {
+              setSelectedContext("");
+              setSelectedTags([]);
+              setSelectedStatus("");
+            }}
+          >
+            Reset
+          </button>
         </div>
       </div>
 
