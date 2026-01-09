@@ -1,0 +1,198 @@
+// Habimori DBML (dbdiagram.io)
+// Термины:
+// - User = Пользователь
+// - Context = Контекст (область/проект)
+// - Tag = Тег (глобальная метка)
+// - Goal = Цель (правило на период)
+// - Events = События (время/счётчик/чек)
+// - Goal periods = Периоды цели (успех/провал на каждый период)
+
+Table users as "users" { // Пользователи
+  id uuid [primary key]
+  email varchar
+  name varchar
+  created_at timestamp
+}
+
+// --------------------
+// Контексты и теги
+// --------------------
+
+Table contexts as "contexts" { // Контексты (области/проекты)
+  id uuid [primary key]
+  user_id uuid [not null]
+  name varchar [not null]
+  created_at timestamp
+}
+
+Ref: contexts.user_id > users.id
+
+Table tags as "tags" { // Теги (глобальные метки)
+  id uuid [primary key]
+  user_id uuid [not null]
+  name varchar [not null]
+  created_at timestamp
+}
+
+Ref: tags.user_id > users.id
+
+// --------------------
+// Цели
+// --------------------
+
+Table goals as "goals" { // Цели
+  id uuid [primary key]
+  user_id uuid [not null]
+
+  title varchar [not null] // Заголовок (например "Английский 5ч/нед")
+  goal_type varchar [not null] // time | counter | check (время/счётчик/чек)
+  period varchar [not null] // day | week | month (день/неделя/месяц)
+
+  target_value integer [not null] // значение (минуты/кол-во/1)
+  target_op varchar [not null] // gte | lte (>= для позитивной, <= для негативной)
+
+  start_date date [not null] // на фронте дефолт = today, но юзер может выбрать
+  end_date date [not null] // юзер выбирает (duration пока не используем)
+
+  context_id uuid [not null] // контекст обязателен
+  is_active boolean
+  created_at timestamp
+}
+
+Ref: goals.user_id > users.id
+Ref: goals.context_id > contexts.id
+
+Table goal_tags as "goal_tags" { // Теги цели (многие-ко-многим)
+  goal_id uuid [not null]
+  tag_id uuid [not null]
+  created_at timestamp
+
+  Indexes {
+    (goal_id, tag_id) [unique]
+  }
+}
+
+Ref: goal_tags.goal_id > goals.id
+Ref: goal_tags.tag_id > tags.id
+
+// --------------------
+// События логирования
+// --------------------
+
+// 1) Время (таймер)
+Table time_entries as "time_entries" { // Сессии времени
+  id uuid [primary key]
+  user_id uuid [not null]
+
+  started_at timestamp [not null]
+  ended_at timestamp // null = идёт
+
+  context_id uuid [not null]
+  goal_id uuid // опционально
+
+  created_at timestamp
+}
+
+Ref: time_entries.user_id > users.id
+Ref: time_entries.context_id > contexts.id
+Ref: time_entries.goal_id > goals.id
+
+Table time_entry_tags as "time_entry_tags" { // Теги сессии времени
+  time_entry_id uuid [not null]
+  tag_id uuid [not null]
+  created_at timestamp
+
+  Indexes {
+    (time_entry_id, tag_id) [unique]
+  }
+}
+
+Ref: time_entry_tags.time_entry_id > time_entries.id
+Ref: time_entry_tags.tag_id > tags.id
+
+// 2) Счётчик (инкременты)
+Table counter_events as "counter_events" { // События счётчика
+  id uuid [primary key]
+  user_id uuid [not null]
+
+  occurred_at timestamp [not null]
+  value_delta integer [not null]
+
+  context_id uuid [not null]
+  goal_id uuid // опционально
+
+  created_at timestamp
+}
+
+Ref: counter_events.user_id > users.id
+Ref: counter_events.context_id > contexts.id
+Ref: counter_events.goal_id > goals.id
+
+Table counter_event_tags as "counter_event_tags" { // Теги события счётчика
+  counter_event_id uuid [not null]
+  tag_id uuid [not null]
+  created_at timestamp
+
+  Indexes {
+    (counter_event_id, tag_id) [unique]
+  }
+}
+
+Ref: counter_event_tags.counter_event_id > counter_events.id
+Ref: counter_event_tags.tag_id > tags.id
+
+// 3) Чек (сделал/не сделал)
+Table check_events as "check_events" { // Чек-события
+  id uuid [primary key]
+  user_id uuid [not null]
+
+  occurred_at timestamp [not null]
+  state boolean [not null] // true/false
+
+  context_id uuid [not null]
+  goal_id uuid // опционально
+
+  created_at timestamp
+}
+
+Ref: check_events.user_id > users.id
+Ref: check_events.context_id > contexts.id
+Ref: check_events.goal_id > goals.id
+
+Table check_event_tags as "check_event_tags" { // Теги чек-события
+  check_event_id uuid [not null]
+  tag_id uuid [not null]
+  created_at timestamp
+
+  Indexes {
+    (check_event_id, tag_id) [unique]
+  }
+}
+
+Ref: check_event_tags.check_event_id > check_events.id
+Ref: check_event_tags.tag_id > tags.id
+
+// --------------------
+// Периоды цели (успех/провал по каждому периоду)
+// --------------------
+
+// Это нужно, чтобы:
+// - хранить "успех/провал" за каждый период (день/неделя/месяц)
+// - рисовать графики без пересчёта на лету (или с кэшированием)
+// - делать правило: если недельная цель не выполнена -> "вся неделя провалена"
+//   и на календаре каждый день этой недели подсвечивается как fail для этой цели.
+
+Table goal_periods as "goal_periods" { // Экземпляры периодов цели
+  id uuid [primary key]
+  goal_id uuid [not null]
+
+  period_start date [not null]
+  period_end date [not null]
+
+  actual_value integer [not null] // факт (минуты/кол-во/1)
+  status varchar [not null] // success | fail | in_progress
+
+  calculated_at timestamp // когда пересчитано
+}
+
+Ref: goal_periods.goal_id > goals.id
