@@ -28,7 +28,7 @@ type ActiveTimerContextValue = {
     contextId: string;
     goalId?: string | null;
   }) => Promise<{ error?: string; entryId?: string }>;
-  stopTimer: () => Promise<{ error?: string }>;
+  stopTimer: (endedAt?: string) => Promise<{ error?: string }>;
 };
 
 const ActiveTimerContext = createContext<ActiveTimerContextValue | null>(null);
@@ -153,49 +153,53 @@ export function ActiveTimerProvider({
     [activeEntry, refresh],
   );
 
-  const stopTimer = useCallback(async () => {
-    if (!activeEntry) {
-      return { error: "No active timer to stop." };
-    }
+  const stopTimer = useCallback(
+    async (endedAt?: string) => {
+      if (!activeEntry) {
+        return { error: "No active timer to stop." };
+      }
 
-    const optimisticId = pendingOptimisticIdRef.current;
-    if (optimisticId && activeEntry.id === optimisticId) {
-      const pendingStart = pendingStartRef.current;
-      if (!pendingStart) {
+      const finalEndedAt = endedAt ?? new Date().toISOString();
+      const optimisticId = pendingOptimisticIdRef.current;
+      if (optimisticId && activeEntry.id === optimisticId) {
+        const pendingStart = pendingStartRef.current;
+        if (!pendingStart) {
+          setActiveEntry(null);
+          return {};
+        }
+        const data = await pendingStart;
+        if (!data?.id) {
+          setActiveEntry(null);
+          return { error: "Failed to stop timer." };
+        }
+        const { error: updateError } = await supabase
+          .from("time_entries")
+          .update({ ended_at: finalEndedAt })
+          .eq("id", data.id);
+
+        if (updateError) {
+          return { error: updateError.message };
+        }
+
         setActiveEntry(null);
+        await refresh();
         return {};
       }
-      const data = await pendingStart;
-      if (!data?.id) {
-        setActiveEntry(null);
-        return { error: "Failed to stop timer." };
-      }
+
       const { error: updateError } = await supabase
         .from("time_entries")
-        .update({ ended_at: new Date().toISOString() })
-        .eq("id", data.id);
+        .update({ ended_at: finalEndedAt })
+        .eq("id", activeEntry.id);
 
       if (updateError) {
         return { error: updateError.message };
       }
 
-      setActiveEntry(null);
       await refresh();
       return {};
-    }
-
-    const { error: updateError } = await supabase
-      .from("time_entries")
-      .update({ ended_at: new Date().toISOString() })
-      .eq("id", activeEntry.id);
-
-    if (updateError) {
-      return { error: updateError.message };
-    }
-
-    await refresh();
-    return {};
-  }, [activeEntry, refresh]);
+    },
+    [activeEntry, refresh],
+  );
 
   const value = useMemo(
     () => ({

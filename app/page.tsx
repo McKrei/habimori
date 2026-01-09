@@ -9,10 +9,7 @@ import {
   getPeriodRangeForDate,
   recalcGoalPeriods,
 } from "@/src/components/goalPeriods";
-import {
-  formatMinutesAsHHMM,
-  formatSecondsAsHHMMSS,
-} from "@/src/components/formatters";
+import { formatSecondsAsHHMMSS } from "@/src/components/formatters";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
 import ToastStack, { type Toast } from "@/src/components/ToastStack";
@@ -61,6 +58,9 @@ export default function Home() {
   const [optimisticStatus, setOptimisticStatus] = useState<
     Record<string, string>
   >({});
+  const [timeSecondsMap, setTimeSecondsMap] = useState<Record<string, number>>(
+    {},
+  );
   const [pendingByGoal, setPendingByGoal] = useState<Record<string, boolean>>(
     {},
   );
@@ -141,12 +141,18 @@ export default function Home() {
     }
 
     await loadStatuses(mappedGoals);
+    await loadTimeSeconds(mappedGoals);
     setIsLoading(false);
   };
 
   useEffect(() => {
     void loadGoals();
   }, []);
+
+  useEffect(() => {
+    if (goals.length === 0) return;
+    void loadTimeSeconds(goals);
+  }, [activeEntry?.goal_id, goals]);
 
   const pushToast = useCallback(
     (message: string, tone: Toast["tone"] = "info") => {
@@ -173,6 +179,88 @@ export default function Home() {
     },
     [],
   );
+
+  const loadTimeSeconds = async (items: GoalSummary[]) => {
+    const timeGoals = items.filter((goal) => goal.goal_type === "time");
+    if (timeGoals.length === 0) {
+      setTimeSecondsMap({});
+      return;
+    }
+
+    const results = await Promise.all(
+      timeGoals.map(async (goal) => {
+        const { start, end } = getPeriodRangeForDate(goal.period, new Date());
+        const { data, error: timeError } = await supabase
+          .from("time_entries")
+          .select("started_at, ended_at")
+          .eq("goal_id", goal.id)
+          .lt("started_at", end.toISOString())
+          .or(`ended_at.is.null,ended_at.gte.${start.toISOString()}`);
+
+        if (timeError || !data) {
+          return [goal.id, 0] as const;
+        }
+
+        let totalMs = 0;
+        for (const entry of data) {
+          if (!entry.ended_at) {
+            continue;
+          }
+          const startedAt = new Date(entry.started_at);
+          const endedAt = entry.ended_at
+            ? new Date(entry.ended_at)
+            : new Date();
+          const overlapStart = startedAt > start ? startedAt : start;
+          const overlapEnd = endedAt < end ? endedAt : end;
+          if (overlapEnd > overlapStart) {
+            totalMs += overlapEnd.getTime() - overlapStart.getTime();
+          }
+        }
+
+        return [goal.id, Math.ceil(totalMs / 1000)] as const;
+      }),
+    );
+
+    const nextMap: Record<string, number> = {};
+    for (const [goalId, seconds] of results) {
+      nextMap[goalId] = seconds;
+    }
+    setTimeSecondsMap(nextMap);
+  };
+
+  const refreshTimeSeconds = useCallback(async (goal: GoalSummary) => {
+    if (goal.goal_type !== "time") return;
+    const { start, end } = getPeriodRangeForDate(goal.period, new Date());
+    const { data, error: timeError } = await supabase
+      .from("time_entries")
+      .select("started_at, ended_at")
+      .eq("goal_id", goal.id)
+      .lt("started_at", end.toISOString())
+      .or(`ended_at.is.null,ended_at.gte.${start.toISOString()}`);
+
+    if (timeError || !data) {
+      return;
+    }
+
+    let totalMs = 0;
+    for (const entry of data) {
+      if (!entry.ended_at) {
+        continue;
+      }
+      const startedAt = new Date(entry.started_at);
+      const endedAt = entry.ended_at ? new Date(entry.ended_at) : new Date();
+      const overlapStart = startedAt > start ? startedAt : start;
+      const overlapEnd = endedAt < end ? endedAt : end;
+      if (overlapEnd > overlapStart) {
+        totalMs += overlapEnd.getTime() - overlapStart.getTime();
+      }
+    }
+
+    setTimeSecondsMap((prev) => ({
+      ...prev,
+      [goal.id]: Math.ceil(totalMs / 1000),
+    }));
+  }, []);
 
   const refreshStatus = useCallback(async (goal: GoalSummary) => {
     const { period_start, period_end } = getPeriodRangeForDate(
@@ -208,16 +296,18 @@ export default function Home() {
       recalcTimersRef.current[goal.id] = window.setTimeout(async () => {
         await recalcGoalPeriods(goal.id);
         await refreshStatus(goal);
+        await refreshTimeSeconds(goal);
       }, 1200);
     },
-    [refreshStatus],
+    [refreshStatus, refreshTimeSeconds],
   );
 
   useEffect(() => {
     if (!activeEntry?.started_at) return;
+    setNow(new Date());
     const interval = window.setInterval(() => {
       setNow(new Date());
-    }, 1000);
+    }, 500);
     return () => window.clearInterval(interval);
   }, [activeEntry?.started_at]);
 
@@ -417,15 +507,32 @@ export default function Home() {
   const handleStopTimer = (goal: GoalSummary) => {
     const mutationId = (timeMutationRef.current[goal.id] ?? 0) + 1;
     timeMutationRef.current[goal.id] = mutationId;
+    const endedAt = new Date().toISOString();
+    if (activeEntry?.goal_id === goal.id && activeEntry.started_at) {
+      const elapsedSeconds = Math.max(
+        0,
+        Math.ceil(
+          (new Date(endedAt).getTime() -
+            new Date(activeEntry.started_at).getTime()) /
+            1000,
+        ),
+      );
+      setTimeSecondsMap((prev) => ({
+        ...prev,
+        [goal.id]:
+          (prev[goal.id] ?? timeSecondsMap[goal.id] ?? 0) + elapsedSeconds,
+      }));
+    }
     setPendingByGoal((prev) => ({ ...prev, [goal.id]: true }));
     setErrorByGoal((prev) => ({ ...prev, [goal.id]: false }));
 
-    void stopTimer().then(({ error: stopError }) => {
+    void stopTimer(endedAt).then(({ error: stopError }) => {
       if (timeMutationRef.current[goal.id] !== mutationId) return;
       if (stopError) {
         setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
         pushToast(stopError, "error");
       } else {
+        void refreshTimeSeconds(goal);
         scheduleRecalc(goal);
       }
       setPendingByGoal((prev) => ({ ...prev, [goal.id]: false }));
@@ -684,15 +791,23 @@ export default function Home() {
           const actualValue = effectiveActual;
           const displayValue =
             goal.goal_type === "time"
-              ? formatMinutesAsHHMM(actualValue)
+              ? formatSecondsAsHHMMSS(actualValue * 60)
               : `${actualValue}`;
+          const baseTimeSeconds =
+            goal.goal_type === "time" ? (timeSecondsMap[goal.id] ?? 0) : 0;
           const activeSeconds =
             isActiveTimer && activeEntry?.started_at
-              ? (now.getTime() - new Date(activeEntry.started_at).getTime()) /
-                1000
+              ? Math.max(
+                  0,
+                  Math.ceil(
+                    (now.getTime() -
+                      new Date(activeEntry.started_at).getTime()) /
+                      1000,
+                  ),
+                )
               : 0;
           const totalSeconds =
-            goal.goal_type === "time" ? actualValue * 60 + activeSeconds : 0;
+            goal.goal_type === "time" ? baseTimeSeconds + activeSeconds : 0;
 
           return (
             <div
@@ -762,7 +877,7 @@ export default function Home() {
                       >
                         {isActiveTimer
                           ? formatSecondsAsHHMMSS(totalSeconds)
-                          : displayValue}
+                          : formatSecondsAsHHMMSS(baseTimeSeconds)}
                       </div>
                       {isActiveTimer ? (
                         <button

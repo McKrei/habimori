@@ -30,14 +30,20 @@ export default function GlobalTimerBar() {
 
   useEffect(() => {
     if (!activeEntry?.started_at) return;
+    setNow(new Date());
     const interval = window.setInterval(() => {
       setNow(new Date());
-    }, 1000);
+    }, 500);
     return () => window.clearInterval(interval);
   }, [activeEntry?.started_at]);
 
   const elapsedSeconds = activeEntry?.started_at
-    ? (now.getTime() - new Date(activeEntry.started_at).getTime()) / 1000
+    ? Math.max(
+        0,
+        Math.ceil(
+          (now.getTime() - new Date(activeEntry.started_at).getTime()) / 1000,
+        ),
+      )
     : 0;
 
   const handleStart = async () => {
@@ -85,7 +91,8 @@ export default function GlobalTimerBar() {
   const handleStop = async () => {
     setIsWorking(true);
     setError(null);
-    const { error: stopError } = await stopTimer();
+    const endedAt = new Date().toISOString();
+    const { error: stopError } = await stopTimer(endedAt);
     if (stopError) {
       setError(stopError);
     }
