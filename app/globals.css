@@ -17,3 +17,15 @@ body {
     color: var(--foreground);
     font-family: Arial, Helvetica, sans-serif;
 }
+
+button[aria-label="Open Next.js Dev Tools"],
+button[aria-label="Open issues overlay"],
+button[aria-label="Collapse issues badge"],
+#__nextjs-dev-tools,
+#__nextjs-dev-tools-button,
+.nextjs-dev-tools,
+.nextjs-devtools-button,
+[data-nextjs-toast],
+[data-nextjs-dev-tools] {
+    display: none !important;
+}

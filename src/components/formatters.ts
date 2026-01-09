@@ -25,6 +25,18 @@ export function formatMinutesAsHHMM(minutes: number) {
   return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
+export function formatSecondsAsHHMMSS(seconds: number) {
+  if (!Number.isFinite(seconds)) return "--:--:--";
+  const total = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(total / 3600);
+  const mins = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(
+    2,
+    "0",
+  )}:${String(secs).padStart(2, "0")}`;
+}
+
 export function formatGoalTarget(goal: {
   goal_type: string;
   target_value: number;

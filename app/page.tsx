@@ -9,7 +9,10 @@ import {
   getPeriodRangeForDate,
   recalcGoalPeriods,
 } from "@/src/components/goalPeriods";
-import { formatMinutesAsHHMM } from "@/src/components/formatters";
+import {
+  formatMinutesAsHHMM,
+  formatSecondsAsHHMMSS,
+} from "@/src/components/formatters";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
 
@@ -61,6 +64,7 @@ export default function Home() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [isTagsOpen, setIsTagsOpen] = useState(false);
+  const [now, setNow] = useState(() => new Date());
 
   const activeGoalId = activeEntry?.goal_id ?? null;
 
@@ -124,6 +128,14 @@ export default function Home() {
   useEffect(() => {
     void loadGoals();
   }, []);
+
+  useEffect(() => {
+    if (!activeEntry?.started_at) return;
+    const interval = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [activeEntry?.started_at]);
 
   const loadStatuses = async (items: GoalSummary[]) => {
     if (items.length === 0) {
@@ -310,7 +322,6 @@ export default function Home() {
   return (
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Home</h1>
         <Link
           className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           href="/goals/new"
@@ -463,6 +474,11 @@ export default function Home() {
             goal.goal_type === "time"
               ? formatMinutesAsHHMM(actualValue)
               : `${actualValue}`;
+          const activeSeconds =
+            isActiveTimer && activeEntry?.started_at
+              ? (now.getTime() - new Date(activeEntry.started_at).getTime()) /
+                1000
+              : 0;
 
           return (
             <div
@@ -528,7 +544,9 @@ export default function Home() {
                       <div
                         className={`text-xl font-semibold md:text-2xl ${accentColor}`}
                       >
-                        {displayValue}:00
+                        {isActiveTimer
+                          ? formatSecondsAsHHMMSS(activeSeconds)
+                          : displayValue}
                       </div>
                       {isActiveTimer ? (
                         <button

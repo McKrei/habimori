@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
-import { formatDateTime } from "@/src/components/formatters";
+import { formatSecondsAsHHMMSS } from "@/src/components/formatters";
 
 export default function GlobalTimerBar() {
   const { activeEntry, isLoading, startTimer, stopTimer } = useActiveTimer();
@@ -18,6 +18,7 @@ export default function GlobalTimerBar() {
   >([]);
   const [error, setError] = useState<string | null>(null);
   const [isWorking, setIsWorking] = useState(false);
+  const [now, setNow] = useState(() => new Date());
 
   const contextLabel = useMemo(() => {
     if (!activeEntry) return null;
@@ -26,6 +27,18 @@ export default function GlobalTimerBar() {
     );
     return match?.name ?? activeEntry.context_id.slice(0, 8);
   }, [activeEntry, contexts]);
+
+  useEffect(() => {
+    if (!activeEntry?.started_at) return;
+    const interval = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [activeEntry?.started_at]);
+
+  const elapsedSeconds = activeEntry?.started_at
+    ? (now.getTime() - new Date(activeEntry.started_at).getTime()) / 1000
+    : 0;
 
   const handleStart = async () => {
     setIsWorking(true);
@@ -85,7 +98,7 @@ export default function GlobalTimerBar() {
         <div className="text-sm text-slate-600">
           {activeEntry ? (
             <span>
-              Timer running since {formatDateTime(activeEntry.started_at)}
+              {formatSecondsAsHHMMSS(elapsedSeconds)}
               {contextLabel ? ` · ${contextLabel}` : ""}
             </span>
           ) : (
