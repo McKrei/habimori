@@ -115,17 +115,19 @@ export function ActiveTimerProvider({
         started_at: startedAt,
       });
 
-      const insertPromise = supabase
-        .from("time_entries")
-        .insert({
-          user_id: userId,
-          context_id: contextId,
-          goal_id: goalId ?? null,
-          started_at: startedAt,
-        })
-        .select("id")
-        .single()
-        .then((result) => (result.error ? null : result.data));
+      const insertPromise = (async () => {
+        const result = await supabase
+          .from("time_entries")
+          .insert({
+            user_id: userId,
+            context_id: contextId,
+            goal_id: goalId ?? null,
+            started_at: startedAt,
+          })
+          .select("id")
+          .single();
+        return result.error ? null : result.data;
+      })();
 
       pendingStartRef.current = insertPromise;
       pendingOptimisticIdRef.current = optimisticId;

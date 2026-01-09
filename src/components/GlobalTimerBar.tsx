@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
@@ -62,7 +63,7 @@ export default function GlobalTimerBar() {
       contextId: context.id,
     });
     if (startError || !entryId) {
-      setError(startError);
+      setError(startError ?? "Failed to start timer.");
       setIsWorking(false);
       return;
     }

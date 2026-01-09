@@ -116,12 +116,40 @@ export default function Home() {
       return;
     }
 
-    const mappedGoals = (data ?? []).map((goal) => ({
-      ...goal,
-      tags: (goal.goal_tags ?? []).map(
-        (item: { tag: { id: string; name: string } }) => item.tag,
-      ),
-    })) as GoalSummary[];
+    type RawGoal = Omit<GoalSummary, "context" | "tags"> & {
+      context:
+        | { id: string; name: string }
+        | { id: string; name: string }[]
+        | null;
+      goal_tags?: {
+        tag:
+          | { id: string; name: string }
+          | { id: string; name: string }[]
+          | null;
+      }[];
+    };
+
+    const mappedGoals: GoalSummary[] = (data ?? []).map((goal: RawGoal) => {
+        const context = Array.isArray(goal.context)
+          ? (goal.context[0] ?? null)
+          : (goal.context ?? null);
+        const tags =
+          goal.goal_tags
+            ?.map((item) =>
+              Array.isArray(item.tag)
+                ? (item.tag[0] ?? null)
+                : (item.tag ?? null),
+            )
+            .filter(
+              (tag): tag is { id: string; name: string } => tag !== null,
+            ) ?? [];
+
+        return {
+          ...goal,
+          context,
+          tags,
+        };
+      });
     setGoals(mappedGoals);
 
     const checkGoalIds = mappedGoals
@@ -161,18 +189,21 @@ export default function Home() {
   }, [activeEntry?.goal_id, goals]);
 
   useEffect(() => {
-    if (!activeEntry?.goal_id) {
+    if (!activeEntry?.goal_id || typeof activeEntry.goal_id !== "string") {
       setActiveBaseSeconds({});
       return;
     }
+    const goalId = activeEntry.goal_id;
     setActiveBaseSeconds((prev) => ({
       ...prev,
-      [activeEntry.goal_id]: timeSecondsMap[activeEntry.goal_id] ?? 0,
+      [goalId]: timeSecondsMap[goalId] ?? 0,
     }));
   }, [activeEntry?.goal_id]);
 
   useEffect(() => {
-    if (!activeEntry?.goal_id) return;
+    if (!activeEntry?.goal_id || typeof activeEntry.goal_id !== "string") {
+      return;
+    }
     const goalId = activeEntry.goal_id;
     const nextBase = timeSecondsMap[goalId] ?? 0;
     if (nextBase === 0) return;
@@ -211,7 +242,7 @@ export default function Home() {
     [],
   );
 
-  const loadTimeSeconds = async (items: GoalSummary[]) => {
+  async function loadTimeSeconds(items: GoalSummary[]) {
     const timeGoals = items.filter((goal) => goal.goal_type === "time");
     if (timeGoals.length === 0) {
       setTimeSecondsMap({});
@@ -263,7 +294,7 @@ export default function Home() {
       }
       return merged;
     });
-  };
+  }
 
   const refreshTimeSeconds = useCallback(
     async (goal: GoalSummary, overrideValue?: number) => {
@@ -378,7 +409,7 @@ export default function Home() {
     return () => window.clearInterval(interval);
   }, [activeEntry?.started_at]);
 
-  const loadStatuses = async (items: GoalSummary[]) => {
+  async function loadStatuses(items: GoalSummary[]) {
     if (items.length === 0) {
       setStatusMap({});
       return;
@@ -429,7 +460,7 @@ export default function Home() {
       }
       await fetchStatuses();
     }
-  };
+  }
 
   const handleCounterEvent = (goal: GoalSummary, delta: number) => {
     if (delta <= 0 || !Number.isInteger(delta)) {

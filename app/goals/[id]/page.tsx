@@ -166,7 +166,18 @@ export default function GoalDetailsPage() {
       return;
     }
 
-    const loadedGoal = data as GoalDetails;
+    const rawGoal = data as GoalDetails & {
+      context:
+        | { id: string; name: string }
+        | { id: string; name: string }[]
+        | null;
+    };
+    const loadedGoal: GoalDetails = {
+      ...rawGoal,
+      context: Array.isArray(rawGoal.context)
+        ? (rawGoal.context[0] ?? null)
+        : (rawGoal.context ?? null),
+    };
     setGoal(loadedGoal);
     setEditTitle(loadedGoal.title);
     setEditEndDate(loadedGoal.end_date);
@@ -186,7 +197,15 @@ export default function GoalDetailsPage() {
     }
 
     const loadedTags =
-      data?.map((item: { tag: { id: string; name: string } }) => item.tag) ??
+      data?.map(
+        (item: {
+          tag:
+            | { id: string; name: string }
+            | { id: string; name: string }[]
+            | null;
+        }) =>
+          Array.isArray(item.tag) ? item.tag[0] ?? null : item.tag ?? null,
+      )?.filter((tag): tag is { id: string; name: string } => tag !== null) ??
       [];
     setSelectedTags(loadedTags);
   };
@@ -907,7 +926,7 @@ export default function GoalDetailsPage() {
                       </span>
                       {!goal.is_archived ? (
                         <button
-                          className="rounded-md px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 hover:text-rose-800"
+                          className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-50 hover:text-rose-800"
                           type="button"
                           onClick={() => handleDeleteEvent("time", entry.id)}
                         >
@@ -939,7 +958,7 @@ export default function GoalDetailsPage() {
                     </span>
                     {!goal.is_archived ? (
                       <button
-                        className="rounded-md px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 hover:text-rose-800"
+                        className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-50 hover:text-rose-800"
                         type="button"
                         onClick={() => handleDeleteEvent("counter", event.id)}
                       >
@@ -970,7 +989,7 @@ export default function GoalDetailsPage() {
                     </span>
                     {!goal.is_archived ? (
                       <button
-                        className="rounded-md px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 hover:text-rose-800"
+                        className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-50 hover:text-rose-800"
                         type="button"
                         onClick={() => handleDeleteEvent("check", event.id)}
                       >

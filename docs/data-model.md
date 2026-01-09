@@ -1,7 +1,7 @@
 ---
 # Модель данных (MVP)
 
-Основано на `supabase/migrations/0001_init.sql` и `supabase/migrations/0002_schema_hardening.sql`.
+Основано на `supabase/migrations/0001_init.sql`, `supabase/migrations/0002_schema_hardening.sql` и `supabase/migrations/0003_feature8_polish.sql`.
 Цель: описать таблицы, связи, ограничения, индексы и правила доступа.
 
 ## Общие принципы

@@ -56,6 +56,7 @@ Table goals as "goals" { // Цели
 
   context_id uuid [not null] // контекст обязателен
   is_active boolean
+  is_archived boolean
   created_at timestamp
 }
 
@@ -190,7 +191,7 @@ Table goal_periods as "goal_periods" { // Экземпляры периодов 
   period_end date [not null]
 
   actual_value integer [not null] // факт (минуты/кол-во/1)
-  status varchar [not null] // success | fail | in_progress
+  status varchar [not null] // success | fail | in_progress | archived
 
   calculated_at timestamp // когда пересчитано
 }
