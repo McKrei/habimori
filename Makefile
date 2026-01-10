@@ -1,8 +1,40 @@
-.PHONY: run app
+.PHONY: install dev run lint typecheck build start test test-e2e ci docker-build docker-run app clean
 
-run:
+install:
+	npm install
+
+dev:
 	npm run dev
 
-app:
+run: dev
+
+lint:
+	npm run lint
+
+typecheck:
+	npm run typecheck
+
+build:
+	npm run build
+
+start:
+	npm run start
+
+test:
+	npm test
+
+test-e2e:
+	npm run test:e2e
+
+ci: lint typecheck test
+
+docker-build:
 	docker build -t habimori-app .
+
+docker-run:
 	docker run --rm -p 3000:3000 --name habimori-app habimori-app
+
+app: docker-build docker-run
+
+clean:
+	rm -rf .next

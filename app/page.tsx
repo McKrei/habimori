@@ -130,26 +130,25 @@ export default function Home() {
     };
 
     const mappedGoals: GoalSummary[] = (data ?? []).map((goal: RawGoal) => {
-        const context = Array.isArray(goal.context)
-          ? (goal.context[0] ?? null)
-          : (goal.context ?? null);
-        const tags =
-          goal.goal_tags
-            ?.map((item) =>
-              Array.isArray(item.tag)
-                ? (item.tag[0] ?? null)
-                : (item.tag ?? null),
-            )
-            .filter(
-              (tag): tag is { id: string; name: string } => tag !== null,
-            ) ?? [];
+      const context = Array.isArray(goal.context)
+        ? (goal.context[0] ?? null)
+        : (goal.context ?? null);
+      const tags =
+        goal.goal_tags
+          ?.map((item) =>
+            Array.isArray(item.tag)
+              ? (item.tag[0] ?? null)
+              : (item.tag ?? null),
+          )
+          .filter((tag): tag is { id: string; name: string } => tag !== null) ??
+        [];
 
-        return {
-          ...goal,
-          context,
-          tags,
-        };
-      });
+      return {
+        ...goal,
+        context,
+        tags,
+      };
+    });
     setGoals(mappedGoals);
 
     const checkGoalIds = mappedGoals
@@ -696,19 +695,38 @@ export default function Home() {
   };
 
   const filteredGoals = useMemo(() => {
-    return goals.filter((goal) => {
-      const contextOk =
-        selectedContext === "" || goal.context_id === selectedContext;
-      const tagsOk =
-        selectedTags.length === 0 ||
-        goal.tags.some((tag) => selectedTags.includes(tag.id));
-      const statusEntry = statusMap[goal.id];
-      const effectiveStatus = optimisticStatus[goal.id] ?? statusEntry?.status;
-      const statusOk =
-        selectedStatus === "" ||
-        (effectiveStatus ? selectedStatus === effectiveStatus : false);
-      return contextOk && tagsOk && statusOk;
-    });
+    const statusRank: Record<string, number> = {
+      success: 0,
+      in_progress: 1,
+      fail: 2,
+      archived: 3,
+    };
+
+    return goals
+      .map((goal, index) => {
+        const statusEntry = statusMap[goal.id];
+        const effectiveStatus =
+          optimisticStatus[goal.id] ?? statusEntry?.status ?? "";
+        return { goal, index, effectiveStatus };
+      })
+      .filter(({ goal, effectiveStatus }) => {
+        const contextOk =
+          selectedContext === "" || goal.context_id === selectedContext;
+        const tagsOk =
+          selectedTags.length === 0 ||
+          goal.tags.some((tag) => selectedTags.includes(tag.id));
+        const statusOk =
+          selectedStatus === "" ||
+          (effectiveStatus ? selectedStatus === effectiveStatus : false);
+        return contextOk && tagsOk && statusOk;
+      })
+      .sort((a, b) => {
+        const rankA = statusRank[a.effectiveStatus] ?? 4;
+        const rankB = statusRank[b.effectiveStatus] ?? 4;
+        if (rankA !== rankB) return rankA - rankB;
+        return a.index - b.index;
+      })
+      .map(({ goal }) => goal);
   }, [
     goals,
     optimisticStatus,

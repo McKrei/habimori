@@ -1,186 +1,44 @@
-# Доменные правила (domain-rules.md)
+# Domain rules
 
-## 1) Термины и сущности
+## Entities
+- User: owner of all data.
+- Context: required for every log entry.
+- Tag: optional label on goals and time entries.
+- Goal: rule with period (day/week/month) and target.
+- Events: time_entries, counter_events, check_events.
+- Goal periods: cached period stats for goals.
 
-- Пользователь (User): владелец всех данных.
-- Контекст (Context): обязательная “область/проект”, куда относится любое логирование.
-- Тег (Tag): глобальная метка пользователя для сквозной статистики (год, проекты, направления).
-- Цель (Goal): правило на период (день/неделя/месяц) с условием успех/провал и диапазоном дат.
-- События (Events):
-  - TimeEntry (сессия времени): интервал started_at..ended_at
-  - CounterEvent (событие счётчика): value_delta
-  - CheckEvent (событие чекбокса): state boolean
-- Период цели (GoalPeriod): кэш “факт + статус” для каждого периода цели.
+## Invariants
+- Every log entry must have a context.
+- A goal always belongs to a context.
+- A log entry can exist without a goal.
+- One active time entry per user (ended_at is null).
+- Time entry duration must be non-negative.
 
-## 2) Базовые инварианты (обязательные правила)
-
-1) Любое логирование относится минимум к контексту:
-   - time_entries.context_id NOT NULL
-   - counter_events.context_id NOT NULL
-   - check_events.context_id NOT NULL
-
-2) Привязка к цели опциональна:
-   - *_events.goal_id может быть NULL (логирование “без цели”, но в контекст/теги)
-
-3) Теги опциональны (0..N) и глобальны:
-   - можно логировать только контекст без тегов
-   - теги не привязаны жёстко к контексту
-
-4) Цель всегда принадлежит контексту:
-   - goals.context_id NOT NULL
-
-5) Диапазон цели задаётся датами:
-   - goals.start_date <= goals.end_date
-   - start_date по умолчанию “сегодня” (на фронте), но пользователь может выбрать
-
-6) Время в сессии не может быть “в минус”:
-   - ended_at IS NULL OR ended_at >= started_at
-
-7) Все сущности принадлежат одному пользователю (логически):
-   - при чтении/записи обеспечивается, что user_id совпадает для связанных сущностей
-   - практическая реализация: RLS/политики и/или проверки в сервисном слое
-
-## 3) Семантика целей: позитивная/негативная
-
-Цель задаётся параметрами:
+## Goal semantics
+Goal is defined by:
 - goal_type: time | counter | check
 - period: day | week | month
-- target_value: целевое значение (минуты / количество / 0-1)
-- target_op:
-  - gte (>=) — позитивная цель “сделать не меньше”
-  - lte (<=) — негативная цель “не превысить”
+- target_value (minutes/count/0-1)
+- target_op: gte (positive) or lte (negative)
 
-Примеры:
-- Позитивная: “Вода 5 стаканов/день” => target_op=gte, target_value=5
-- Негативная: “Кофе не больше 2/день” => target_op=lte, target_value=2
-- Время: “Английский 5 часов/нед” => goal_type=time, target_value=300, target_op=gte
+Status for a period:
+- in_progress if current period is not finished.
+- success/fail if period is finished and target_op comparison passes/fails.
+- archived if goal is archived.
 
-## 4) Периоды (day/week/month) и границы
+## Period boundaries
+- Day: local calendar day.
+- Week: ISO week (Mon-Sun).
+- Month: calendar month.
 
-Границы периодов считаются в таймзоне пользователя.
-Тimestamps хранятся как timestamptz, но “календарная логика” идёт через timezone пользователя.
+Goal periods store:
+- period_start, period_end (dates)
+- actual_value, status
 
-Определения:
-- Day: календарный день (00:00..24:00) по таймзоне пользователя.
-- Week: неделя ISO (понедельник..воскресенье) по таймзоне пользователя.
-- Month: календарный месяц (1..последний день) по таймзоне пользователя.
+## Actual value calculation
+- Time: sum of entry overlaps with period (ended_at null => now).
+- Counter: sum of value_delta for events inside period.
+- Check: last check_event in period wins (true => 1, false => 0).
 
-GoalPeriod хранит:
-- period_start date
-- period_end date
-Это календарные даты границ периода (для week — даты понедельника/воскресенья).
-
-Правило отображения в календаре:
-- если period=week, то статус GoalPeriod применяется ко всем дням, попадающим в period_start..period_end
-  (то есть “провал недели” виден каждый день этой недели).
-
-## 5) Как считается факт (actual_value) для GoalPeriod
-
-### 5.1 Time (goal_type=time)
-actual_value = сумма длительностей (в минутах) всех time_entries, привязанных к goal_id, с учётом пересечений с периодом.
-
-Если time_entry пересекает границы периода, учитывается только пересечение:
-- duration = overlap([started_at, ended_at), [period_start 00:00, next_period_start 00:00))
-
-Если ended_at NULL (идёт сейчас):
-- в расчётах можно брать ended_at = now() (для in_progress)
-
-### 5.2 Counter (goal_type=counter)
-actual_value = сумма value_delta всех counter_events, привязанных к goal_id, попавших по occurred_at в период.
-
-### 5.3 Check (goal_type=check)
-Check — это “состояние периода” по принципу “последнее событие в периоде выигрывает”.
-
-actual_value:
-- 1, если последнее check_event в периоде имеет state=true
-- 0, если:
-  - нет событий в периоде
-  - или последнее событие имеет state=false
-
-Рекомендованные значения для чек-целей:
-- “Надо сделать” => target_op=gte, target_value=1 (успех если состояние true)
-- “Нельзя делать” => target_op=lte, target_value=0 (успех если состояние false/отсутствует)
-
-## 6) Успех/провал и статус периода
-
-Базовое правило:
-- success, если сравнение target_op выполняется:
-  - gte: actual_value >= target_value
-  - lte: actual_value <= target_value
-- fail иначе
-
-status ∈ {in_progress, success, fail, archived}
-
-Правило определения status:
-1) Если период текущий (период ещё не закончился по времени пользователя):
-   - status = in_progress
-   - дополнительно можно показывать “промежуточно success/fail” как подсказку (не финально)
-
-2) Если период закончился:
-   - status = success или fail по правилу сравнения
-
-3) Если цель архивирована:
-   - status = archived для всех периодов цели
-
-Правило “защёлкивания” (опционально, но удобно в UI):
-- Для lte (негативные цели): если actual_value > target_value, статус можно сразу помечать как fail до конца периода.
-- Для gte (позитивные цели): если actual_value >= target_value, можно показывать “уже выполнено”, но финальный статус фиксируется после окончания периода.
-
-## 7) Поведение при отсутствии данных
-
-Если в периоде нет событий цели:
-- actual_value = 0
-
-Следствия:
-- gte-цели (например “5 часов/нед”) => 0 < target => fail после окончания периода
-- lte-цели (например “кофе <= 2”) => 0 <= target => success после окончания периода
-
-Это ключевой механизм, из-за которого “если не добил английский за неделю — вся неделя провалена”.
-
-## 8) GoalPeriods как кэш прогресса
-
-Назначение:
-- быстро строить графики успех/провал без пересчёта всего истории
-- правильно подсвечивать календарь (в т.ч. недельные цели по дням)
-
-Правила хранения:
-- одна запись на один период цели:
-  - уникальность: (goal_id, period_start, period_end)
-- actual_value и status пересчитываются при изменениях данных
-
-Триггеры/события пересчёта (логические):
-- вставка/обновление/удаление события с goal_id (time/counter/check)
-- изменение параметров цели (period, target_value, target_op, start_date, end_date)
-- периодический пересчёт “на границе суток/недели/месяца” (опционально)
-
-Минимальная стратегия:
-- пересчитывать “текущий период” и “затронутые периоды” по факту изменений
-
-## 9) Логирование: старт по цели и быстрый старт
-
-1) Старт по цели (Play на карточке цели):
-- создаётся time_entry с goal_id=goal.id
-- context_id берётся из goal.context_id
-- теги опциональны (в MVP можно не автокопировать)
-
-2) Быстрый старт таймера:
-- перед стартом выбирается контекст (обязательно)
-- цель опциональна
-- теги опциональны
-
-Правило “одна активная сессия” (рекомендуется):
-- у пользователя может быть только один time_entry с ended_at IS NULL
-
-## 10) Контексты и теги: практические правила
-
-- Контекст не удаляется физически (рекомендуется), а архивируется:
-  - contexts.is_archived (в будущем)
-- Теги также лучше архивировать вместо удаления, чтобы не ломать историю.
-- Имена тегов/контекстов желательно уникализировать в рамках пользователя (case-insensitive).
-
-## 11) Pomodoro (помидоры) — доменная заметка
-
-Pomodoro — это режим нарезки времени на клиенте:
-- “работа” создаёт обычный time_entry (25 минут и т.п.)
-- “перерыв” по умолчанию не записывается в БД
-- доменная модель целей/прогресса не меняется
+If no events in period, actual_value = 0.
