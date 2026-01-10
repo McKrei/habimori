@@ -32,11 +32,12 @@ docker-build:
 	docker build -t habimori-app .
 
 docker-run:
-	docker run --rm -p 3000:3000 --name habimori-app habimori-app
+	docker run -d --restart unless-stopped -p 3000:3000 --name habimori-app habimori-app
 
 docker-stop:
-	docker stop habimori-app
-	
+	docker stop habimori-app 2>/dev/null || true
+	docker rm habimori-app 2>/dev/null || true
+
 app: docker-build docker-run
 
 clean:
