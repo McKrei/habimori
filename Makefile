@@ -37,10 +37,18 @@ ci: lint typecheck test
 test-all: lint typecheck build test test-e2e
 
 docker-build:
-	docker build -t habimori-app .
+	set -a; . ./.env; set +a; \
+	docker build \
+	  --build-arg NEXT_PUBLIC_SUPABASE_URL \
+	  --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY \
+	  -t habimori-app .
 
 docker-run:
-	docker run -d --restart unless-stopped -p 3000:3000 --name habimori-app habimori-app
+	docker run -d --restart unless-stopped \
+	  -p 3000:3000 \
+	  --env-file ./.env \
+	  --name habimori-app \
+	  habimori-app
 
 docker-stop:
 	docker stop habimori-app 2>/dev/null || true
