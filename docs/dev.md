@@ -1,39 +1,39 @@
-# Development
+# Разработка
 
-## Requirements
+## Требования
 - Node.js 20+
 - npm
 
-## Environment
-Create `.env.local`:
+## Переменные окружения
+Создайте `.env.local`:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (optional override)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (опционально)
 
-## Commands
-- Install: `npm install` or `make install`
-- Dev server: `npm run dev` or `make dev`
-- Lint: `npm run lint` or `make lint`
-- Typecheck: `npm run typecheck` or `make typecheck`
-- Build: `npm run build` or `make build`
+## Команды
+- Установка: `npm install` или `make install`
+- Dev сервер: `npm run dev` или `make dev`
+- Линт: `npm run lint` или `make lint`
+- Проверка типов: `npm run typecheck` или `make typecheck`
+- Сборка: `npm run build` или `make build`
 
 ## Docker
 - Build + run: `make app`
 
-## Tests
-- Unit/Integration: `npm test` or `make test`
-- E2E: `npm run test:e2e` or `make test-e2e`
+## Тесты
+- Unit/Integration: `npm test` или `make test`
+- E2E: `npm run test:e2e` или `make test-e2e`
 
-### Test environment
-Integration tests expect production Supabase credentials via env vars:
+### Окружение для тестов
+Integration-тесты ожидают креденшлы Supabase в env:
 
-- `SUPABASE_URL` (or `NEXT_PUBLIC_SUPABASE_URL`)
-- `SUPABASE_ANON_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+- `SUPABASE_URL` (или `NEXT_PUBLIC_SUPABASE_URL`)
+- `SUPABASE_ANON_KEY` (или `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 - `SUPABASE_TEST_EMAIL`
 - `SUPABASE_TEST_PASSWORD`
-- `SUPABASE_SERVICE_ROLE_KEY` (optional, to auto-provision test user)
+- `SUPABASE_SERVICE_ROLE_KEY` (опционально, для авто-создания тестового пользователя)
 
-E2E tests use:
+E2E тесты используют:
 
-- `E2E_BASE_URL` (production URL; falls back to `http://localhost:3000` locally)
+- `E2E_BASE_URL` (production URL; локально `http://localhost:3000`)

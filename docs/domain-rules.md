@@ -1,44 +1,48 @@
-# Domain rules
+# Доменные правила
 
-## Entities
-- User: owner of all data.
-- Context: required for every log entry.
-- Tag: optional label on goals and time entries.
-- Goal: rule with period (day/week/month) and target.
+## Сущности
+- User: владелец всех данных.
+- Context: обязателен для каждой записи и цели.
+- Tag: опциональная метка для целей и time entries.
+- Goal: правило с периодом (day/week/month), направлением и целью.
 - Events: time_entries, counter_events, check_events.
-- Goal periods: cached period stats for goals.
+- Goal periods: кэш статусов по периодам.
 
-## Invariants
-- Every log entry must have a context.
-- A goal always belongs to a context.
-- A log entry can exist without a goal.
-- One active time entry per user (ended_at is null).
-- Time entry duration must be non-negative.
+## Инварианты
+- Каждый лог обязан иметь context.
+- Goal всегда относится к context.
+- Лог может существовать без goal (глобальный таймер).
+- Один активный time entry на пользователя (ended_at = null).
+- ended_at >= started_at или null.
 
-## Goal semantics
-Goal is defined by:
+## Семантика цели
+Параметры цели:
 - goal_type: time | counter | check
 - period: day | week | month
-- target_value (minutes/count/0-1)
-- target_op: gte (positive) or lte (negative)
+- target_value (минуты/кол-во/0–1)
+- target_op: gte (положительная цель) или lte (отрицательная цель)
 
-Status for a period:
-- in_progress if current period is not finished.
-- success/fail if period is finished and target_op comparison passes/fails.
-- archived if goal is archived.
+Статус периода:
+- in_progress, если период еще не завершен.
+- success/fail, если период завершен и сравнение target_op проходит/нет.
+- archived, если goal архивирована.
 
-## Period boundaries
-- Day: local calendar day.
-- Week: ISO week (Mon-Sun).
-- Month: calendar month.
+Для check-целей:
+- target_op = gte означает «должно быть done».
+- target_op = lte означает «должно быть not done».
 
-Goal periods store:
-- period_start, period_end (dates)
+## Границы периодов
+- Day: локальный календарный день (period_end = period_start).
+- Week: ISO неделя (Mon–Sun).
+- Month: календарный месяц (последний день месяца).
+
+Goal periods хранят:
+- period_start, period_end (даты)
 - actual_value, status
 
-## Actual value calculation
-- Time: sum of entry overlaps with period (ended_at null => now).
-- Counter: sum of value_delta for events inside period.
-- Check: last check_event in period wins (true => 1, false => 0).
+## Расчет actual_value
+- Time: сумма пересечений записей с периодом, округление до минут (ended_at = null → now).
+- Counter: сумма value_delta по событиям внутри периода.
+- Check: последнее check_event в периоде (true = 1, false = 0).
 
-If no events in period, actual_value = 0.
+Если событий нет, actual_value = 0.

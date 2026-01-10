@@ -1,18 +1,18 @@
-# Habimori overview
+# Обзор Habimori
 
-Habimori is a minimal goal + time tracking app. Users create goals (time, counter, or check), log activity quickly from the main screen, and can run a global timer without selecting a goal.
+Habimori — минимальный трекер целей и времени. Пользователь создает цели (time/counter/check), быстро логирует события с главного экрана и запускает глобальный таймер без привязки к цели.
 
-## Core concepts
-- Goal: rule with period (day/week/month), target value, and positive/negative operator.
-- Context: required grouping for all logging.
-- Tags: optional labels for goals and time sessions.
-- Events: time entries, counter events, check events.
-- Goal periods: cached period results (success/fail/in_progress/archived).
+## Ключевые понятия
+- Цель: правило с периодом (day/week/month), целевым значением и оператором сравнения (gte/lte).
+- Контекст: обязательная группировка для любого лога и цели.
+- Теги: опциональные метки для целей и time entries.
+- События: time entries, counter events, check events.
+- Периоды цели: кэш статусов по периодам (success/fail/in_progress/archived).
 
-## Current behavior
-- Google OAuth via Supabase.
-- Main screen shows active goals, sorted by status, with quick logging.
-- Goals can be created with context + optional tags.
-- Goal details show recent events and allow manual entries.
-- Global timer starts a time entry without a goal.
-- Stats screen includes period/context/tag filters and charts for goals/time.
+## Что делает приложение
+- Авторизация через Google OAuth (Supabase).
+- Главный экран показывает активные цели на текущую дату с быстрыми действиями.
+- Таймер: один активный time entry на пользователя (для цели или глобальный).
+- Детали цели позволяют редактировать title/end date, управлять тегами, добавлять и удалять события.
+- Глобальный таймер запускается из нижней панели и требует контекст.
+- Статистика строится по goal_periods и time_entries с фильтрами по периоду/контекстам/тегам.

@@ -1,31 +1,40 @@
-# Screens and UI
+# Экраны и UI
 
-## / (Main)
-- Shows active, non-archived goals for today, sorted by status.
-- Filters: context (single), status (single), tags (multi), reset.
-- Goal card actions:
-  - Counter: input + submit (+ defaults to 1)
-  - Time: play/stop per goal (only one active timer per user)
-  - Check: toggle done/undone
-- Status indicator: success/fail/in_progress based on goal periods.
+## / (Главная)
+- Показывает активные цели на текущую дату: `is_active = true`, `is_archived = false`, `start_date <= today <= end_date`.
+- Сортировка: по статусу периода (success → in_progress → fail → archived), затем по времени создания.
+- Фильтры: контекст (single), статус (single), теги (multi), сброс.
+- Карточка цели:
+  - Counter: ввод значения и отправка (Enter/кнопка, пустое поле = +1).
+  - Time: старт/стоп таймера по цели (один активный timer на пользователя).
+  - Check: переключение done/undone.
+  - Отображение прогресса: текущий actual/target.
+- Индикатор статуса и состояния запроса (pending/error) по goal periods.
 
-## /goals/new (Create goal)
-- Fields: title, type, period, target, target operator, start/end dates.
-- Context: required, creates on the fly.
-- Tags: optional, creates on the fly.
-- Saves goal, then recalculates goal periods.
+## Глобальный таймер (нижняя панель)
+- Кнопка Play открывает шторку запуска.
+- Требует контекст (создается на лету), теги — опционально.
+- Создает time entry без goal_id.
+- Кнопка Stop завершает активный таймер.
 
-## /goals/[id] (Goal details)
-- Shows goal summary and period progress.
-- Lists recent events (time/counter/check).
-- Manual add for time, counter, check events.
-- Goal tags can be edited.
-- Goal can be archived; archived goals hidden from main screen.
+## /goals/new (Создание цели)
+- Поля: title, goal type (time/counter/check), period, direction (gte/lte), target, start/end dates.
+- Контекст обязателен, выбирается из списка или создается на лету.
+- Теги опциональны, создаются на лету.
+- После сохранения пересчитываются goal periods.
 
-## /stats (Stats)
-- Filters: period (week/month/custom), contexts (multi), tags (multi).
-- Charts:
-  - goal status counts (success/fail/in_progress)
-  - tracked time totals
-  - time by context (stacked bars, interactive)
-  - time distribution by context (pie)
+## /goals/[id] (Детали цели)
+- Сводка цели, период и прогресс за текущий период.
+- Редактирование title, end date и тегов.
+- Формы ручного ввода событий в зависимости от типа цели.
+- Список последних 50 событий с возможностью удалить.
+- Архивация скрывает цель из активных экранов; архивная цель отображает отдельное сообщение.
+
+## /stats (Статистика)
+- Период: week, month или custom диапазон дат.
+- Фильтры: контексты (multi), теги (multi).
+- Графики:
+  - goal status counts по period_start (line).
+  - tracked time по дням (line).
+  - time by context (stacked bars, отключение контекста кликом).
+  - context share (pie).
