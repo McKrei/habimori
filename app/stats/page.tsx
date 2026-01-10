@@ -93,7 +93,7 @@ function listDates(start: Date, end: Date) {
 }
 
 function toShortLabel(dateString: string) {
-  const [year, month, day] = dateString.split("-");
+  const [, month, day] = dateString.split("-");
   return `${month}/${day}`;
 }
 
@@ -103,21 +103,22 @@ export default function StatsPage() {
   const [periodMode, setPeriodMode] = useState<"week" | "month" | "custom">(
     "week",
   );
-  const [customStart, setCustomStart] = useState(() =>
-    toDateInput(new Date()),
-  );
+  const [customStart, setCustomStart] = useState(() => toDateInput(new Date()));
   const [customEnd, setCustomEnd] = useState(() => toDateInput(new Date()));
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isContextOpen, setIsContextOpen] = useState(false);
   const [isTagsOpen, setIsTagsOpen] = useState(false);
   const [chartContextIds, setChartContextIds] = useState<string[]>([]);
-  const [selectedSegment, setSelectedSegment] = useState<
-    { contextId: string; minutes: number } | null
-  >(null);
-  const [statusSeries, setStatusSeries] = useState<
-    { success: number[]; fail: number[]; in_progress: number[] }
-  >({ success: [], fail: [], in_progress: [] });
+  const [selectedSegment, setSelectedSegment] = useState<{
+    contextId: string;
+    minutes: number;
+  } | null>(null);
+  const [statusSeries, setStatusSeries] = useState<{
+    success: number[];
+    fail: number[];
+    in_progress: number[];
+  }>({ success: [], fail: [], in_progress: [] });
   const [timeTotals, setTimeTotals] = useState<number[]>([]);
   const [contextSeries, setContextSeries] = useState<
     { id: string; label: string; color: string; values: number[] }[]
@@ -165,17 +166,20 @@ export default function StatsPage() {
   }, [contexts]);
 
   useEffect(() => {
-    if (selectedContextIds.length > 0) {
-      setChartContextIds(selectedContextIds);
-      return;
-    }
-    if (chartContextIds.length === 0 && contextSeries.length > 0) {
-      setChartContextIds(contextSeries.map((item) => item.id));
-      return;
-    }
-    setChartContextIds((prev) =>
-      prev.filter((id) => contextSeries.some((item) => item.id === id)),
-    );
+    const timeout = window.setTimeout(() => {
+      if (selectedContextIds.length > 0) {
+        setChartContextIds(selectedContextIds);
+        return;
+      }
+      if (chartContextIds.length === 0 && contextSeries.length > 0) {
+        setChartContextIds(contextSeries.map((item) => item.id));
+        return;
+      }
+      setChartContextIds((prev) =>
+        prev.filter((id) => contextSeries.some((item) => item.id === id)),
+      );
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [selectedContextIds, contextSeries, chartContextIds.length]);
 
   useEffect(() => {
@@ -207,9 +211,7 @@ export default function StatsPage() {
 
       const goalIds = filteredGoals.map((goal) => goal.id);
 
-      const rangeStart = new Date(
-        `${toDateInput(range.start)}T00:00:00`,
-      );
+      const rangeStart = new Date(`${toDateInput(range.start)}T00:00:00`);
       const rangeEndExclusive = addDays(
         new Date(`${toDateInput(range.end)}T00:00:00`),
         1,
@@ -226,7 +228,9 @@ export default function StatsPage() {
               .lte("period_start", toDateInput(range.end)),
         supabase
           .from("time_entries")
-          .select("id, started_at, ended_at, context_id, time_entry_tags(tag_id)")
+          .select(
+            "id, started_at, ended_at, context_id, time_entry_tags(tag_id)",
+          )
           .lt("started_at", rangeEndExclusive.toISOString())
           .or(`ended_at.is.null,ended_at.gte.${rangeStart.toISOString()}`),
       ]);
@@ -298,15 +302,16 @@ export default function StatsPage() {
 
       filteredEntries.forEach((entry) => {
         const entryStart = new Date(entry.started_at);
-        const entryEnd = entry.ended_at
-          ? new Date(entry.ended_at)
-          : new Date();
+        const entryEnd = entry.ended_at ? new Date(entry.ended_at) : new Date();
 
         dayRanges.forEach((rangeItem, index) => {
-          const overlapStart = entryStart > rangeItem.start ? entryStart : rangeItem.start;
-          const overlapEnd = entryEnd < rangeItem.end ? entryEnd : rangeItem.end;
+          const overlapStart =
+            entryStart > rangeItem.start ? entryStart : rangeItem.start;
+          const overlapEnd =
+            entryEnd < rangeItem.end ? entryEnd : rangeItem.end;
           if (overlapEnd <= overlapStart) return;
-          const minutes = (overlapEnd.getTime() - overlapStart.getTime()) / 60000;
+          const minutes =
+            (overlapEnd.getTime() - overlapStart.getTime()) / 60000;
           totalsByDay[index] += minutes;
           const contextValues = contextByDay.get(entry.context_id);
           if (contextValues) {
@@ -356,7 +361,10 @@ export default function StatsPage() {
   );
 
   const totalsForVisibleContexts = timeTotals.map((_, index) =>
-    visibleContextSeries.reduce((sum, item) => sum + (item.values[index] ?? 0), 0),
+    visibleContextSeries.reduce(
+      (sum, item) => sum + (item.values[index] ?? 0),
+      0,
+    ),
   );
 
   const pieSlices = contextTotals
@@ -425,7 +433,9 @@ export default function StatsPage() {
             {isContextOpen ? (
               <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
                 {contexts.length === 0 ? (
-                  <p className="px-2 py-1 text-xs text-slate-500">No contexts</p>
+                  <p className="px-2 py-1 text-xs text-slate-500">
+                    No contexts
+                  </p>
                 ) : (
                   contexts.map((context) => {
                     const checked = selectedContextIds.includes(context.id);
@@ -541,7 +551,10 @@ export default function StatsPage() {
                     values: statusSeries.success,
                     meta: (
                       <span className="text-slate-500">
-                        {statusSeries.success.reduce((sum, value) => sum + value, 0)}
+                        {statusSeries.success.reduce(
+                          (sum, value) => sum + value,
+                          0,
+                        )}
                       </span>
                     ),
                   },
@@ -566,7 +579,10 @@ export default function StatsPage() {
                     values: statusSeries.fail,
                     meta: (
                       <span className="text-slate-500">
-                        {statusSeries.fail.reduce((sum, value) => sum + value, 0)}
+                        {statusSeries.fail.reduce(
+                          (sum, value) => sum + value,
+                          0,
+                        )}
                       </span>
                     ),
                   },
@@ -651,7 +667,10 @@ export default function StatsPage() {
 
             {selectedSegment ? (
               <div className="mt-4 text-xs text-slate-600">
-                Selected: {contexts.find((ctx) => ctx.id === selectedSegment.contextId)?.name ?? selectedSegment.contextId} · {formatMinutesAsHHMM(selectedSegment.minutes)}
+                Selected:{" "}
+                {contexts.find((ctx) => ctx.id === selectedSegment.contextId)
+                  ?.name ?? selectedSegment.contextId}{" "}
+                · {formatMinutesAsHHMM(selectedSegment.minutes)}
               </div>
             ) : null}
           </div>

@@ -6,6 +6,7 @@ const isRemote = Boolean(process.env.E2E_BASE_URL);
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
+  outputDir: ".playwright-artifacts",
   use: {
     baseURL,
     trace: "retain-on-failure",

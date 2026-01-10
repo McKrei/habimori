@@ -12,6 +12,7 @@ googleusercontent.com.json
 
 # testing
 /coverage
+.playwright-artifacts/
 
 # next.js
 /.next/

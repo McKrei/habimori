@@ -81,7 +81,10 @@ export function ActiveTimerProvider({
   }, []);
 
   useEffect(() => {
-    void refresh();
+    const timeout = window.setTimeout(() => {
+      void refresh();
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [refresh]);
 
   const startTimer = useCallback(

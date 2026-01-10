@@ -32,11 +32,16 @@ export default function GlobalTimerBar() {
 
   useEffect(() => {
     if (!activeEntry?.started_at) return;
-    setNow(new Date());
+    const timeout = window.setTimeout(() => {
+      setNow(new Date());
+    }, 0);
     const interval = window.setInterval(() => {
       setNow(new Date());
     }, 500);
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(interval);
+    };
   }, [activeEntry?.started_at]);
 
   const elapsedSeconds = activeEntry?.started_at

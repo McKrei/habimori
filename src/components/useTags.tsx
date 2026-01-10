@@ -42,7 +42,10 @@ export function useTags() {
   }, []);
 
   useEffect(() => {
-    void refresh();
+    const timeout = window.setTimeout(() => {
+      void refresh();
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [refresh]);
 
   const ensureTag = useCallback(
@@ -76,7 +79,9 @@ export function useTags() {
         .single();
 
       if (!insertError && data) {
-        setTags((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+        setTags((prev) =>
+          [...prev, data].sort((a, b) => a.name.localeCompare(b.name)),
+        );
         return { tag: data, error: null };
       }
 
@@ -91,7 +96,9 @@ export function useTags() {
           if (prev.some((tag) => tag.id === fallback.id)) {
             return prev;
           }
-          return [...prev, fallback].sort((a, b) => a.name.localeCompare(b.name));
+          return [...prev, fallback].sort((a, b) =>
+            a.name.localeCompare(b.name),
+          );
         });
         return { tag: fallback, error: null };
       }

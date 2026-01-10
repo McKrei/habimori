@@ -10,22 +10,16 @@ import {
 } from "@/src/components/goalPeriods";
 import type { Toast } from "@/src/components/ToastStack";
 import type { CheckStateMap, GoalSummary, StatusMap } from "./types";
-import { getTodayDateString } from "./utils";
+import { getDateString } from "./utils";
 
 type RawGoal = Omit<GoalSummary, "context" | "tags"> & {
-  context:
-    | { id: string; name: string }
-    | { id: string; name: string }[]
-    | null;
+  context: { id: string; name: string } | { id: string; name: string }[] | null;
   goal_tags?: {
-    tag:
-      | { id: string; name: string }
-      | { id: string; name: string }[]
-      | null;
+    tag: { id: string; name: string } | { id: string; name: string }[] | null;
   }[];
 };
 
-export function useHomeGoalData() {
+export function useHomeGoalData(selectedDate: Date) {
   const { activeEntry, startTimer, stopTimer } = useActiveTimer();
   const [goals, setGoals] = useState<GoalSummary[]>([]);
   const [checkStates, setCheckStates] = useState<CheckStateMap>({});
@@ -79,10 +73,25 @@ export function useHomeGoalData() {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setActiveBaseSeconds({});
+      setTimeOverrides({});
+      setTimeSecondsMap({});
+      setOptimisticDeltas({});
+      setOptimisticStatus({});
+      setPendingByGoal({});
+      setErrorByGoal({});
+      setStatusMap({});
+      setCounterInputs({});
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [selectedDate]);
+
   const computeStatusForGoal = useCallback(
     (goal: GoalSummary, actualValue: number) => {
-      const { end } = getPeriodRangeForDate(goal.period, new Date());
-      const nowTime = new Date();
+      const { end } = getPeriodRangeForDate(goal.period, selectedDate);
+      const nowTime = selectedDate;
       if (goal.target_op === "gte") {
         if (actualValue >= goal.target_value) return "success";
         return nowTime < end ? "in_progress" : "fail";
@@ -90,14 +99,130 @@ export function useHomeGoalData() {
       if (actualValue > goal.target_value) return "fail";
       return nowTime < end ? "in_progress" : "success";
     },
-    [],
+    [selectedDate],
+  );
+
+  const loadTimeSeconds = useCallback(
+    async (items: GoalSummary[]) => {
+      const timeGoals = items.filter((goal) => goal.goal_type === "time");
+      if (timeGoals.length === 0) {
+        setTimeSecondsMap({});
+        return;
+      }
+
+      const results = await Promise.all(
+        timeGoals.map(async (goal) => {
+          const { start, end } = getPeriodRangeForDate(
+            goal.period,
+            selectedDate,
+          );
+          const { data, error: timeError } = await supabase
+            .from("time_entries")
+            .select("started_at, ended_at")
+            .eq("goal_id", goal.id)
+            .lt("started_at", end.toISOString())
+            .or(`ended_at.is.null,ended_at.gte.${start.toISOString()}`);
+
+          if (timeError || !data) {
+            return [goal.id, 0] as const;
+          }
+
+          let totalMs = 0;
+          for (const entry of data) {
+            if (!entry.ended_at) {
+              continue;
+            }
+            const startedAt = new Date(entry.started_at);
+            const endedAt = entry.ended_at
+              ? new Date(entry.ended_at)
+              : new Date();
+            const overlapStart = startedAt > start ? startedAt : start;
+            const overlapEnd = endedAt < end ? endedAt : end;
+            if (overlapEnd > overlapStart) {
+              totalMs += overlapEnd.getTime() - overlapStart.getTime();
+            }
+          }
+
+          return [goal.id, Math.ceil(totalMs / 1000)] as const;
+        }),
+      );
+
+      const nextMap: Record<string, number> = {};
+      for (const [goalId, seconds] of results) {
+        nextMap[goalId] = seconds;
+      }
+      setTimeSecondsMap((prev) => {
+        const merged = { ...prev };
+        for (const [goalId, seconds] of Object.entries(nextMap)) {
+          merged[goalId] = Math.max(prev[goalId] ?? 0, seconds);
+        }
+        return merged;
+      });
+    },
+    [selectedDate],
+  );
+
+  const loadStatuses = useCallback(
+    async (items: GoalSummary[]) => {
+      if (items.length === 0) {
+        setStatusMap({});
+        return;
+      }
+
+      const buildFilters = (list: GoalSummary[]) =>
+        list
+          .map((goal) => {
+            const { period_start, period_end } = getPeriodRangeForDate(
+              goal.period,
+              selectedDate,
+            );
+            return `and(goal_id.eq.${goal.id},period_start.eq.${period_start},period_end.eq.${period_end})`;
+          })
+          .join(",");
+
+      const fetchStatuses = async () => {
+        const { data, error: statusError } = await supabase
+          .from("goal_periods")
+          .select("goal_id, status, actual_value")
+          .or(buildFilters(items));
+
+        if (statusError) {
+          setStatusMap({});
+          return { map: {}, missing: items.map((goal) => goal.id) };
+        }
+
+        const nextMap: StatusMap = {};
+        for (const row of data ?? []) {
+          if (row.goal_id) {
+            nextMap[row.goal_id] = {
+              status: row.status,
+              actual_value: row.actual_value ?? null,
+            };
+          }
+        }
+        const missing = items
+          .filter((goal) => !nextMap[goal.id])
+          .map((goal) => goal.id);
+        setStatusMap(nextMap);
+        return { map: nextMap, missing };
+      };
+
+      const initial = await fetchStatuses();
+      if (initial.missing.length > 0) {
+        for (const id of initial.missing) {
+          await recalcGoalPeriods(id);
+        }
+        await fetchStatuses();
+      }
+    },
+    [selectedDate],
   );
 
   const loadGoals = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
-    const today = getTodayDateString();
+    const dayKey = getDateString(selectedDate);
     const { data, error: fetchError } = await supabase
       .from("goals")
       .select(
@@ -105,8 +230,8 @@ export function useHomeGoalData() {
       )
       .eq("is_active", true)
       .eq("is_archived", false)
-      .lte("start_date", today)
-      .gte("end_date", today)
+      .lte("start_date", dayKey)
+      .gte("end_date", dayKey)
       .order("created_at", { ascending: false });
 
     if (fetchError) {
@@ -138,138 +263,121 @@ export function useHomeGoalData() {
     });
     setGoals(mappedGoals);
 
-    const checkGoalIds = mappedGoals
-      .filter((goal) => goal.goal_type === "check")
-      .map((goal) => goal.id);
+    const checkGoals = mappedGoals.filter((goal) => goal.goal_type === "check");
+    const checkGoalIds = checkGoals.map((goal) => goal.id);
 
     if (checkGoalIds.length > 0) {
+      const ranges = new Map<string, { start: Date; end: Date }>();
+      let minStart = null as Date | null;
+      let maxEnd = null as Date | null;
+      for (const goal of checkGoals) {
+        const { start, end } = getPeriodRangeForDate(goal.period, selectedDate);
+        ranges.set(goal.id, { start, end });
+        minStart = minStart ? (start < minStart ? start : minStart) : start;
+        maxEnd = maxEnd ? (end > maxEnd ? end : maxEnd) : end;
+      }
       const { data: checkEvents, error: checkError } = await supabase
         .from("check_events")
         .select("goal_id, state, occurred_at")
         .in("goal_id", checkGoalIds)
+        .gte("occurred_at", (minStart ?? selectedDate).toISOString())
+        .lt("occurred_at", (maxEnd ?? selectedDate).toISOString())
         .order("occurred_at", { ascending: false });
 
       if (!checkError && checkEvents) {
         const nextStates: CheckStateMap = {};
+        const assigned = new Set<string>();
+        for (const goal of checkGoals) {
+          nextStates[goal.id] = false;
+        }
         for (const event of checkEvents) {
-          if (event.goal_id && nextStates[event.goal_id] === undefined) {
-            nextStates[event.goal_id] = Boolean(event.state);
-          }
+          if (!event.goal_id || assigned.has(event.goal_id)) continue;
+          const range = ranges.get(event.goal_id);
+          if (!range) continue;
+          const occurredAt = new Date(event.occurred_at);
+          if (occurredAt < range.start || occurredAt >= range.end) continue;
+          nextStates[event.goal_id] = Boolean(event.state);
+          assigned.add(event.goal_id);
         }
         setCheckStates(nextStates);
       }
+    } else {
+      setCheckStates({});
     }
 
     await loadStatuses(mappedGoals);
     await loadTimeSeconds(mappedGoals);
     setIsLoading(false);
-  }, []);
+  }, [loadStatuses, loadTimeSeconds, selectedDate]);
 
   useEffect(() => {
-    void loadGoals();
-  }, [activeEntry?.goal_id, loadGoals]);
+    const timeout = window.setTimeout(() => {
+      void loadGoals();
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [activeEntry?.goal_id, loadGoals, selectedDate]);
 
   useEffect(() => {
     if (goals.length === 0) return;
-    void loadTimeSeconds(goals);
-  }, [activeEntry?.goal_id, goals]);
+    const timeout = window.setTimeout(() => {
+      void loadTimeSeconds(goals);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [activeEntry?.goal_id, goals, loadTimeSeconds, selectedDate]);
 
   useEffect(() => {
-    if (!activeEntry?.goal_id || typeof activeEntry.goal_id !== "string") {
-      setActiveBaseSeconds({});
-      return;
-    }
-    const goalId = activeEntry.goal_id;
-    setActiveBaseSeconds((prev) => ({
-      ...prev,
-      [goalId]: timeSecondsMap[goalId] ?? 0,
-    }));
+    const timeout = window.setTimeout(() => {
+      if (!activeEntry?.goal_id || typeof activeEntry.goal_id !== "string") {
+        setActiveBaseSeconds({});
+        return;
+      }
+      const goalId = activeEntry.goal_id;
+      setActiveBaseSeconds((prev) => ({
+        ...prev,
+        [goalId]: timeSecondsMap[goalId] ?? 0,
+      }));
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [activeEntry?.goal_id, timeSecondsMap]);
 
   useEffect(() => {
-    if (!activeEntry?.goal_id || typeof activeEntry.goal_id !== "string") {
-      return;
-    }
-    const goalId = activeEntry.goal_id;
-    const nextBase = timeSecondsMap[goalId] ?? 0;
-    if (nextBase === 0) return;
-    setActiveBaseSeconds((prev) => {
-      const currentBase = prev[goalId] ?? 0;
-      if (nextBase <= currentBase) {
-        return prev;
+    const timeout = window.setTimeout(() => {
+      if (!activeEntry?.goal_id || typeof activeEntry.goal_id !== "string") {
+        return;
       }
-      return { ...prev, [goalId]: nextBase };
-    });
+      const goalId = activeEntry.goal_id;
+      const nextBase = timeSecondsMap[goalId] ?? 0;
+      if (nextBase === 0) return;
+      setActiveBaseSeconds((prev) => {
+        const currentBase = prev[goalId] ?? 0;
+        if (nextBase <= currentBase) {
+          return prev;
+        }
+        return { ...prev, [goalId]: nextBase };
+      });
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [activeEntry?.goal_id, timeSecondsMap]);
 
   useEffect(() => {
     if (!activeEntry?.started_at) return;
-    setNow(new Date());
+    const timeout = window.setTimeout(() => {
+      setNow(new Date());
+    }, 0);
     const interval = window.setInterval(() => {
       setNow(new Date());
     }, 500);
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(interval);
+    };
   }, [activeEntry?.started_at]);
-
-  async function loadTimeSeconds(items: GoalSummary[]) {
-    const timeGoals = items.filter((goal) => goal.goal_type === "time");
-    if (timeGoals.length === 0) {
-      setTimeSecondsMap({});
-      return;
-    }
-
-    const results = await Promise.all(
-      timeGoals.map(async (goal) => {
-        const { start, end } = getPeriodRangeForDate(goal.period, new Date());
-        const { data, error: timeError } = await supabase
-          .from("time_entries")
-          .select("started_at, ended_at")
-          .eq("goal_id", goal.id)
-          .lt("started_at", end.toISOString())
-          .or(`ended_at.is.null,ended_at.gte.${start.toISOString()}`);
-
-        if (timeError || !data) {
-          return [goal.id, 0] as const;
-        }
-
-        let totalMs = 0;
-        for (const entry of data) {
-          if (!entry.ended_at) {
-            continue;
-          }
-          const startedAt = new Date(entry.started_at);
-          const endedAt = entry.ended_at
-            ? new Date(entry.ended_at)
-            : new Date();
-          const overlapStart = startedAt > start ? startedAt : start;
-          const overlapEnd = endedAt < end ? endedAt : end;
-          if (overlapEnd > overlapStart) {
-            totalMs += overlapEnd.getTime() - overlapStart.getTime();
-          }
-        }
-
-        return [goal.id, Math.ceil(totalMs / 1000)] as const;
-      }),
-    );
-
-    const nextMap: Record<string, number> = {};
-    for (const [goalId, seconds] of results) {
-      nextMap[goalId] = seconds;
-    }
-    setTimeSecondsMap((prev) => {
-      const merged = { ...prev };
-      for (const [goalId, seconds] of Object.entries(nextMap)) {
-        merged[goalId] = Math.max(prev[goalId] ?? 0, seconds);
-      }
-      return merged;
-    });
-  }
 
   const refreshTimeSeconds = useCallback(
     async (goal: GoalSummary, overrideValue?: number) => {
       if (goal.goal_type !== "time") return;
       if (activeEntry?.goal_id === goal.id) return;
-      const { start, end } = getPeriodRangeForDate(goal.period, new Date());
+      const { start, end } = getPeriodRangeForDate(goal.period, selectedDate);
       const { data, error: timeError } = await supabase
         .from("time_entries")
         .select("started_at, ended_at")
@@ -316,44 +424,47 @@ export function useHomeGoalData() {
         });
       }
     },
-    [activeEntry?.goal_id, timeSecondsMap],
+    [activeEntry?.goal_id, selectedDate, timeSecondsMap],
   );
 
-  const refreshStatus = useCallback(async (goal: GoalSummary) => {
-    const { period_start, period_end } = getPeriodRangeForDate(
-      goal.period,
-      new Date(),
-    );
-    const { data, error: statusError } = await supabase
-      .from("goal_periods")
-      .select("goal_id, status, actual_value")
-      .eq("goal_id", goal.id)
-      .eq("period_start", period_start)
-      .eq("period_end", period_end)
-      .maybeSingle();
+  const refreshStatus = useCallback(
+    async (goal: GoalSummary) => {
+      const { period_start, period_end } = getPeriodRangeForDate(
+        goal.period,
+        selectedDate,
+      );
+      const { data, error: statusError } = await supabase
+        .from("goal_periods")
+        .select("goal_id, status, actual_value")
+        .eq("goal_id", goal.id)
+        .eq("period_start", period_start)
+        .eq("period_end", period_end)
+        .maybeSingle();
 
-    if (statusError || !data?.goal_id) {
-      return;
-    }
-
-    setStatusMap((prev) => ({
-      ...prev,
-      [goal.id]: {
-        status: data.status,
-        actual_value: data.actual_value ?? null,
-      },
-    }));
-    setOptimisticStatus((prev) => {
-      const optimistic = prev[goal.id];
-      if (!optimistic) return prev;
-      if (optimistic !== data.status) {
-        return prev;
+      if (statusError || !data?.goal_id) {
+        return;
       }
-      const next = { ...prev };
-      delete next[goal.id];
-      return next;
-    });
-  }, []);
+
+      setStatusMap((prev) => ({
+        ...prev,
+        [goal.id]: {
+          status: data.status,
+          actual_value: data.actual_value ?? null,
+        },
+      }));
+      setOptimisticStatus((prev) => {
+        const optimistic = prev[goal.id];
+        if (!optimistic) return prev;
+        if (optimistic !== data.status) {
+          return prev;
+        }
+        const next = { ...prev };
+        delete next[goal.id];
+        return next;
+      });
+    },
+    [selectedDate],
+  );
 
   const scheduleRecalc = useCallback(
     async (goal: GoalSummary) => {
@@ -368,59 +479,6 @@ export function useHomeGoalData() {
     },
     [refreshStatus, refreshTimeSeconds],
   );
-
-  async function loadStatuses(items: GoalSummary[]) {
-    if (items.length === 0) {
-      setStatusMap({});
-      return;
-    }
-
-    const buildFilters = (list: GoalSummary[]) =>
-      list
-        .map((goal) => {
-          const { period_start, period_end } = getPeriodRangeForDate(
-            goal.period,
-            new Date(),
-          );
-          return `and(goal_id.eq.${goal.id},period_start.eq.${period_start},period_end.eq.${period_end})`;
-        })
-        .join(",");
-
-    const fetchStatuses = async () => {
-      const { data, error: statusError } = await supabase
-        .from("goal_periods")
-        .select("goal_id, status, actual_value")
-        .or(buildFilters(items));
-
-      if (statusError) {
-        setStatusMap({});
-        return { map: {}, missing: items.map((goal) => goal.id) };
-      }
-
-      const nextMap: StatusMap = {};
-      for (const row of data ?? []) {
-        if (row.goal_id) {
-          nextMap[row.goal_id] = {
-            status: row.status,
-            actual_value: row.actual_value ?? null,
-          };
-        }
-      }
-      const missing = items
-        .filter((goal) => !nextMap[goal.id])
-        .map((goal) => goal.id);
-      setStatusMap(nextMap);
-      return { map: nextMap, missing };
-    };
-
-    const initial = await fetchStatuses();
-    if (initial.missing.length > 0) {
-      for (const id of initial.missing) {
-        await recalcGoalPeriods(id);
-      }
-      await fetchStatuses();
-    }
-  }
 
   const handleCounterEvent = (goal: GoalSummary, delta: number) => {
     if (delta <= 0 || !Number.isInteger(delta)) {

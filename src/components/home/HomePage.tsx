@@ -7,9 +7,11 @@ import ToastStack from "@/src/components/ToastStack";
 import HomeEmptyState from "./HomeEmptyState";
 import HomeFiltersBar from "./HomeFiltersBar";
 import HomeGoalCard from "./HomeGoalCard";
+import HomeWeekCalendar from "./HomeWeekCalendar";
 import { useHomeGoalData } from "./useHomeGoalData";
 
 export default function HomePage() {
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
   const {
     activeEntry,
     activeBaseSeconds,
@@ -34,7 +36,7 @@ export default function HomePage() {
     timeOverrides,
     timeSecondsMap,
     toasts,
-  } = useHomeGoalData();
+  } = useHomeGoalData(selectedDate);
   const { contexts } = useContexts();
   const { tags } = useTags();
   const [selectedContext, setSelectedContext] = useState("");
@@ -102,6 +104,11 @@ export default function HomePage() {
           Loading goals…
         </div>
       ) : null}
+
+      <HomeWeekCalendar
+        selectedDate={selectedDate}
+        onChange={setSelectedDate}
+      />
 
       <HomeFiltersBar
         contexts={contexts}

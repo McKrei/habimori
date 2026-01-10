@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { getCurrentUserId } from "@/src/components/auth";
 import { recalcGoalPeriods } from "@/src/components/goalPeriods";
@@ -55,7 +55,7 @@ export function useGoalDetails({ goalId, onArchived }: UseGoalDetailsOptions) {
   const [isSaving, setIsSaving] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
 
-  const loadGoalTags = async (id: string) => {
+  const loadGoalTags = useCallback(async (id: string) => {
     const { data, error: tagsError } = await supabase
       .from("goal_tags")
       .select("tag:tags(id, name)")
@@ -67,18 +67,22 @@ export function useGoalDetails({ goalId, onArchived }: UseGoalDetailsOptions) {
     }
 
     const loadedTags =
-      data?.map(
-        (item: {
-          tag:
-            | { id: string; name: string }
-            | { id: string; name: string }[]
-            | null;
-        }) =>
-          Array.isArray(item.tag) ? item.tag[0] ?? null : item.tag ?? null,
-      )?.filter((tag): tag is { id: string; name: string } => tag !== null) ??
+      data
+        ?.map(
+          (item: {
+            tag:
+              | { id: string; name: string }
+              | { id: string; name: string }[]
+              | null;
+          }) =>
+            Array.isArray(item.tag)
+              ? (item.tag[0] ?? null)
+              : (item.tag ?? null),
+        )
+        ?.filter((tag): tag is { id: string; name: string } => tag !== null) ??
       [];
     setSelectedTags(loadedTags);
-  };
+  }, []);
 
   const handleAddTag = async (name: string) => {
     const trimmed = name.trim();
@@ -95,7 +99,7 @@ export function useGoalDetails({ goalId, onArchived }: UseGoalDetailsOptions) {
     setTagInput("");
   };
 
-  const loadGoal = async () => {
+  const loadGoal = useCallback(async () => {
     if (!goalId || typeof goalId !== "string") {
       setError("Invalid goal id.");
       setGoal(null);
@@ -137,9 +141,9 @@ export function useGoalDetails({ goalId, onArchived }: UseGoalDetailsOptions) {
     setEditEndDate(loadedGoal.end_date);
     await loadGoalTags(loadedGoal.id);
     setIsLoading(false);
-  };
+  }, [goalId, loadGoalTags]);
 
-  const loadEvents = async (goalData: GoalDetails) => {
+  const loadEvents = useCallback(async (goalData: GoalDetails) => {
     const [time, counter, check] = await Promise.all([
       goalData.goal_type === "time"
         ? supabase
@@ -180,9 +184,9 @@ export function useGoalDetails({ goalId, onArchived }: UseGoalDetailsOptions) {
     setTimeEntries((time.data as TimeEntry[]) ?? []);
     setCounterEvents((counter.data as CounterEvent[]) ?? []);
     setCheckEvents((check.data as CheckEvent[]) ?? []);
-  };
+  }, []);
 
-  const loadProgress = async (goalData: GoalDetails) => {
+  const loadProgress = useCallback(async (goalData: GoalDetails) => {
     const { start, end } = getPeriodBounds(goalData.period);
     if (goalData.goal_type === "time") {
       const { data, error: timeError } = await supabase
@@ -245,17 +249,23 @@ export function useGoalDetails({ goalId, onArchived }: UseGoalDetailsOptions) {
       const state = data?.[0]?.state ? 1 : 0;
       setProgress({ label: "Check state", value: state });
     }
-  };
+  }, []);
 
   useEffect(() => {
-    void loadGoal();
-  }, [goalId]);
+    const timeout = window.setTimeout(() => {
+      void loadGoal();
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [loadGoal]);
 
   useEffect(() => {
     if (!goal) return;
-    void loadEvents(goal);
-    void loadProgress(goal);
-  }, [goal]);
+    const timeout = window.setTimeout(() => {
+      void loadEvents(goal);
+      void loadProgress(goal);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [goal, loadEvents, loadProgress]);
 
   const handleAddTimeEntry = async () => {
     if (!goal) return;
