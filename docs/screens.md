@@ -1,7 +1,7 @@
 # Screens and UI
 
 ## / (Main)
-- Shows active, non-archived goals for today.
+- Shows active, non-archived goals for today, sorted by status.
 - Filters: context (single), status (single), tags (multi), reset.
 - Goal card actions:
   - Counter: input + submit (+ defaults to 1)
@@ -23,4 +23,9 @@
 - Goal can be archived; archived goals hidden from main screen.
 
 ## /stats (Stats)
-- Screen exists but currently a placeholder.
+- Filters: period (week/month/custom), contexts (multi), tags (multi).
+- Charts:
+  - goal status counts (success/fail/in_progress)
+  - tracked time totals
+  - time by context (stacked bars, interactive)
+  - time distribution by context (pie)

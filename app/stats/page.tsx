@@ -1,10 +1,676 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { useContexts } from "@/src/components/useContexts";
+import { useTags } from "@/src/components/useTags";
+import { formatMinutesAsHHMM } from "@/src/components/formatters";
+import StatsLineChart from "@/src/components/StatsLineChart";
+import StatsStackedBarChart from "@/src/components/StatsStackedBarChart";
+import StatsPieChart from "@/src/components/StatsPieChart";
+
+const STATUS_COLORS: Record<string, string> = {
+  success: "#10b981",
+  in_progress: "#f59e0b",
+  fail: "#ef4444",
+};
+
+const CONTEXT_COLORS = [
+  "#0f766e",
+  "#1d4ed8",
+  "#a21caf",
+  "#ea580c",
+  "#16a34a",
+  "#0f172a",
+  "#0284c7",
+  "#dc2626",
+];
+
+type GoalRow = {
+  id: string;
+  context_id: string;
+  goal_tags?: { tag_id: string }[] | null;
+};
+
+type GoalPeriodRow = {
+  goal_id: string;
+  status: "success" | "fail" | "in_progress" | "archived";
+  period_start: string;
+};
+
+type TimeEntryRow = {
+  id: string;
+  started_at: string;
+  ended_at: string | null;
+  context_id: string;
+  time_entry_tags?: { tag_id: string }[] | null;
+};
+
+function toDateInput(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function startOfWeek(date: Date) {
+  const day = date.getDay();
+  const diff = (day + 6) % 7;
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  start.setDate(start.getDate() - diff);
+  return start;
+}
+
+function endOfWeek(date: Date) {
+  const start = startOfWeek(date);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return end;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function listDates(start: Date, end: Date) {
+  const dates: string[] = [];
+  let cursor = new Date(start);
+  while (cursor <= end) {
+    dates.push(toDateInput(cursor));
+    cursor = addDays(cursor, 1);
+  }
+  return dates;
+}
+
+function toShortLabel(dateString: string) {
+  const [year, month, day] = dateString.split("-");
+  return `${month}/${day}`;
+}
+
 export default function StatsPage() {
+  const { contexts } = useContexts();
+  const { tags } = useTags();
+  const [periodMode, setPeriodMode] = useState<"week" | "month" | "custom">(
+    "week",
+  );
+  const [customStart, setCustomStart] = useState(() =>
+    toDateInput(new Date()),
+  );
+  const [customEnd, setCustomEnd] = useState(() => toDateInput(new Date()));
+  const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [isContextOpen, setIsContextOpen] = useState(false);
+  const [isTagsOpen, setIsTagsOpen] = useState(false);
+  const [chartContextIds, setChartContextIds] = useState<string[]>([]);
+  const [selectedSegment, setSelectedSegment] = useState<
+    { contextId: string; minutes: number } | null
+  >(null);
+  const [statusSeries, setStatusSeries] = useState<
+    { success: number[]; fail: number[]; in_progress: number[] }
+  >({ success: [], fail: [], in_progress: [] });
+  const [timeTotals, setTimeTotals] = useState<number[]>([]);
+  const [contextSeries, setContextSeries] = useState<
+    { id: string; label: string; color: string; values: number[] }[]
+  >([]);
+  const [contextTotals, setContextTotals] = useState<
+    { id: string; label: string; color: string; value: number }[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const range = useMemo(() => {
+    const now = new Date();
+    if (periodMode === "week") {
+      const start = startOfWeek(now);
+      const end = endOfWeek(now);
+      return { start, end };
+    }
+    if (periodMode === "month") {
+      const start = startOfMonth(now);
+      const end = endOfMonth(now);
+      return { start, end };
+    }
+    const startDate = customStart || toDateInput(now);
+    const endDate = customEnd || toDateInput(now);
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T00:00:00`);
+    if (start > end) {
+      return { start: end, end: start };
+    }
+    return { start, end };
+  }, [customEnd, customStart, periodMode]);
+
+  const dateLabels = useMemo(() => listDates(range.start, range.end), [range]);
+  const shortLabels = useMemo(
+    () => dateLabels.map((label) => toShortLabel(label)),
+    [dateLabels],
+  );
+
+  const contextColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    contexts.forEach((context, index) => {
+      map.set(context.id, CONTEXT_COLORS[index % CONTEXT_COLORS.length]);
+    });
+    return map;
+  }, [contexts]);
+
+  useEffect(() => {
+    if (selectedContextIds.length > 0) {
+      setChartContextIds(selectedContextIds);
+      return;
+    }
+    if (chartContextIds.length === 0 && contextSeries.length > 0) {
+      setChartContextIds(contextSeries.map((item) => item.id));
+      return;
+    }
+    setChartContextIds((prev) =>
+      prev.filter((id) => contextSeries.some((item) => item.id === id)),
+    );
+  }, [selectedContextIds, contextSeries, chartContextIds.length]);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      const { data: goals, error: goalError } = await supabase
+        .from("goals")
+        .select("id, context_id, goal_tags(tag_id)")
+        .eq("is_archived", false);
+
+      if (goalError) {
+        setError(goalError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      const filteredGoals = (goals ?? []).filter((goal) => {
+        const contextOk =
+          selectedContextIds.length === 0 ||
+          selectedContextIds.includes(goal.context_id);
+        const goalTags = (goal as GoalRow).goal_tags ?? [];
+        const tagsOk =
+          selectedTagIds.length === 0 ||
+          goalTags.some((tag) => selectedTagIds.includes(tag.tag_id));
+        return contextOk && tagsOk;
+      }) as GoalRow[];
+
+      const goalIds = filteredGoals.map((goal) => goal.id);
+
+      const rangeStart = new Date(
+        `${toDateInput(range.start)}T00:00:00`,
+      );
+      const rangeEndExclusive = addDays(
+        new Date(`${toDateInput(range.end)}T00:00:00`),
+        1,
+      );
+
+      const [goalPeriodsResult, timeEntriesResult] = await Promise.all([
+        goalIds.length === 0
+          ? Promise.resolve({ data: [] as GoalPeriodRow[], error: null })
+          : supabase
+              .from("goal_periods")
+              .select("goal_id, status, period_start")
+              .in("goal_id", goalIds)
+              .gte("period_start", toDateInput(range.start))
+              .lte("period_start", toDateInput(range.end)),
+        supabase
+          .from("time_entries")
+          .select("id, started_at, ended_at, context_id, time_entry_tags(tag_id)")
+          .lt("started_at", rangeEndExclusive.toISOString())
+          .or(`ended_at.is.null,ended_at.gte.${rangeStart.toISOString()}`),
+      ]);
+
+      if (goalPeriodsResult.error) {
+        setError(goalPeriodsResult.error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (timeEntriesResult.error) {
+        setError(timeEntriesResult.error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      const goalPeriods = (goalPeriodsResult.data ?? []) as GoalPeriodRow[];
+      const timeEntries = (timeEntriesResult.data ?? []) as TimeEntryRow[];
+
+      const statusByDate: Record<
+        string,
+        { success: number; fail: number; in_progress: number }
+      > = {};
+      dateLabels.forEach((label) => {
+        statusByDate[label] = { success: 0, fail: 0, in_progress: 0 };
+      });
+
+      goalPeriods.forEach((period) => {
+        if (!statusByDate[period.period_start]) return;
+        if (period.status === "success") {
+          statusByDate[period.period_start].success += 1;
+        }
+        if (period.status === "fail") {
+          statusByDate[period.period_start].fail += 1;
+        }
+        if (period.status === "in_progress") {
+          statusByDate[period.period_start].in_progress += 1;
+        }
+      });
+
+      const nextStatusSeries = {
+        success: dateLabels.map((label) => statusByDate[label]?.success ?? 0),
+        fail: dateLabels.map((label) => statusByDate[label]?.fail ?? 0),
+        in_progress: dateLabels.map(
+          (label) => statusByDate[label]?.in_progress ?? 0,
+        ),
+      };
+
+      const filteredEntries = timeEntries.filter((entry) => {
+        const contextOk =
+          selectedContextIds.length === 0 ||
+          selectedContextIds.includes(entry.context_id);
+        const entryTags = entry.time_entry_tags ?? [];
+        const tagsOk =
+          selectedTagIds.length === 0 ||
+          entryTags.some((tag) => selectedTagIds.includes(tag.tag_id));
+        return contextOk && tagsOk;
+      });
+
+      const dayRanges = dateLabels.map((label) => {
+        const start = new Date(`${label}T00:00:00`);
+        return { start, end: addDays(start, 1) };
+      });
+
+      const totalsByDay = dateLabels.map(() => 0);
+      const contextByDay = new Map<string, number[]>(
+        contexts.map((context) => [context.id, dateLabels.map(() => 0)]),
+      );
+
+      filteredEntries.forEach((entry) => {
+        const entryStart = new Date(entry.started_at);
+        const entryEnd = entry.ended_at
+          ? new Date(entry.ended_at)
+          : new Date();
+
+        dayRanges.forEach((rangeItem, index) => {
+          const overlapStart = entryStart > rangeItem.start ? entryStart : rangeItem.start;
+          const overlapEnd = entryEnd < rangeItem.end ? entryEnd : rangeItem.end;
+          if (overlapEnd <= overlapStart) return;
+          const minutes = (overlapEnd.getTime() - overlapStart.getTime()) / 60000;
+          totalsByDay[index] += minutes;
+          const contextValues = contextByDay.get(entry.context_id);
+          if (contextValues) {
+            contextValues[index] += minutes;
+          }
+        });
+      });
+
+      const roundedTotals = totalsByDay.map((value) => Math.round(value));
+
+      const nextContextSeries = Array.from(contextByDay.entries())
+        .map(([id, values]) => ({
+          id,
+          label: contexts.find((context) => context.id === id)?.name ?? id,
+          color: contextColorMap.get(id) ?? "#64748b",
+          values: values.map((value) => Math.round(value)),
+        }))
+        .filter((item) => item.values.some((value) => value > 0));
+
+      const nextContextTotals = nextContextSeries.map((item) => ({
+        id: item.id,
+        label: item.label,
+        color: item.color,
+        value: item.values.reduce((sum, value) => sum + value, 0),
+      }));
+
+      setStatusSeries(nextStatusSeries);
+      setTimeTotals(roundedTotals);
+      setContextSeries(nextContextSeries);
+      setContextTotals(nextContextTotals);
+      setIsLoading(false);
+    };
+
+    void loadStats();
+  }, [
+    contexts,
+    contextColorMap,
+    dateLabels,
+    range.end,
+    range.start,
+    selectedContextIds,
+    selectedTagIds,
+  ]);
+
+  const visibleContextSeries = contextSeries.filter((item) =>
+    chartContextIds.includes(item.id),
+  );
+
+  const totalsForVisibleContexts = timeTotals.map((_, index) =>
+    visibleContextSeries.reduce((sum, item) => sum + (item.values[index] ?? 0), 0),
+  );
+
+  const pieSlices = contextTotals
+    .filter((item) => chartContextIds.includes(item.id))
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      color: item.color,
+      value: item.value,
+      meta: formatMinutesAsHHMM(item.value),
+    }));
+
   return (
-    <section className="space-y-4">
-      <h1 className="text-2xl font-semibold">Stats</h1>
-      <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
-        <p className="text-sm text-slate-600">Stats screen placeholder.</p>
+    <section className="space-y-6">
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-600">
+            {[
+              { key: "week", label: "This week" },
+              { key: "month", label: "This month" },
+              { key: "custom", label: "Custom" },
+            ].map((item) => (
+              <button
+                key={item.key}
+                className={`rounded-full px-3 py-1.5 ${
+                  periodMode === item.key
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600"
+                }`}
+                type="button"
+                onClick={() => setPeriodMode(item.key as typeof periodMode)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {periodMode === "custom" ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+              <input
+                className="h-9 rounded-md border border-slate-200 px-3 text-sm"
+                type="date"
+                value={customStart}
+                onChange={(event) => setCustomStart(event.target.value)}
+              />
+              <span>to</span>
+              <input
+                className="h-9 rounded-md border border-slate-200 px-3 text-sm"
+                type="date"
+                value={customEnd}
+                onChange={(event) => setCustomEnd(event.target.value)}
+              />
+            </div>
+          ) : null}
+
+          <div className="relative">
+            <button
+              className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
+              type="button"
+              onClick={() => setIsContextOpen((prev) => !prev)}
+            >
+              {selectedContextIds.length > 0
+                ? `Contexts (${selectedContextIds.length})`
+                : "Contexts"}
+            </button>
+            {isContextOpen ? (
+              <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
+                {contexts.length === 0 ? (
+                  <p className="px-2 py-1 text-xs text-slate-500">No contexts</p>
+                ) : (
+                  contexts.map((context) => {
+                    const checked = selectedContextIds.includes(context.id);
+                    return (
+                      <label
+                        key={context.id}
+                        className="flex items-center gap-2 px-2 py-1 text-sm text-slate-700"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() =>
+                            setSelectedContextIds((prev) =>
+                              checked
+                                ? prev.filter((id) => id !== context.id)
+                                : [...prev, context.id],
+                            )
+                          }
+                        />
+                        {context.name}
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="relative">
+            <button
+              className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
+              type="button"
+              onClick={() => setIsTagsOpen((prev) => !prev)}
+            >
+              {selectedTagIds.length > 0
+                ? `Tags (${selectedTagIds.length})`
+                : "Tags"}
+            </button>
+            {isTagsOpen ? (
+              <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
+                {tags.length === 0 ? (
+                  <p className="px-2 py-1 text-xs text-slate-500">No tags</p>
+                ) : (
+                  tags.map((tag) => {
+                    const checked = selectedTagIds.includes(tag.id);
+                    return (
+                      <label
+                        key={tag.id}
+                        className="flex items-center gap-2 px-2 py-1 text-sm text-slate-700"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() =>
+                            setSelectedTagIds((prev) =>
+                              checked
+                                ? prev.filter((id) => id !== tag.id)
+                                : [...prev, tag.id],
+                            )
+                          }
+                        />
+                        {tag.name}
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+            ) : null}
+          </div>
+
+          <button
+            className="ml-auto h-9 rounded-md bg-slate-900 px-4 text-xs font-medium text-white hover:bg-slate-800"
+            type="button"
+            onClick={() => {
+              setSelectedContextIds([]);
+              setSelectedTagIds([]);
+              setChartContextIds([]);
+              setSelectedSegment(null);
+            }}
+          >
+            Reset
+          </button>
+        </div>
       </div>
+
+      {error ? (
+        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      {isLoading ? (
+        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
+          Loading stats…
+        </div>
+      ) : null}
+
+      {!isLoading ? (
+        <div className="space-y-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Goal status counts</h2>
+              <span className="text-xs text-slate-500">By period start</span>
+            </div>
+            <div className="mt-4">
+              <StatsLineChart
+                labels={shortLabels}
+                series={[
+                  {
+                    id: "success",
+                    label: "Success",
+                    color: STATUS_COLORS.success,
+                    values: statusSeries.success,
+                    meta: (
+                      <span className="text-slate-500">
+                        {statusSeries.success.reduce((sum, value) => sum + value, 0)}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: "in_progress",
+                    label: "In progress",
+                    color: STATUS_COLORS.in_progress,
+                    values: statusSeries.in_progress,
+                    meta: (
+                      <span className="text-slate-500">
+                        {statusSeries.in_progress.reduce(
+                          (sum, value) => sum + value,
+                          0,
+                        )}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: "fail",
+                    label: "Fail",
+                    color: STATUS_COLORS.fail,
+                    values: statusSeries.fail,
+                    meta: (
+                      <span className="text-slate-500">
+                        {statusSeries.fail.reduce((sum, value) => sum + value, 0)}
+                      </span>
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Tracked time</h2>
+              <span className="text-xs text-slate-500">Minutes per day</span>
+            </div>
+            <div className="mt-4">
+              <StatsLineChart
+                labels={shortLabels}
+                series={[
+                  {
+                    id: "time",
+                    label: "Total",
+                    color: "#2563eb",
+                    values: timeTotals,
+                    meta: (
+                      <span className="text-slate-500">
+                        {formatMinutesAsHHMM(
+                          timeTotals.reduce((sum, value) => sum + value, 0),
+                        )}
+                      </span>
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">Time by context</h2>
+                <p className="text-xs text-slate-500">
+                  Tap a context to remove it from the chart.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {visibleContextSeries.map((context) => (
+                  <button
+                    key={context.id}
+                    type="button"
+                    className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700"
+                    onClick={() =>
+                      setChartContextIds((prev) =>
+                        prev.filter((id) => id !== context.id),
+                      )
+                    }
+                  >
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: context.color }}
+                    />
+                    {context.label}
+                  </button>
+                ))}
+                {visibleContextSeries.length === 0 ? (
+                  <span className="text-xs text-slate-500">
+                    No contexts to show.
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <StatsStackedBarChart
+                labels={shortLabels}
+                series={visibleContextSeries}
+                totals={totalsForVisibleContexts}
+                formatTotal={(value) => formatMinutesAsHHMM(value)}
+                onSegmentClick={(contextId, value) =>
+                  setSelectedSegment({ contextId, minutes: value })
+                }
+              />
+            </div>
+
+            {selectedSegment ? (
+              <div className="mt-4 text-xs text-slate-600">
+                Selected: {contexts.find((ctx) => ctx.id === selectedSegment.contextId)?.name ?? selectedSegment.contextId} · {formatMinutesAsHHMM(selectedSegment.minutes)}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Context share</h2>
+              <span className="text-xs text-slate-500">Total time</span>
+            </div>
+            <div className="mt-4">
+              {pieSlices.length === 0 ? (
+                <p className="text-sm text-slate-500">No time logged yet.</p>
+              ) : (
+                <StatsPieChart slices={pieSlices} />
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

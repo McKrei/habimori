@@ -11,8 +11,8 @@ Habimori is a minimal goal + time tracking app. Users create goals (time, counte
 
 ## Current behavior
 - Google OAuth via Supabase.
-- Main screen shows active goals and quick logging.
+- Main screen shows active goals, sorted by status, with quick logging.
 - Goals can be created with context + optional tags.
 - Goal details show recent events and allow manual entries.
 - Global timer starts a time entry without a goal.
-- Stats screen is present but currently a placeholder.
+- Stats screen includes period/context/tag filters and charts for goals/time.
