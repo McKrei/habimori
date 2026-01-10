@@ -10,4 +10,4 @@
 
 ## In progress / missing
 - Stats screen is a placeholder.
-- No automated tests or CI configured yet.
+- CI pipeline is not configured yet.
