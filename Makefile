@@ -1,4 +1,4 @@
-.PHONY: install dev run lint typecheck build start test test-unit test-integration test-e2e test-all ci docker-build docker-run app clean
+.PHONY: install dev run lint typecheck build start test test-unit test-integration test-e2e test-all ci docker-build docker-run docker-stop docker-reload app clean
 
 install:
 	npm install
@@ -45,6 +45,8 @@ docker-run:
 docker-stop:
 	docker stop habimori-app 2>/dev/null || true
 	docker rm habimori-app 2>/dev/null || true
+
+docker-reload: docker-stop docker-build docker-run
 
 app: docker-build docker-run
 
