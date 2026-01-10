@@ -1,4 +1,4 @@
-.PHONY: install dev run lint typecheck build start test test-e2e ci docker-build docker-run app clean
+.PHONY: install dev run lint typecheck build start test test-unit test-integration test-e2e test-all ci docker-build docker-run app clean
 
 install:
 	npm install
@@ -23,10 +23,18 @@ start:
 test:
 	npm test
 
+test-unit:
+	npx vitest run --exclude tests/integration
+
+test-integration:
+	npx vitest run tests/integration
+
 test-e2e:
 	npm run test:e2e
 
 ci: lint typecheck test
+
+test-all: lint typecheck build test test-e2e
 
 docker-build:
 	docker build -t habimori-app .
