@@ -926,7 +926,7 @@ export default function Home() {
               <div className="grid grid-cols-[1fr_1fr] items-center gap-3">
                 <div className="min-w-0">
                   <Link
-                    className="block max-h-[3.2rem] overflow-hidden break-words text-[clamp(1.15rem,2.4vw,1.6rem)] font-semibold leading-snug text-slate-900 hover:text-slate-700"
+                    className="block max-h-[3.2rem] overflow-hidden break-words text-[clamp(1.15rem,4vw,1.4rem)] font-semibold leading-snug text-slate-900 hover:text-slate-700 md:text-[clamp(1.1rem,1.6vw,1.35rem)]"
                     href={`/goals/${goal.id}`}
                   >
                     {goal.title}
