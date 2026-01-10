@@ -36,7 +36,7 @@ export default function HomeFiltersBar({
         <label className="text-xs font-semibold text-slate-500">
           <span className="sr-only">Context</span>
           <select
-            className="h-9 w-44 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
+            className="h-9 w-38 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
             value={selectedContext}
             onChange={(event) => onContextChange(event.target.value)}
           >
@@ -52,7 +52,7 @@ export default function HomeFiltersBar({
         <label className="text-xs font-semibold text-slate-500">
           <span className="sr-only">Status</span>
           <select
-            className="h-9 w-44 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
+            className="h-9 w-38 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
             value={selectedStatus}
             onChange={(event) => onStatusChange(event.target.value)}
           >
@@ -67,7 +67,7 @@ export default function HomeFiltersBar({
 
         <div className="relative">
           <button
-            className="h-9 w-42 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
+            className="h-9 w-38 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
             type="button"
             onClick={onTagsToggle}
           >
@@ -102,7 +102,7 @@ export default function HomeFiltersBar({
         </div>
 
         <button
-          className="ml-auto h-9 rounded-md bg-slate-900 px-4 text-xs font-medium text-white hover:bg-slate-800"
+          className="w-38 h-9 rounded-md bg-slate-900 px-4 text-xs font-medium text-white hover:bg-slate-800"
           type="button"
           onClick={onReset}
         >

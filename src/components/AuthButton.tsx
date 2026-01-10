@@ -90,19 +90,32 @@ export default function AuthButton() {
     setIsWorking(false);
   };
 
+  const buttonLabel = user ? "Выйти" : "Войти через Google";
+
   return (
     <button
-      className="rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
       type="button"
       onClick={user ? handleLogout : handleLogin}
       disabled={isWorking}
       aria-busy={isWorking}
+      aria-label={buttonLabel}
+      title={buttonLabel}
     >
-      {user
-        ? getDisplayName(user)
-          ? `Logout (${getDisplayName(user)})`
-          : "Logout"
-        : "Login with Google"}
+      <svg
+        className="h-4 w-4"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <path d="M16 17l5-5-5-5" />
+        <path d="M21 12H9" />
+      </svg>
     </button>
   );
 }

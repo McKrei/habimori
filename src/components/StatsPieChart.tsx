@@ -66,7 +66,7 @@ export default function StatsPieChart({
   );
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center">
+    <div className="flex flex-col items-center gap-4">
       <svg
         width={size}
         height={size}

@@ -55,9 +55,24 @@ export default function HomeWeekCalendar({
     [onChange, selectedDate],
   );
 
+  const handlePointerStart = useCallback((clientX: number) => {
+    swipeStartRef.current = clientX;
+  }, []);
+
+  const handlePointerEnd = useCallback(
+    (clientX: number) => {
+      if (swipeStartRef.current == null) return;
+      const delta = clientX - swipeStartRef.current;
+      swipeStartRef.current = null;
+      if (Math.abs(delta) < 40) return;
+      handleStep(delta < 0 ? 1 : -1);
+    },
+    [handleStep],
+  );
+
   return (
     <div
-      className="select-none rounded-lg border border-slate-200 bg-white px-3 py-2"
+      className="select-none rounded-lg border border-slate-200 bg-white px-3 py-2 touch-pan-y"
       onWheel={(event) => {
         const now = Date.now();
         if (now - wheelLockRef.current < 120) return;
@@ -71,17 +86,23 @@ export default function HomeWeekCalendar({
         handleStep(delta);
       }}
       onPointerDown={(event) => {
-        swipeStartRef.current = event.clientX;
+        handlePointerStart(event.clientX);
       }}
       onPointerUp={(event) => {
-        if (swipeStartRef.current == null) return;
-        const delta = event.clientX - swipeStartRef.current;
-        swipeStartRef.current = null;
-        if (Math.abs(delta) < 40) return;
-        handleStep(delta < 0 ? 1 : -1);
+        handlePointerEnd(event.clientX);
       }}
       onPointerCancel={() => {
         swipeStartRef.current = null;
+      }}
+      onTouchStart={(event) => {
+        const touch = event.touches[0];
+        if (!touch) return;
+        handlePointerStart(touch.clientX);
+      }}
+      onTouchEnd={(event) => {
+        const touch = event.changedTouches[0];
+        if (!touch) return;
+        handlePointerEnd(touch.clientX);
       }}
     >
       <div className="flex items-center justify-between gap-2">
@@ -109,11 +130,6 @@ export default function HomeWeekCalendar({
               <span className="text-lg font-semibold">
                 {day.date.getDate()}
               </span>
-              {isToday ? (
-                <span className="text-[10px] font-semibold">Сегодня</span>
-              ) : (
-                <span className="text-[10px] text-transparent">.</span>
-              )}
               <DayStatusDots statuses={statusMap[day.key]} />
             </button>
           );

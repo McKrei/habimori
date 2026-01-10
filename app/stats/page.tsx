@@ -5,7 +5,6 @@ import { supabase } from "@/lib/supabase/client";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
 import { formatMinutesAsHHMM } from "@/src/components/formatters";
-import StatsLineChart from "@/src/components/StatsLineChart";
 import StatsStackedBarChart from "@/src/components/StatsStackedBarChart";
 import StatsPieChart from "@/src/components/StatsPieChart";
 
@@ -16,14 +15,16 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const CONTEXT_COLORS = [
+  "#0ea5e9",
+  "#22c55e",
+  "#f97316",
+  "#a855f7",
+  "#14b8a6",
+  "#eab308",
+  "#f43f5e",
+  "#6366f1",
+  "#84cc16",
   "#0f766e",
-  "#1d4ed8",
-  "#a21caf",
-  "#ea580c",
-  "#16a34a",
-  "#0f172a",
-  "#0284c7",
-  "#dc2626",
 ];
 
 type GoalRow = {
@@ -92,19 +93,46 @@ function listDates(start: Date, end: Date) {
   return dates;
 }
 
-function toShortLabel(dateString: string) {
-  const [, month, day] = dateString.split("-");
-  return `${month}/${day}`;
+function formatDayLabel(date: Date) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}.${month}`;
+}
+
+function formatRangeLabel(start: Date, end: Date) {
+  const startLabel = formatDayLabel(start);
+  const endLabel = formatDayLabel(end);
+  if (startLabel === endLabel) {
+    return startLabel;
+  }
+  return `${startLabel}-${endLabel}`;
+}
+
+function formatMinutesWithDays(totalMinutes: number) {
+  const minutes = Math.max(0, Math.round(totalMinutes));
+  const days = Math.floor(minutes / (24 * 60));
+  const hours = Math.floor((minutes % (24 * 60)) / 60);
+  const mins = minutes % 60;
+  const hh = String(hours).padStart(2, "0");
+  const mm = String(mins).padStart(2, "0");
+  if (days > 0) {
+    return `${String(days).padStart(2, "0")}:${hh}:${mm}`;
+  }
+  return `${hh}:${mm}`;
 }
 
 export default function StatsPage() {
   const { contexts } = useContexts();
   const { tags } = useTags();
   const [periodMode, setPeriodMode] = useState<"week" | "month" | "custom">(
-    "week",
+    "month",
   );
-  const [customStart, setCustomStart] = useState(() => toDateInput(new Date()));
-  const [customEnd, setCustomEnd] = useState(() => toDateInput(new Date()));
+  const [customStart, setCustomStart] = useState(() =>
+    toDateInput(startOfMonth(new Date())),
+  );
+  const [customEnd, setCustomEnd] = useState(() =>
+    toDateInput(endOfMonth(new Date())),
+  );
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isContextOpen, setIsContextOpen] = useState(false);
@@ -120,6 +148,8 @@ export default function StatsPage() {
     in_progress: number[];
   }>({ success: [], fail: [], in_progress: [] });
   const [timeTotals, setTimeTotals] = useState<number[]>([]);
+  const [timeLabels, setTimeLabels] = useState<string[]>([]);
+  const [totalTrackedMinutes, setTotalTrackedMinutes] = useState(0);
   const [contextSeries, setContextSeries] = useState<
     { id: string; label: string; color: string; values: number[] }[]
   >([]);
@@ -152,10 +182,6 @@ export default function StatsPage() {
   }, [customEnd, customStart, periodMode]);
 
   const dateLabels = useMemo(() => listDates(range.start, range.end), [range]);
-  const shortLabels = useMemo(
-    () => dateLabels.map((label) => toShortLabel(label)),
-    [dateLabels],
-  );
 
   const contextColorMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -320,14 +346,87 @@ export default function StatsPage() {
         });
       });
 
-      const roundedTotals = totalsByDay.map((value) => Math.round(value));
+      const totalMinutes = totalsByDay.reduce((sum, value) => sum + value, 0);
+      const contextIds = contexts.map((context) => context.id);
+      const dayItems = dateLabels.map((label, index) => {
+        const date = new Date(`${label}T00:00:00`);
+        return {
+          date,
+          total: totalsByDay[index],
+          contextValues: contextIds.map(
+            (id) => contextByDay.get(id)?.[index] ?? 0,
+          ),
+        };
+      });
 
-      const nextContextSeries = Array.from(contextByDay.entries())
-        .map(([id, values]) => ({
+      const nonZeroItems = dayItems.filter((item) => item.total > 0);
+
+      const groupItems = (
+        items: typeof nonZeroItems,
+        mode: "day" | "week" | "month",
+      ) => {
+        const groups: {
+          key: string;
+          start: Date;
+          end: Date;
+          total: number;
+          contextValues: number[];
+        }[] = [];
+
+        items.forEach((item) => {
+          let key = toDateInput(item.date);
+          if (mode === "week") {
+            key = toDateInput(startOfWeek(item.date));
+          }
+          if (mode === "month") {
+            key = `${item.date.getFullYear()}-${item.date.getMonth() + 1}`;
+          }
+
+          const last = groups[groups.length - 1];
+          if (!last || last.key !== key) {
+            groups.push({
+              key,
+              start: item.date,
+              end: item.date,
+              total: 0,
+              contextValues: contextIds.map(() => 0),
+            });
+          }
+          const current = groups[groups.length - 1];
+          current.end = item.date;
+          current.total += item.total;
+          current.contextValues = current.contextValues.map(
+            (value, idx) => value + (item.contextValues[idx] ?? 0),
+          );
+        });
+
+        return groups;
+      };
+
+      let grouped = groupItems(nonZeroItems, "day");
+      if (grouped.length > 10) {
+        grouped = groupItems(nonZeroItems, "week");
+      }
+      if (grouped.length > 10) {
+        grouped = groupItems(nonZeroItems, "month");
+      }
+      if (grouped.length > 10) {
+        grouped = grouped.slice(0, 10);
+      }
+
+      const nextTimeLabels = grouped.map((group) =>
+        formatRangeLabel(group.start, group.end),
+      );
+      const roundedTotals = grouped.map((group) => Math.round(group.total));
+
+      const nextContextSeries = contextIds
+        .map((id, index) => ({
           id,
           label: contexts.find((context) => context.id === id)?.name ?? id,
           color: contextColorMap.get(id) ?? "#64748b",
-          values: values.map((value) => Math.round(value)),
+          values: grouped.map((group) =>
+            Math.round(group.contextValues[index] ?? 0),
+          ),
         }))
         .filter((item) => item.values.some((value) => value > 0));
 
@@ -340,8 +439,10 @@ export default function StatsPage() {
 
       setStatusSeries(nextStatusSeries);
       setTimeTotals(roundedTotals);
+      setTimeLabels(nextTimeLabels);
       setContextSeries(nextContextSeries);
       setContextTotals(nextContextTotals);
+      setTotalTrackedMinutes(totalMinutes);
       setIsLoading(false);
     };
 
@@ -366,7 +467,6 @@ export default function StatsPage() {
       0,
     ),
   );
-
   const pieSlices = contextTotals
     .filter((item) => chartContextIds.includes(item.id))
     .map((item) => ({
@@ -383,9 +483,9 @@ export default function StatsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-600">
             {[
-              { key: "week", label: "This week" },
-              { key: "month", label: "This month" },
-              { key: "custom", label: "Custom" },
+              { key: "week", label: "Неделя (эта)" },
+              { key: "month", label: "Месяц (этот)" },
+              { key: "custom", label: "Произвольный" },
             ].map((item) => (
               <button
                 key={item.key}
@@ -404,13 +504,14 @@ export default function StatsPage() {
 
           {periodMode === "custom" ? (
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+              <span>от</span>
               <input
                 className="h-9 rounded-md border border-slate-200 px-3 text-sm"
                 type="date"
                 value={customStart}
                 onChange={(event) => setCustomStart(event.target.value)}
               />
-              <span>to</span>
+              <span>до</span>
               <input
                 className="h-9 rounded-md border border-slate-200 px-3 text-sm"
                 type="date"
@@ -427,14 +528,14 @@ export default function StatsPage() {
               onClick={() => setIsContextOpen((prev) => !prev)}
             >
               {selectedContextIds.length > 0
-                ? `Contexts (${selectedContextIds.length})`
-                : "Contexts"}
+                ? `Контексты (${selectedContextIds.length})`
+                : "Контексты"}
             </button>
             {isContextOpen ? (
               <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
                 {contexts.length === 0 ? (
                   <p className="px-2 py-1 text-xs text-slate-500">
-                    No contexts
+                    Нет контекстов
                   </p>
                 ) : (
                   contexts.map((context) => {
@@ -471,13 +572,13 @@ export default function StatsPage() {
               onClick={() => setIsTagsOpen((prev) => !prev)}
             >
               {selectedTagIds.length > 0
-                ? `Tags (${selectedTagIds.length})`
-                : "Tags"}
+                ? `Теги (${selectedTagIds.length})`
+                : "Теги"}
             </button>
             {isTagsOpen ? (
               <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
                 {tags.length === 0 ? (
-                  <p className="px-2 py-1 text-xs text-slate-500">No tags</p>
+                  <p className="px-2 py-1 text-xs text-slate-500">Нет тегов</p>
                 ) : (
                   tags.map((tag) => {
                     const checked = selectedTagIds.includes(tag.id);
@@ -516,7 +617,7 @@ export default function StatsPage() {
               setSelectedSegment(null);
             }}
           >
-            Reset
+            Сбросить
           </button>
         </div>
       </div>
@@ -529,102 +630,59 @@ export default function StatsPage() {
 
       {isLoading ? (
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          Loading stats…
+          Загрузка статистики…
         </div>
       ) : null}
 
       {!isLoading ? (
         <div className="space-y-6">
           <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Goal status counts</h2>
-              <span className="text-xs text-slate-500">By period start</span>
-            </div>
-            <div className="mt-4">
-              <StatsLineChart
-                labels={shortLabels}
-                series={[
-                  {
-                    id: "success",
-                    label: "Success",
-                    color: STATUS_COLORS.success,
-                    values: statusSeries.success,
-                    meta: (
-                      <span className="text-slate-500">
-                        {statusSeries.success.reduce(
-                          (sum, value) => sum + value,
-                          0,
-                        )}
-                      </span>
-                    ),
-                  },
-                  {
-                    id: "in_progress",
-                    label: "In progress",
-                    color: STATUS_COLORS.in_progress,
-                    values: statusSeries.in_progress,
-                    meta: (
-                      <span className="text-slate-500">
-                        {statusSeries.in_progress.reduce(
-                          (sum, value) => sum + value,
-                          0,
-                        )}
-                      </span>
-                    ),
-                  },
-                  {
-                    id: "fail",
-                    label: "Fail",
-                    color: STATUS_COLORS.fail,
-                    values: statusSeries.fail,
-                    meta: (
-                      <span className="text-slate-500">
-                        {statusSeries.fail.reduce(
-                          (sum, value) => sum + value,
-                          0,
-                        )}
-                      </span>
-                    ),
-                  },
-                ]}
-              />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Tracked time</h2>
-              <span className="text-xs text-slate-500">Minutes per day</span>
-            </div>
-            <div className="mt-4">
-              <StatsLineChart
-                labels={shortLabels}
-                series={[
-                  {
-                    id: "time",
-                    label: "Total",
-                    color: "#2563eb",
-                    values: timeTotals,
-                    meta: (
-                      <span className="text-slate-500">
-                        {formatMinutesAsHHMM(
-                          timeTotals.reduce((sum, value) => sum + value, 0),
-                        )}
-                      </span>
-                    ),
-                  },
-                ]}
-              />
+            <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-slate-700">
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: STATUS_COLORS.success }}
+                />
+                <span className="text-lg font-semibold text-slate-900">
+                  {statusSeries.success.reduce((sum, value) => sum + value, 0)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: STATUS_COLORS.in_progress }}
+                />
+                <span className="text-lg font-semibold text-slate-900">
+                  {statusSeries.in_progress.reduce(
+                    (sum, value) => sum + value,
+                    0,
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: STATUS_COLORS.fail }}
+                />
+                <span className="text-lg font-semibold text-slate-900">
+                  {statusSeries.fail.reduce((sum, value) => sum + value, 0)}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs uppercase tracking-wide text-slate-500">
+                  Время
+                </span>
+                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-900">
+                  {formatMinutesWithDays(totalTrackedMinutes)}
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">Time by context</h2>
-                <p className="text-xs text-slate-500">
-                  Tap a context to remove it from the chart.
-                </p>
+                <h2 className="text-lg font-semibold">Время по контекстам</h2>
               </div>
               <div className="flex flex-wrap gap-2">
                 {visibleContextSeries.map((context) => (
@@ -647,7 +705,7 @@ export default function StatsPage() {
                 ))}
                 {visibleContextSeries.length === 0 ? (
                   <span className="text-xs text-slate-500">
-                    No contexts to show.
+                    Нет контекстов для отображения.
                   </span>
                 ) : null}
               </div>
@@ -655,7 +713,7 @@ export default function StatsPage() {
 
             <div className="mt-6">
               <StatsStackedBarChart
-                labels={shortLabels}
+                labels={timeLabels}
                 series={visibleContextSeries}
                 totals={totalsForVisibleContexts}
                 formatTotal={(value) => formatMinutesAsHHMM(value)}
@@ -667,7 +725,7 @@ export default function StatsPage() {
 
             {selectedSegment ? (
               <div className="mt-4 text-xs text-slate-600">
-                Selected:{" "}
+                Выбрано:{" "}
                 {contexts.find((ctx) => ctx.id === selectedSegment.contextId)
                   ?.name ?? selectedSegment.contextId}{" "}
                 · {formatMinutesAsHHMM(selectedSegment.minutes)}
@@ -676,13 +734,14 @@ export default function StatsPage() {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Context share</h2>
-              <span className="text-xs text-slate-500">Total time</span>
+            <div className="flex items-center justify-center">
+              <h2 className="text-lg font-semibold">Доля контекстов</h2>
             </div>
             <div className="mt-4">
               {pieSlices.length === 0 ? (
-                <p className="text-sm text-slate-500">No time logged yet.</p>
+                <p className="text-sm text-slate-500">
+                  Пока нет данных по времени.
+                </p>
               ) : (
                 <StatsPieChart slices={pieSlices} />
               )}

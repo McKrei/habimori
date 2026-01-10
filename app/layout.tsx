@@ -53,7 +53,32 @@ export default function RootLayout({
                       Habimori
                     </span>
                   </Link>
-                  <AuthButton />
+                  <div className="flex items-center gap-2">
+                    <Link
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                      href="/stats"
+                      aria-label="Статистика"
+                      title="Статистика"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M3 3v18h18" />
+                        <path d="M7 15v3" />
+                        <path d="M11 11v7" />
+                        <path d="M15 7v11" />
+                        <path d="M19 9v9" />
+                      </svg>
+                    </Link>
+                    <AuthButton />
+                  </div>
                 </div>
               </header>
 
