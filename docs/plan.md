@@ -7,7 +7,8 @@
 - Goal details: progress summary, recent events, manual event entry, tag editing.
 - Global timer without goal (context required, tags optional).
 - Goal periods recalculation for status display.
+- Test suite: Vitest (unit/integration) + Playwright (e2e).
+- CI: GitHub Actions workflow on master.
 
 ## In progress / missing
 - Stats screen is a placeholder.
-- CI pipeline is not configured yet.
