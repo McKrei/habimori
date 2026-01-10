@@ -1,49 +1,51 @@
 Проект: веб-приложение (Next.js + TypeScript) с бэкендом на Supabase.
 
-##  Где документация (сначала читать это)
-- Документация (оглавление): README.md
-- Схема БД (DBML для dbdiagram.io): ./docs/schema.dbml
-- UserFlow (пользовательские потоки): ./docs/user-flows.md
-- Доменные правила (позитив/негатив, периоды, успех/провал): ./docs/domain-rules.md
-- Модель данных (описание сущностей): ./docs/data-model.md
-- Разработка (как запускать/проверять): ./docs/dev.md
-- План разработки проекта от текщих задач к горизонту который видим: ./docs/plan.md
-- Идеи на будущее (не MVP): ./docs/roadmap.md
+## Документация (входная точка)
+- README: `README.md`
+- Обзор продукта: `docs/overview.md`
+- Экраны/UI: `docs/screens.md`
+- Доменные правила: `docs/domain-rules.md`
+- Модель данных: `docs/data-model.md`
+- Разработка и проверки: `docs/dev.md`
+- Текущее состояние/статус: `docs/plan.md`
 
-## Технологии проекта
+## Технологии
 - Next.js (App Router) + TypeScript
 - Supabase (auth + database)
-- UI: Tailwind CSS (Cascading Style Sheets — каскадные таблицы стилей через utility-классы)
--  Google autntification
+- UI: Tailwind CSS
+- Google OAuth
 
+## Структура кода (ключевые места)
+- Главная: `app/page.tsx`
+- Создание цели: `app/goals/new/page.tsx`
+- Детали цели: `app/goals/[id]/page.tsx`
+- Статистика: `app/stats/page.tsx`
+- Глобальный таймер: `src/components/GlobalTimerBar.tsx`
+- Активный таймер (контекст): `src/components/ActiveTimerProvider.tsx`
+- Логика периодов/статусов: `src/components/goalPeriods.ts`
+- Supabase client: `lib/supabase/client.ts`
 
-UI-правила:
-- Стили пишем через Tailwind-классы, без раздувания inline-style.
-- Повторяемые куски интерфейса выносим в `src/components/`.
+## UI правила
+- Стили только через Tailwind классы.
+- Повторяемые элементы выносить в `src/components/`.
 
-## Проверки (обязательно прогонять после изменений)
+## Проверки (после изменений)
 Всегда:
 - Установка: `npm install`
-- Dev: `npm run dev`
-- Lint (линтер): `npm run lint`
+- Dev: `npm run dev` или `make dev`
+- Lint: `npm run lint`
 - Build: `npm run build`
 
 Проверка типов:
-- Добавь скрипт `typecheck` и используй: `npm run typecheck`
+- `npm run typecheck`
 
 Тесты:
-- Если тесты подключены, то:
-  - Unit (модульные): `npm test`
-  - E2E (end-to-end — сквозные): `npm run test:e2e`
-- Если тестов ещё нет в проекте — при первом добавлении используем:
-  - Vitest + React Testing Library для unit/компонентных
-  - Playwright для e2e
-  и фиксируем команды в package.json.
-
-
-Если меняешь поведение/логику сущностей — обнови документы
+- Unit/Integration: `npm test`
+- E2E: `npm run test:e2e`
 
 ## Правила изменений
-- Делать минимальные, локальные изменения.
-- Не добавлять новые зависимости без необходимости.
-- Не трогать ключи/секреты/приватные токены.
+- Минимальные, локальные изменения.
+- Не добавлять зависимости без необходимости.
+- Не трогать ключи/секреты.
+- Если меняешь поведение/логику — обнови документацию.
+- После каждой группы изменений проверяй UI через MCP (Playwright).

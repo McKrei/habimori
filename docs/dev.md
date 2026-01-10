@@ -1,30 +1,26 @@
-## Разработка
+# Development
 
-### Требования
-
+## Requirements
 - Node.js 20+
 - npm
 
-### Переменные окружения
-
-Создать `.env.local`:
+## Environment
+Create `.env.local`:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (optional override)
 
-### Команды
+## Commands
+- Install: `npm install` or `make install`
+- Dev server: `npm run dev` or `make dev`
+- Lint: `npm run lint` or `make lint`
+- Typecheck: `npm run typecheck` or `make typecheck`
+- Build: `npm run build` or `make build`
 
-- Установка: `npm install`
-- Dev: `npm run dev` или `make run`
-- Lint: `npm run lint`
-- Typecheck: `npm run typecheck`
-- Build: `npm run build`
+## Docker
+- Build + run: `make app`
 
-### Docker
-
-- Сборка и запуск: `make app`
-
-### Тесты
-
-- Unit: `npm test` (если подключены)
-- E2E: `npm run test:e2e` (если подключены)
+## Tests
+- Unit/Integration: `npm test` or `make test`
+- E2E: `npm run test:e2e` or `make test-e2e`
