@@ -1,52 +1,52 @@
 # Habimori
 
-Minimal goal + time tracking app built with Next.js and Supabase.
+Минимальное приложение для целей и учета времени на базе Next.js и Supabase.
 
-## Stack
+## Стек
 
 - Next.js (App Router) + TypeScript
 - Supabase (Auth + Postgres)
 - Tailwind CSS
 - Google OAuth
 
-## Documentation
+## Документация
 
-- Project overview: `docs/overview.md`
-- Screens and UI: `docs/screens.md`
-- Domain rules: `docs/domain-rules.md`
-- Data model: `docs/data-model.md`
-- Development workflow: `docs/dev.md`
-- Current scope/status: `docs/plan.md`
+- Обзор продукта: `docs/overview.md`
+- Экраны/UI: `docs/screens.md`
+- Доменные правила: `docs/domain-rules.md`
+- Модель данных: `docs/data-model.md`
+- Разработка и проверки: `docs/dev.md`
+- Текущее состояние/статус: `docs/plan.md`
 
-## Requirements
+## Требования
 
 - Node.js 20+
 - npm
 
-## Environment
+## Переменные окружения
 
-Create `.env.local` with:
+Создайте `.env.local`:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (optional override)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (опционально)
 
-## Run
+## Запуск
 
 ```bash
 npm install
 npm run dev
 ```
 
-or
+или
 
 ```bash
 make dev
 ```
 
-Open: `http://localhost:3000`
+Адрес: `http://localhost:3000`
 
-## Checks
+## Проверки
 
 ```bash
 npm run lint

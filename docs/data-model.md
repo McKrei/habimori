@@ -1,13 +1,13 @@
-# Data model (current)
+# Модель данных (текущая)
 
-Based on `supabase/migrations/*`.
+Основана на `supabase/migrations/*`.
 
-## Common
-- All business tables include `user_id` and are protected by RLS.
-- Primary keys are UUID.
-- Context/tag names are unique per user (case-insensitive).
+## Общее
+- Все бизнес-таблицы содержат `user_id` и защищены RLS.
+- Primary key — UUID.
+- Имена context/tag уникальны для пользователя (индекс по `lower(name)`).
 
-## Core tables
+## Основные таблицы
 
 ### users
 - id (PK, auth.users FK, cascade)
@@ -16,13 +16,13 @@ Based on `supabase/migrations/*`.
 ### contexts
 - id (PK)
 - user_id (FK users, cascade)
-- name (unique per user, lowercased index)
+- name (unique per user, lower(name))
 - created_at
 
 ### tags
 - id (PK)
 - user_id (FK users, cascade)
-- name (unique per user, lowercased index)
+- name (unique per user, lower(name))
 - created_at
 
 ### goals
@@ -35,17 +35,18 @@ Based on `supabase/migrations/*`.
 - target_op: gte | lte
 - start_date, end_date (start <= end)
 - context_id (FK contexts, restrict)
-- is_active, is_archived
+- is_active (default true)
+- is_archived (default false)
 - created_at
 
 ### time_entries
 - id (PK)
 - user_id (FK users, cascade)
-- started_at, ended_at (ended_at >= started_at or null)
+- started_at, ended_at (ended_at >= started_at или null)
 - context_id (FK contexts, restrict)
 - goal_id (FK goals, set null)
 - created_at
-- unique index: one active entry per user (ended_at is null)
+- уникальный индекс: один активный entry на пользователя (ended_at = null)
 
 ### counter_events
 - id (PK)
@@ -72,11 +73,12 @@ Based on `supabase/migrations/*`.
 - actual_value
 - status: success | fail | in_progress | archived
 - calculated_at
+- уникальный индекс: (goal_id, period_start, period_end)
 
-## Tag relations
+## Связи тегов
 - goal_tags (goal_id, tag_id)
 - time_entry_tags (time_entry_id, tag_id)
 - counter_event_tags (counter_event_id, tag_id)
 - check_event_tags (check_event_id, tag_id)
 
-All relation tables are protected by RLS via ownership of parent rows.
+Все связующие таблицы защищены RLS через владение родительскими строками.
