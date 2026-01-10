@@ -11,20 +11,20 @@
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (опционально; используется при наличии)
+
+> В Supabase должен быть включен Google OAuth provider.
 
 ### Команды
 
-- Установка: `npm install`
-- Dev: `npm run dev` или `make run`
-- Lint: `npm run lint`
-- Typecheck: `npm run typecheck`
-- Build: `npm run build`
+- Установка: `npm install` или `make install`
+- Dev: `npm run dev` или `make dev`
+- Lint: `npm run lint` или `make lint`
+- Typecheck: `npm run typecheck` или `make typecheck`
+- Unit tests: `npm run test` или `make test`
+- E2E tests: `npm run test:e2e` или `make test-e2e`
+- Build: `npm run build` или `make build`
 
 ### Docker
 
 - Сборка и запуск: `make app`
-
-### Тесты
-
-- Unit: `npm test` (если подключены)
-- E2E: `npm run test:e2e` (если подключены)
