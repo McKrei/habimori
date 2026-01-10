@@ -34,6 +34,9 @@ docker-build:
 docker-run:
 	docker run --rm -p 3000:3000 --name habimori-app habimori-app
 
+docker-stop:
+	docker stop habimori-app
+	
 app: docker-build docker-run
 
 clean:
