@@ -17,6 +17,7 @@
 - Линт: `npm run lint` или `make lint`
 - Проверка типов: `npm run typecheck` или `make typecheck`
 - Сборка: `npm run build` или `make build`
+- Все проверки: `make test-all`
 
 ## Docker
 - Build + run: `make app`
@@ -37,3 +38,50 @@ Integration-тесты ожидают креденшлы Supabase в env:
 E2E тесты используют:
 
 - `E2E_BASE_URL` (production URL; локально `http://localhost:3000`)
+
+## i18n (многоязычность)
+
+Приложение использует React Context для переводов (без heavy i18n библиотек).
+
+### Структура
+```
+src/i18n/
+├── config.ts              # Конфигурация языков (ru, en)
+├── TranslationContext.tsx # Provider + useTranslation() hook
+├── index.ts               # Экспорты
+├── locales/
+│   ├── ru.json           # Русские переводы
+│   └── en.json           # Английские переводы
+└── original-texts.md     # Справочник всех ключей
+```
+
+### Использование в компоненте
+```tsx
+import { useTranslation } from "@/src/i18n/TranslationContext";
+
+export default function MyComponent() {
+  const { t } = useTranslation();
+  return <button>{t("common.save")}</button>;
+}
+```
+
+### Переменные в переводах
+```json
+"filters.selected": "Выбрано: {{count}}"
+```
+
+### Добавление нового перевода
+1. Добавить ключ в `src/i18n/locales/ru.json`
+2. Добавить перевод в `src/i18n/locales/en.json`
+3. Обновить `original-texts.md`
+
+### Переключатель языка
+`LanguageSwitcher` — кнопка в шапке, показывает текущий язык и переключает на другой.
+
+### ESLint
+Переменные с префиксом `_` игнорируются:
+```tsx
+export default function Component({ lng: _lng }: Props) {
+  // _lng не вызывает предупреждения @typescript-eslint/no-unused-vars
+}
+```

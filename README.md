@@ -8,6 +8,7 @@
 - Supabase (Auth + Postgres)
 - Tailwind CSS
 - Google OAuth
+- Многоязычность (i18n): русский + английский
 
 ## Документация
 
@@ -52,6 +53,7 @@ make dev
 npm run lint
 npm run typecheck
 npm run build
+npm test
 ```
 
 ## Docker
@@ -59,3 +61,28 @@ npm run build
 ```bash
 make app
 ```
+
+## i18n (многоязычность)
+
+Приложение поддерживает русский и английский языки.
+
+### Файлы переводов
+- Переводы: `src/i18n/locales/{ru,en}.json`
+- Ключи: `src/i18n/original-texts.md`
+
+### Добавление перевода
+1. Добавить ключ в `src/i18n/locales/ru.json`
+2. Добавить перевод в `src/i18n/locales/en.json`
+3. Использовать в компоненте: `const { t } = useTranslation(); t("key")`
+
+### Переменные в переводах
+```json
+"filters.selected": "Выбрано: {{count}}"
+```
+
+### Компоненты
+- `LanguageSwitcher` — переключатель языка (кнопка EN/RU в шапке)
+- Переводы читаются из контекста, параметр `lng` в компонентах не используется напрямую
+
+### ESLint
+Переменные с префиксом `_` (например, `lng: _lng`) игнорируются правилом `@typescript-eslint/no-unused-vars`.
