@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import { supabase } from "@/lib/supabase/client";
+import { getCurrentUserId } from "@/src/components/auth";
 import type { Language } from "./config";
 import {
   DEFAULT_LANGUAGE,
@@ -72,21 +73,30 @@ function interpolate(
 const TranslationContext = createContext<TranslationContextType | null>(null);
 
 async function updateUserLanguage(lang: Language) {
-  const { error } = await supabase
+  const { userId, error } = await getCurrentUserId();
+  if (error || !userId) {
+    return;
+  }
+  const { error: updateError } = await supabase
     .from("users")
     .update({ language: lang })
-    .select();
-  if (error) {
-    console.error("Failed to update user language:", error);
+    .eq("id", userId);
+  if (updateError) {
+    console.error("Failed to update user language:", updateError);
   }
 }
 
 async function fetchUserLanguage(): Promise<Language | null> {
-  const { data, error } = await supabase
+  const { userId, error } = await getCurrentUserId();
+  if (error || !userId) {
+    return null;
+  }
+  const { data, error: fetchError } = await supabase
     .from("users")
     .select("language")
+    .eq("id", userId)
     .single();
-  if (error || !data?.language) {
+  if (fetchError || !data?.language) {
     return null;
   }
   return data.language as Language;
@@ -136,7 +146,7 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
   if (!isInitialized) {
     return (
       <TranslationContext.Provider value={value}>
-            {children}
+        {children}
       </TranslationContext.Provider>
     );
   }
