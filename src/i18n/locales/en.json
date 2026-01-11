@@ -154,14 +154,14 @@
     "login": "Login",
     "logout": "Logout"
   },
-  "errors": {
-    "goalNotFound": "Goal not found.",
-    "failedToLoadEvents": "Failed to load events.",
-    "anotherTimerRunning": "Another timer is already running.",
-    "loginToStartTimer": "Please log in to start a timer.",
-    "failedToStartTimer": "Failed to start timer.",
-    "noActiveTimerToStop": "No active timer to stop.",
-    "failedToStopTimer": "Failed to stop timer.",
+   "errors": {
+     "goalNotFound": "Goal not found.",
+     "failedToLoadEvents": "Failed to load events.",
+     "timerAlreadyRunning": "Another timer is already running.",
+     "timerAlreadyStopped": "Timer was already stopped in another session. Page will reload.",
+     "failedToStartTimer": "Failed to start timer.",
+     "noActiveTimer": "No active timer to stop.",
+     "failedToStopTimer": "Failed to stop timer.",
     "contextNameRequired": "Context name is required.",
     "loginToCreateContext": "Please log in to create a context.",
     "failedToCreateContext": "Failed to create context.",

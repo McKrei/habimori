@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { getCurrentUserId } from "@/src/components/auth";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 import {
   getPeriodRangeForDate,
   recalcGoalPeriods,
@@ -21,6 +22,7 @@ type RawGoal = Omit<GoalSummary, "context" | "tags"> & {
 
 export function useHomeGoalData(selectedDate: Date) {
   const { activeEntry, startTimer, stopTimer } = useActiveTimer();
+  const { t } = useTranslation();
   const [goals, setGoals] = useState<GoalSummary[]>([]);
   const [checkStates, setCheckStates] = useState<CheckStateMap>({});
   const [statusMap, setStatusMap] = useState<StatusMap>({});
@@ -607,7 +609,11 @@ export function useHomeGoalData(selectedDate: Date) {
       if (timeMutationRef.current[goal.id] !== mutationId) return;
       if (startError) {
         setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
-        pushToast(startError, "error");
+        const errorMessage: string = typeof startError === 'string' ? startError : t(startError.key as any, startError.params);
+        pushToast(errorMessage, "error");
+        if (typeof startError === 'object' && startError.key === 'errors.timerAlreadyRunning') {
+          window.location.href = window.location.href;
+        }
       } else {
         scheduleRecalc(goal);
       }
@@ -642,7 +648,11 @@ export function useHomeGoalData(selectedDate: Date) {
       if (timeMutationRef.current[goal.id] !== mutationId) return;
       if (stopError) {
         setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
-        pushToast(stopError, "error");
+        const errorMessage: string = typeof stopError === 'string' ? stopError : t(stopError.key as any, stopError.params);
+        pushToast(errorMessage, "error");
+        if (typeof stopError === 'object' && stopError.key === 'errors.timerAlreadyStopped') {
+          window.location.href = window.location.href;
+        }
       } else {
         void refreshTimeSeconds(goal, timeOverrides[goal.id] ?? undefined);
         scheduleRecalc(goal);

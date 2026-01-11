@@ -27,8 +27,8 @@ type ActiveTimerContextValue = {
   startTimer: (payload: {
     contextId: string;
     goalId?: string | null;
-  }) => Promise<{ error?: string; entryId?: string }>;
-  stopTimer: (endedAt?: string) => Promise<{ error?: string }>;
+  }) => Promise<{ error?: string | { key: string; params?: any }; entryId?: string }>;
+  stopTimer: (endedAt?: string) => Promise<{ error?: string | { key: string; params?: any } }>;
 };
 
 const ActiveTimerContext = createContext<ActiveTimerContextValue | null>(null);
@@ -95,16 +95,18 @@ export function ActiveTimerProvider({
       contextId: string;
       goalId?: string | null;
     }) => {
-      if (activeEntry) {
-        return { error: "Another timer is already running." };
+      // Check if there's already an active timer in DB
+      const { entry: existingEntry } = await fetchActiveEntry();
+      if (existingEntry) {
+        return { error: { key: "errors.timerAlreadyRunning" } };
       }
 
       const { userId, error: userError } = await getCurrentUserId();
       if (userError) {
-        return { error: userError };
+        return { error: { key: "errors.loginRequired" } };
       }
       if (!userId) {
-        return { error: "Please log in to start a timer." };
+        return { error: { key: "errors.loginRequired" } };
       }
 
       const startedAt = new Date().toISOString();
@@ -135,15 +137,21 @@ export function ActiveTimerProvider({
       pendingStartRef.current = insertPromise;
       pendingOptimisticIdRef.current = optimisticId;
 
-      const data = await insertPromise;
+       const data = await insertPromise;
 
-      pendingStartRef.current = null;
-      pendingOptimisticIdRef.current = null;
+       pendingStartRef.current = null;
+       pendingOptimisticIdRef.current = null;
 
-      if (!data?.id) {
-        setActiveEntry(previousEntry ?? null);
-        return { error: "Failed to start timer." };
-      }
+       if (!data?.id) {
+         // Check if another timer was started meanwhile
+         const { entry: checkEntry } = await fetchActiveEntry();
+         if (checkEntry) {
+           await refresh();
+           return { error: { key: "errors.timerAlreadyRunning" } };
+         }
+         setActiveEntry(previousEntry ?? null);
+         return { error: { key: "errors.failedToStartTimer" } };
+       }
 
       setActiveEntry({
         id: data.id,
@@ -161,7 +169,7 @@ export function ActiveTimerProvider({
   const stopTimer = useCallback(
     async (endedAt?: string) => {
       if (!activeEntry) {
-        return { error: "No active timer to stop." };
+        return { error: { key: "errors.noActiveTimer" } };
       }
 
       const finalEndedAt = endedAt ?? new Date().toISOString();
@@ -175,8 +183,24 @@ export function ActiveTimerProvider({
         const data = await pendingStart;
         if (!data?.id) {
           setActiveEntry(null);
-          return { error: "Failed to stop timer." };
+          return { error: { key: "errors.failedToStopTimer" } };
         }
+
+        // Check if already stopped
+        const { data: checkData, error: checkError } = await supabase
+          .from("time_entries")
+          .select("ended_at")
+          .eq("id", data.id)
+          .single();
+
+        if (checkError) {
+          return { error: checkError.message };
+        }
+        if (checkData?.ended_at) {
+          await refresh();
+          return { error: { key: "errors.timerAlreadyStopped" } };
+        }
+
         const { error: updateError } = await supabase
           .from("time_entries")
           .update({ ended_at: finalEndedAt })
@@ -189,6 +213,21 @@ export function ActiveTimerProvider({
         setActiveEntry(null);
         await refresh();
         return {};
+      }
+
+      // Check if already stopped
+      const { data: checkData, error: checkError } = await supabase
+        .from("time_entries")
+        .select("ended_at")
+        .eq("id", activeEntry.id)
+        .single();
+
+      if (checkError) {
+        return { error: checkError.message };
+      }
+      if (checkData?.ended_at) {
+        await refresh();
+        return { error: { key: "errors.timerAlreadyStopped" } };
       }
 
       const { error: updateError } = await supabase

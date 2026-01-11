@@ -154,14 +154,14 @@
     "login": "Войти",
     "logout": "Выйти"
   },
-  "errors": {
-    "goalNotFound": "Цель не найдена.",
-    "failedToLoadEvents": "Не удалось загрузить события.",
-    "anotherTimerRunning": "Другой таймер уже запущен.",
-    "loginToStartTimer": "Войдите, чтобы запустить таймер.",
-    "failedToStartTimer": "Не удалось запустить таймер.",
-    "noActiveTimerToStop": "Нет активного таймера для остановки.",
-    "failedToStopTimer": "Не удалось остановить таймер.",
+   "errors": {
+     "goalNotFound": "Цель не найдена.",
+     "failedToLoadEvents": "Не удалось загрузить события.",
+     "timerAlreadyRunning": "Другой таймер уже запущен.",
+     "timerAlreadyStopped": "Таймер уже остановлен в другой сессии. Страница перезагрузится.",
+     "failedToStartTimer": "Не удалось запустить таймер.",
+     "noActiveTimer": "Нет активного таймера для остановки.",
+     "failedToStopTimer": "Не удалось остановить таймер.",
     "contextNameRequired": "Введите название контекста.",
     "loginToCreateContext": "Войдите, чтобы создать контекст.",
     "failedToCreateContext": "Не удалось создать контекст.",

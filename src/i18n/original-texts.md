@@ -242,10 +242,10 @@ It serves as a reference for the i18n system and for adding new languages.
 |-----|---------|
 | `errors.goalNotFound` | Goal not found. |
 | `errors.failedToLoadEvents` | Failed to load events. |
-| `errors.anotherTimerRunning` | Another timer is already running. |
-| `errors.loginToStartTimer` | Please log in to start a timer. |
+| `errors.timerAlreadyRunning` | Another timer is already running. |
+| `errors.timerAlreadyStopped` | Timer was already stopped in another session. Page will reload. |
 | `errors.failedToStartTimer` | Failed to start timer. |
-| `errors.noActiveTimerToStop` | No active timer to stop. |
+| `errors.noActiveTimer` | No active timer to stop. |
 | `errors.failedToStopTimer` | Failed to stop timer. |
 | `errors.contextNameRequired` | Context name is required. |
 | `errors.loginToCreateContext` | Please log in to create a context. |
