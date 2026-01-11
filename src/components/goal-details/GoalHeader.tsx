@@ -2,13 +2,16 @@
 
 import { formatDate, formatGoalTarget } from "@/src/components/formatters";
 import type { GoalDetails } from "./types";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type GoalHeaderProps = {
   goal: GoalDetails;
   progressValue: string;
+  lng: string;
 };
 
-export default function GoalHeader({ goal, progressValue }: GoalHeaderProps) {
+export default function GoalHeader({ goal, progressValue, lng }: GoalHeaderProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
@@ -18,11 +21,11 @@ export default function GoalHeader({ goal, progressValue }: GoalHeaderProps) {
         </p>
         <p className="text-xs text-slate-500">
           {formatDate(goal.start_date)} → {formatDate(goal.end_date)} ·{" "}
-          {goal.context?.name ?? "Unknown context"}
+          {goal.context?.name ?? t("goalDetails.unknownContext")}
         </p>
       </div>
       <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
-        Progress: {progressValue}
+        {t("goalDetails.progress")} {progressValue}
       </div>
     </div>
   );

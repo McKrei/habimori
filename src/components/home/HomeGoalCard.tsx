@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { formatSecondsAsHHMMSS } from "@/src/components/formatters";
 import type { GoalSummary, StatusMap } from "./types";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type HomeGoalCardProps = {
   goal: GoalSummary;
@@ -25,6 +26,7 @@ type HomeGoalCardProps = {
   onStartTimer: () => void;
   onStopTimer: () => void;
   onCheckToggle: (nextState: boolean) => void;
+  lng: string;
 };
 
 export default function HomeGoalCard({
@@ -48,8 +50,10 @@ export default function HomeGoalCard({
   onStartTimer,
   onStopTimer,
   onCheckToggle,
+  lng,
 }: HomeGoalCardProps) {
-  const contextLabel = goal.context?.name ?? "Unknown context";
+  const { t } = useTranslation();
+  const contextLabel = goal.context?.name ?? t("goalDetails.unknownContext");
   const effectiveStatus = optimisticStatus ?? statusEntry?.status;
   const baseActual = statusEntry?.actual_value ?? 0;
   const effectiveActual =
@@ -157,7 +161,7 @@ export default function HomeGoalCard({
                   className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
                   type="button"
                   onClick={onStopTimer}
-                  title="Stop"
+                  title={t("common.stop")}
                 >
                   ⏸
                 </button>
@@ -167,7 +171,7 @@ export default function HomeGoalCard({
                   type="button"
                   onClick={onStartTimer}
                   disabled={isTimerBlocked}
-                  title={isTimerBlocked ? "Another timer is running" : "Play"}
+                  title={isTimerBlocked ? t("timer.anotherRunning") : t("common.start")}
                 >
                   ▶
                 </button>

@@ -1,0 +1,195 @@
+{
+  "common": {
+    "yes": "Да",
+    "no": "Нет",
+    "ok": "ОК",
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "add": "Добавить",
+    "reset": "Сбросить",
+    "back": "Назад",
+    "next": "Далее",
+    "start": "Старт",
+    "stop": "Стоп",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно"
+  },
+  "nav": {
+    "home": "Главная",
+    "goals": "Цели",
+    "stats": "Статистика",
+    "settings": "Настройки"
+  },
+  "home": {
+    "title": "Мои цели",
+    "noActiveGoals": "Пока нет активных целей.",
+    "createFirstGoal": "Создать первую цель",
+    "loadingGoals": "Загрузка целей..."
+  },
+  "filters": {
+    "context": "Контекст",
+    "status": "Статус",
+    "tags": "Теги",
+    "selected": "Выбрано ({count})",
+    "noTags": "Нет тегов",
+    "reset": "Сбросить"
+  },
+  "goalTypes": {
+    "timer": "Таймер",
+    "counter": "Счётчик",
+    "checkbox": "Чекбокс"
+  },
+  "goalPeriods": {
+    "day": "Ежедневно",
+    "week": "Еженедельно",
+    "month": "Ежемесячно"
+  },
+  "goalDirections": {
+    "complete": "Я хочу достичь",
+    "limit": "Я хочу ограничить"
+  },
+  "goalForm": {
+    "title": "Создать цель",
+    "editTitle": "Редактировать цель",
+    "goalName": "Название цели",
+    "goalType": "Тип цели",
+    "selectGoalType": "Выберите тип цели",
+    "period": "Период",
+    "goalDirection": "Направление цели",
+    "targetValue": "Целевое значение",
+    "targetTime": "Целевое время (ЧЧ:ММ)",
+    "startDate": "Дата начала",
+    "endDate": "Дата окончания",
+    "periodsCount": "Количество периодов",
+    "saveChanges": "Сохранить",
+    "archiveGoal": "Архивировать цель",
+    "addGoal": "Добавить цель"
+  },
+  "goalDetails": {
+    "loadingGoal": "Загрузка цели...",
+    "notFound": "Цель не найдена.",
+    "archived": "Эта цель архивирована и скрыта из активных.",
+    "backToHome": "На главную",
+    "unknownContext": "Неизвестный контекст",
+    "progress": "Прогресс:",
+    "events": "События",
+    "noTimeEntries": "Пока нет записей времени.",
+    "noCounterEvents": "Пока нет событий счётчика.",
+    "noCheckEvents": "Пока нет событий чекбокса.",
+    "running": "Текущее"
+  },
+  "timeEntry": {
+    "addTimeEntry": "Добавить запись времени",
+    "start": "Начало",
+    "end": "Окончание",
+    "addEntry": "Добавить"
+  },
+  "counterEvent": {
+    "addCounterEvent": "Добавить событие счётчика",
+    "occurredAt": "Когда",
+    "delta": "Изменение",
+    "addEvent": "Добавить"
+  },
+  "checkEvent": {
+    "addCheckEvent": "Добавить событие чекбокс",
+    "occurredAt": "Когда",
+    "state": "Состояние",
+    "done": "Выполнено",
+    "notDone": "Не выполнено",
+    "addEvent": "Добавить"
+  },
+  "timer": {
+    "noActiveTimer": "Таймер не запущен",
+    "startTimer": "Запустить таймер",
+    "anotherRunning": "Другой таймер уже запущен"
+  },
+  "contexts": {
+    "context": "Контекст",
+    "pickOrCreate": "Выберите или создайте контекст",
+    "loading": "Загрузка контекстов...",
+    "noContexts": "Нет контекстов",
+    "contextsSelected": "Контексты ({count})",
+    "allContexts": "Контексты"
+  },
+  "tags": {
+    "tags": "Теги",
+    "addTag": "Добавить тег",
+    "loading": "Загрузка тегов...",
+    "noTags": "Нет тегов",
+    "noTagsYet": "Пока нет тегов.",
+    "tagsSelected": "Теги ({count})",
+    "allTags": "Теги"
+  },
+  "stats": {
+    "period": {
+      "week": "Неделя",
+      "month": "Месяц",
+      "custom": "Произвольный"
+    },
+    "from": "от",
+    "to": "до",
+    "totalTime": "Время",
+    "timeByContexts": "Время по контекстам",
+    "noContextsToShow": "Нет контекстов для отображения.",
+    "selected": "Выбрано:",
+    "contextShare": "Доля контекстов",
+    "noTimeData": "Пока нет данных по времени.",
+    "loading": "Загрузка статистики...",
+    "contextsSelected": "Контексты ({count})",
+    "allContexts": "Контексты",
+    "noContexts": "Нет контекстов",
+    "tagsSelected": "Теги ({count})",
+    "allTags": "Теги",
+    "noTags": "Нет тегов"
+  },
+  "auth": {
+    "checkingSession": "Проверка сессии...",
+    "loginWithGoogle": "Войти через Google",
+    "authFailed": "Ошибка авторизации. Попробуйте снова.",
+    "signingIn": "Выполняется вход...",
+    "login": "Войти",
+    "logout": "Выйти"
+  },
+  "errors": {
+    "goalNotFound": "Цель не найдена.",
+    "failedToLoadEvents": "Не удалось загрузить события.",
+    "anotherTimerRunning": "Другой таймер уже запущен.",
+    "loginToStartTimer": "Войдите, чтобы запустить таймер.",
+    "failedToStartTimer": "Не удалось запустить таймер.",
+    "noActiveTimerToStop": "Нет активного таймера для остановки.",
+    "failedToStopTimer": "Не удалось остановить таймер.",
+    "contextNameRequired": "Введите название контекста.",
+    "loginToCreateContext": "Войдите, чтобы создать контекст.",
+    "failedToCreateContext": "Не удалось создать контекст.",
+    "tagNameRequired": "Введите название тега.",
+    "loginToCreateTag": "Войдите, чтобы создать тег.",
+    "failedToCreateTag": "Не удалось создать тег.",
+    "goalTypeRequired": "Выберите тип цели.",
+    "periodsCountInvalid": "Количество периодов должно быть положительным числом.",
+    "targetValueInvalid": "Целевое значение должно быть положительным числом.",
+    "timeFormatInvalid": "Введите время в формате ЧЧ:ММ (минуты от 00 до 59).",
+    "startDateAndPeriodsRequired": "Укажите дату начала и количество периодов.",
+    "endDateBeforeStart": "Дата окончания должна быть не раньше даты начала.",
+    "loginRequired": "Войдите, чтобы продолжить.",
+    "contextRequired": "Выберите контекст.",
+    "goalCreatedButNoId": "Цель создана, но не удалось получить её ID.",
+    "failedToAddTag": "Не удалось добавить тег."
+  },
+  "formatters": {
+    "dash": "—",
+    "minutes": "мин",
+    "hours": "ч",
+    "defaultTime": "--:--",
+    "defaultDateTime": "--:--:--"
+  },
+  "status": {
+    "success": "Выполнено",
+    "fail": "Не выполнено",
+    "inProgress": "В процессе",
+    "archived": "Архивировано"
+  }
+}

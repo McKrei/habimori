@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 import GoalEditCard from "./GoalEditCard";
 import GoalEntryForms from "./GoalEntryForms";
 import GoalEventsList from "./GoalEventsList";
@@ -8,11 +9,12 @@ import GoalHeader from "./GoalHeader";
 import { useGoalDetails } from "./useGoalDetails";
 import { getTodayDateString } from "./utils";
 
-export default function GoalDetailsPage() {
+export default function GoalDetailsPage({ lng }: { lng: string }) {
   const router = useRouter();
   const params = useParams();
   const goalId = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const today = getTodayDateString();
+  const { t } = useTranslation();
 
   const {
     checkEvents,
@@ -64,7 +66,7 @@ export default function GoalDetailsPage() {
     return (
       <section className="space-y-4">
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          Loading goal…
+          {t("goalDetails.loadingGoal")}
         </div>
       </section>
     );
@@ -74,7 +76,7 @@ export default function GoalDetailsPage() {
     return (
       <section className="space-y-4">
         <div className="rounded-lg border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-          {error ?? "Goal not found."}
+          {error ?? t("goalDetails.notFound")}
         </div>
       </section>
     );
@@ -84,14 +86,14 @@ export default function GoalDetailsPage() {
     return (
       <section className="space-y-4">
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          This goal is archived and hidden from active views.
+          {t("goalDetails.archived")}
         </div>
         <button
           className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
           type="button"
           onClick={() => router.push("/")}
         >
-          Back to Home
+          {t("goalDetails.backToHome")}
         </button>
       </section>
     );
@@ -99,7 +101,7 @@ export default function GoalDetailsPage() {
 
   return (
     <section className="space-y-6">
-      <GoalHeader goal={goal} progressValue={progressValue} />
+      <GoalHeader goal={goal} progressValue={progressValue} lng={lng} />
 
       {error ? (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
@@ -132,6 +134,7 @@ export default function GoalDetailsPage() {
               }
               onSave={handleSaveGoal}
               onArchive={handleArchiveGoal}
+              lng={lng}
             />
           ) : null}
 
@@ -153,6 +156,7 @@ export default function GoalDetailsPage() {
             onAddTimeEntry={handleAddTimeEntry}
             onAddCounterEvent={handleAddCounterEvent}
             onAddCheckEvent={handleAddCheckEvent}
+            lng={lng}
           />
         </div>
       </div>
@@ -163,6 +167,7 @@ export default function GoalDetailsPage() {
         counterEvents={counterEvents}
         checkEvents={checkEvents}
         onDeleteEvent={handleDeleteEvent}
+        lng={lng}
       />
     </section>
   );

@@ -2,6 +2,7 @@
 
 import type { ContextOption } from "@/src/components/useContexts";
 import type { TagOption } from "@/src/components/useTags";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type HomeFiltersBarProps = {
   contexts: ContextOption[];
@@ -15,6 +16,7 @@ type HomeFiltersBarProps = {
   onTagsToggle: () => void;
   onTagToggle: (tagId: string) => void;
   onReset: () => void;
+  lng: string;
 };
 
 export default function HomeFiltersBar({
@@ -29,18 +31,20 @@ export default function HomeFiltersBar({
   onTagsToggle,
   onTagToggle,
   onReset,
+  lng,
 }: HomeFiltersBarProps) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <div className="flex flex-wrap items-center gap-3">
         <label className="text-xs font-semibold text-slate-500">
-          <span className="sr-only">Context</span>
+          <span className="sr-only">{t("filters.context")}</span>
           <select
             className="h-9 w-34 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
             value={selectedContext}
             onChange={(event) => onContextChange(event.target.value)}
           >
-            <option value="">Context</option>
+            <option value="">{t("filters.context")}</option>
             {contexts.map((context) => (
               <option key={context.id} value={context.id}>
                 {context.name}
@@ -50,18 +54,16 @@ export default function HomeFiltersBar({
         </label>
 
         <label className="text-xs font-semibold text-slate-500">
-          <span className="sr-only">Status</span>
+          <span className="sr-only">{t("filters.status")}</span>
           <select
             className="h-9 w-34 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
             value={selectedStatus}
             onChange={(event) => onStatusChange(event.target.value)}
           >
-            <option value="">Status</option>
-            {["success", "fail", "in_progress", "archived"].map((status) => (
-              <option key={status} value={status}>
-                {status.replace("_", " ")}
-              </option>
-            ))}
+            <option value="">{t("filters.status")}</option>
+            <option value="success">{t("status.success")}</option>
+            <option value="fail">{t("status.fail")}</option>
+            <option value="in_progress">{t("status.inProgress")}</option>
           </select>
         </label>
 
@@ -72,13 +74,13 @@ export default function HomeFiltersBar({
             onClick={onTagsToggle}
           >
             {selectedTags.length > 0
-              ? `Selected (${selectedTags.length})`
-              : "Tags"}
+              ? t("filters.selected", { count: selectedTags.length })
+              : t("filters.tags")}
           </button>
           {isTagsOpen ? (
             <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
               {tags.length === 0 ? (
-                <p className="px-2 py-1 text-xs text-slate-500">No tags</p>
+                <p className="px-2 py-1 text-xs text-slate-500">{t("filters.noTags")}</p>
               ) : (
                 tags.map((tag) => {
                   const checked = selectedTags.includes(tag.id);
@@ -106,7 +108,7 @@ export default function HomeFiltersBar({
           type="button"
           onClick={onReset}
         >
-          Reset
+          {t("filters.reset")}
         </button>
       </div>
     </div>

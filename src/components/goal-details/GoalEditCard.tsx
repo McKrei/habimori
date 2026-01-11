@@ -1,6 +1,7 @@
 "use client";
 
 import type { TagOption } from "@/src/components/useTags";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type GoalEditCardProps = {
   editTitle: string;
@@ -20,6 +21,7 @@ type GoalEditCardProps = {
   onSave: () => void;
   onArchive: () => void;
   onTagSubmit: () => void;
+  lng: string;
 };
 
 export default function GoalEditCard({
@@ -40,12 +42,14 @@ export default function GoalEditCard({
   onSave,
   onArchive,
   onTagSubmit,
+  lng,
 }: GoalEditCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5">
-      <h2 className="text-base font-semibold">Edit goal</h2>
+      <h2 className="text-base font-semibold">{t("goalForm.editTitle")}</h2>
       <label className="mt-3 block text-sm font-medium text-slate-700">
-        Title
+        {t("goalForm.goalName")}
         <input
           className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
           value={editTitle}
@@ -53,7 +57,7 @@ export default function GoalEditCard({
         />
       </label>
       <label className="mt-3 block text-sm font-medium text-slate-700">
-        End date
+        {t("goalForm.endDate")}
         <input
           className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
           type="date"
@@ -63,12 +67,12 @@ export default function GoalEditCard({
         />
       </label>
       <label className="mt-3 block text-sm font-medium text-slate-700">
-        Tags
+        {t("tags.tags")}
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <input
             className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm"
             list="goal-tag-options"
-            placeholder="Add a tag"
+            placeholder={t("tags.addTag")}
             value={tagInput}
             onChange={(event) => onTagInputChange(event.target.value)}
             onKeyDown={(event) => {
@@ -83,7 +87,7 @@ export default function GoalEditCard({
             type="button"
             onClick={onTagAdd}
           >
-            Add
+            {t("common.add")}
           </button>
         </div>
         <datalist id="goal-tag-options">
@@ -92,7 +96,7 @@ export default function GoalEditCard({
           ))}
         </datalist>
         {tagsLoading ? (
-          <p className="mt-1 text-xs text-slate-500">Loading tags…</p>
+          <p className="mt-1 text-xs text-slate-500">{t("tags.loading")}</p>
         ) : null}
         {selectedTags.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-2">
@@ -108,7 +112,7 @@ export default function GoalEditCard({
             ))}
           </div>
         ) : (
-          <p className="mt-2 text-xs text-slate-500">No tags yet.</p>
+          <p className="mt-2 text-xs text-slate-500">{t("tags.noTagsYet")}</p>
         )}
       </label>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -118,7 +122,7 @@ export default function GoalEditCard({
           onClick={onSave}
           disabled={isSaving}
         >
-          Save changes
+          {t("goalForm.saveChanges")}
         </button>
         <button
           className="rounded-md border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 hover:border-rose-300"
@@ -126,7 +130,7 @@ export default function GoalEditCard({
           onClick={onArchive}
           disabled={isArchiving}
         >
-          Archive goal
+          {t("goalForm.archiveGoal")}
         </button>
       </div>
     </div>

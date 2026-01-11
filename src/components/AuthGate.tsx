@@ -4,13 +4,16 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type AuthGateProps = {
   children: React.ReactNode;
+  lng: string;
 };
 
-export default function AuthGate({ children }: AuthGateProps) {
+export default function AuthGate({ children, lng }: AuthGateProps) {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
@@ -45,7 +48,7 @@ export default function AuthGate({ children }: AuthGateProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-          Checking session…
+          {t("auth.checkingSession")}
         </div>
       </div>
     );
@@ -77,7 +80,7 @@ export default function AuthGate({ children }: AuthGateProps) {
           disabled={isWorking}
           aria-busy={isWorking}
         >
-          Login with Google
+          {t("auth.loginWithGoogle")}
         </button>
       </div>
     );

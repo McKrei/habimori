@@ -1,6 +1,7 @@
 "use client";
 
 import type { GoalDetails } from "./types";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type GoalEntryFormsProps = {
   goal: GoalDetails;
@@ -20,6 +21,7 @@ type GoalEntryFormsProps = {
   onAddTimeEntry: () => void;
   onAddCounterEvent: () => void;
   onAddCheckEvent: () => void;
+  lng: string;
 };
 
 export default function GoalEntryForms({
@@ -40,7 +42,9 @@ export default function GoalEntryForms({
   onAddTimeEntry,
   onAddCounterEvent,
   onAddCheckEvent,
+  lng,
 }: GoalEntryFormsProps) {
+  const { t } = useTranslation();
   return (
     <>
       {!goal.is_archived && goal.goal_type === "time" ? (
@@ -51,9 +55,9 @@ export default function GoalEntryForms({
             onAddTimeEntry();
           }}
         >
-          <h2 className="text-base font-semibold">Add time entry</h2>
+          <h2 className="text-base font-semibold">{t("timeEntry.addTimeEntry")}</h2>
           <label className="mt-3 block text-sm font-medium text-slate-700">
-            Start
+            {t("timeEntry.start")}
             <input
               className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               type="datetime-local"
@@ -62,7 +66,7 @@ export default function GoalEntryForms({
             />
           </label>
           <label className="mt-3 block text-sm font-medium text-slate-700">
-            End
+            {t("timeEntry.end")}
             <input
               className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               type="datetime-local"
@@ -75,7 +79,7 @@ export default function GoalEntryForms({
             type="submit"
             disabled={isSubmitting}
           >
-            Add entry
+            {t("timeEntry.addEntry")}
           </button>
         </form>
       ) : null}
@@ -88,9 +92,9 @@ export default function GoalEntryForms({
             onAddCounterEvent();
           }}
         >
-          <h2 className="text-base font-semibold">Add counter event</h2>
+          <h2 className="text-base font-semibold">{t("counterEvent.addCounterEvent")}</h2>
           <label className="mt-3 block text-sm font-medium text-slate-700">
-            Occurred at
+            {t("counterEvent.occurredAt")}
             <input
               className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               type="datetime-local"
@@ -101,7 +105,7 @@ export default function GoalEntryForms({
             />
           </label>
           <label className="mt-3 block text-sm font-medium text-slate-700">
-            Delta
+            {t("counterEvent.delta")}
             <input
               className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               inputMode="numeric"
@@ -114,7 +118,7 @@ export default function GoalEntryForms({
             type="submit"
             disabled={isSubmitting}
           >
-            Add event
+            {t("counterEvent.addEvent")}
           </button>
         </form>
       ) : null}
@@ -127,9 +131,9 @@ export default function GoalEntryForms({
             onAddCheckEvent();
           }}
         >
-          <h2 className="text-base font-semibold">Add check event</h2>
+          <h2 className="text-base font-semibold">{t("checkEvent.addCheckEvent")}</h2>
           <label className="mt-3 block text-sm font-medium text-slate-700">
-            Occurred at
+            {t("checkEvent.occurredAt")}
             <input
               className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               type="datetime-local"
@@ -138,7 +142,7 @@ export default function GoalEntryForms({
             />
           </label>
           <label className="mt-3 block text-sm font-medium text-slate-700">
-            State
+            {t("checkEvent.state")}
             <select
               className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
               value={checkState ? "done" : "not"}
@@ -146,8 +150,8 @@ export default function GoalEntryForms({
                 onCheckStateChange(event.target.value === "done")
               }
             >
-              <option value="done">Done</option>
-              <option value="not">Not done</option>
+              <option value="done">{t("checkEvent.done")}</option>
+              <option value="not">{t("checkEvent.notDone")}</option>
             </select>
           </label>
           <button
@@ -155,7 +159,7 @@ export default function GoalEntryForms({
             type="submit"
             disabled={isSubmitting}
           >
-            Add event
+            {t("checkEvent.addEvent")}
           </button>
         </form>
       ) : null}

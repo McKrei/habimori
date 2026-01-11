@@ -1,0 +1,158 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
+
+import type { Language } from "./config";
+import {
+  DEFAULT_LANGUAGE,
+  FALLBACK_LANGUAGE,
+  getLanguageFromBrowser,
+  getLanguageFromStorage,
+  setLanguageStorage,
+} from "./config";
+
+import ru from "./locales/ru.json";
+import en from "./locales/en.json";
+
+type Translations = typeof ru;
+
+const TRANSLATIONS: Record<Language, Translations> = {
+  ru,
+  en,
+};
+
+type TranslationContextType = {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: TFunction;
+  translations: Translations;
+};
+
+export type NestedKeyOf<ObjectType extends object> = {
+  [Key in keyof ObjectType & string]: ObjectType[Key] extends object
+    ? `${Key}.${NestedKeyOf<ObjectType[Key]>}`
+    : Key;
+}[keyof ObjectType & string];
+
+export type TFunction = {
+  <Key extends NestedKeyOf<Translations>>(
+    key: Key,
+    params?: Record<string, string | number>
+  ): string;
+};
+
+function getNestedValue(obj: object, path: string): unknown {
+  const keys = path.split(".");
+  let current: unknown = obj;
+  for (const key of keys) {
+    if (current === null || current === undefined) return undefined;
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
+
+function interpolate(
+  text: string,
+  params?: Record<string, string | number>
+): string {
+  if (!params) return text;
+  return text.replace(/\{(\w+)\}/g, (_, key) => {
+    const value = params[key];
+    return value !== undefined ? String(value) : `{${key}}`;
+  });
+}
+
+function createTFunction(
+  translations: Translations,
+  lang: Language
+): TFunction {
+  return function t<Key extends NestedKeyOf<Translations>>(
+    key: Key,
+    params?: Record<string, string | number>
+  ): string {
+    const value = getNestedValue(translations, key);
+    if (typeof value === "string") {
+      return interpolate(value, params);
+    }
+    console.warn(`Translation key not found: "${key}" (language: ${lang})`);
+    const enValue = getNestedValue(TRANSLATIONS[FALLBACK_LANGUAGE], key);
+    if (typeof enValue === "string") {
+      return interpolate(enValue, params);
+    }
+    return key;
+  };
+}
+
+const TranslationContext = createContext<TranslationContextType | null>(null);
+
+export function TranslationProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguageState] = useState<Language>(DEFAULT_LANGUAGE);
+  const [translations, setTranslations] = useState<Translations>(TRANSLATIONS[DEFAULT_LANGUAGE]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang);
+    setTranslations(TRANSLATIONS[lang]);
+    setLanguageStorage(lang);
+  }, []);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const storedLang = getLanguageFromStorage();
+      const browserLang = getLanguageFromBrowser();
+      const initialLang = storedLang || browserLang;
+      if (TRANSLATIONS[initialLang]) {
+        setLanguageState(initialLang);
+        setTranslations(TRANSLATIONS[initialLang]);
+      }
+      setIsInitialized(true);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  const t = useCallback<TFunction>(
+    (key, params) => interpolate(getNestedValue(translations, key) as string || key, params),
+    [translations]
+  );
+
+  const value: TranslationContextType = {
+    language,
+    setLanguage,
+    t,
+    translations,
+  };
+
+  if (!isInitialized) {
+    return (
+      <TranslationContext.Provider value={value}>
+            {children}
+      </TranslationContext.Provider>
+    );
+  }
+
+  return (
+    <TranslationContext.Provider value={value}>
+      <div lang={language} dir="ltr">
+        {children}
+      </div>
+    </TranslationContext.Provider>
+  );
+}
+
+export function useTranslation() {
+  const context = useContext(TranslationContext);
+  if (!context) {
+    throw new Error("useTranslation must be used within a TranslationProvider");
+  }
+  return context;
+}
+
+export { TRANSLATIONS };
+export type { Translations };

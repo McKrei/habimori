@@ -8,9 +8,11 @@ import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
 import { formatSecondsAsHHMMSS } from "@/src/components/formatters";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 export default function GlobalTimerBar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const { activeEntry, isLoading, startTimer, stopTimer } = useActiveTimer();
   const { contexts, ensureContext, isLoading: contextsLoading } = useContexts();
   const { tags, ensureTag, isLoading: tagsLoading } = useTags();
@@ -61,7 +63,7 @@ export default function GlobalTimerBar() {
     const { context, error: contextError } = await ensureContext(contextName);
 
     if (contextError || !context) {
-      setError(contextError ?? "Context is required.");
+      setError(contextError ?? t("errors.contextRequired"));
       setIsWorking(false);
       return;
     }
@@ -70,7 +72,7 @@ export default function GlobalTimerBar() {
       contextId: context.id,
     });
     if (startError || !entryId) {
-      setError(startError ?? "Failed to start timer.");
+      setError(startError ?? t("errors.failedToStartTimer"));
       setIsWorking(false);
       return;
     }
@@ -118,7 +120,7 @@ export default function GlobalTimerBar() {
               {contextLabel ? ` · ${contextLabel}` : ""}
             </span>
           ) : (
-            <span>No active timer</span>
+            <span>{t("timer.noActiveTimer")}</span>
           )}
         </div>
 
@@ -130,7 +132,7 @@ export default function GlobalTimerBar() {
               onClick={handleStop}
               disabled={isWorking}
             >
-              Stop
+              {t("common.stop")}
             </button>
           ) : (
             <button
@@ -139,7 +141,7 @@ export default function GlobalTimerBar() {
               onClick={() => setIsSheetOpen(true)}
               disabled={isLoading}
             >
-              Play
+              {t("common.start")}
             </button>
           )}
         </div>
@@ -150,7 +152,7 @@ export default function GlobalTimerBar() {
               className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
               href="/goals/new"
             >
-              Add goal
+              {t("goalForm.addGoal")}
             </Link>
           )}
         </div>
@@ -166,25 +168,25 @@ export default function GlobalTimerBar() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/30 px-4 pb-20">
           <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Start timer</h2>
+              <h2 className="text-lg font-semibold">{t("timer.startTimer")}</h2>
               <button
                 className="text-sm text-slate-500 hover:text-slate-700"
                 type="button"
                 onClick={() => setIsSheetOpen(false)}
                 disabled={isWorking}
               >
-                Close
+                {t("common.close")}
               </button>
             </div>
 
             <div className="mt-4 space-y-3">
               <label className="block text-sm font-medium text-slate-700">
-                Context
+                {t("contexts.context")}
               </label>
               <input
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
                 list="global-context-options"
-                placeholder="Pick or create a context"
+                placeholder={t("contexts.pickOrCreate")}
                 value={contextName}
                 onChange={(event) => setContextName(event.target.value)}
               />
@@ -194,7 +196,7 @@ export default function GlobalTimerBar() {
                 ))}
               </datalist>
               {contextsLoading ? (
-                <p className="text-xs text-slate-500">Loading contexts…</p>
+                <p className="text-xs text-slate-500">{t("contexts.loading")}</p>
               ) : null}
               {error ? (
                 <p className="text-xs font-medium text-rose-600">{error}</p>
@@ -203,13 +205,13 @@ export default function GlobalTimerBar() {
 
             <div className="mt-4 space-y-2">
               <label className="block text-sm font-medium text-slate-700">
-                Tags
+                {t("tags.tags")}
               </label>
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm"
                   list="global-tag-options"
-                  placeholder="Add a tag"
+                  placeholder={t("tags.addTag")}
                   value={tagInput}
                   onChange={(event) => setTagInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -220,7 +222,7 @@ export default function GlobalTimerBar() {
                       void (async () => {
                         const { tag, error: tagError } = await ensureTag(name);
                         if (tagError || !tag) {
-                          setError(tagError ?? "Failed to add tag.");
+                          setError(tagError ?? t("errors.failedToAddTag"));
                           return;
                         }
                         setSelectedTags((prev) => {
@@ -242,7 +244,7 @@ export default function GlobalTimerBar() {
                     void (async () => {
                       const { tag, error: tagError } = await ensureTag(name);
                       if (tagError || !tag) {
-                        setError(tagError ?? "Failed to add tag.");
+                        setError(tagError ?? t("errors.failedToAddTag"));
                         return;
                       }
                       setSelectedTags((prev) => {
@@ -254,7 +256,7 @@ export default function GlobalTimerBar() {
                     })();
                   }}
                 >
-                  Add
+                  {t("common.add")}
                 </button>
               </div>
               <datalist id="global-tag-options">
@@ -263,7 +265,7 @@ export default function GlobalTimerBar() {
                 ))}
               </datalist>
               {tagsLoading ? (
-                <p className="text-xs text-slate-500">Loading tags…</p>
+                <p className="text-xs text-slate-500">{t("tags.loading")}</p>
               ) : null}
               {selectedTags.length > 0 ? (
                 <div className="flex flex-wrap gap-2 pt-2">
@@ -292,7 +294,7 @@ export default function GlobalTimerBar() {
                 onClick={() => setIsSheetOpen(false)}
                 disabled={isWorking}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
@@ -300,7 +302,7 @@ export default function GlobalTimerBar() {
                 onClick={handleStart}
                 disabled={isWorking || contextsLoading || tagsLoading}
               >
-                Start
+                {t("common.start")}
               </button>
             </div>
           </div>

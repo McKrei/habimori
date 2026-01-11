@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
 import { formatMinutesAsHHMM } from "@/src/components/formatters";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 import StatsStackedBarChart from "@/src/components/StatsStackedBarChart";
 import StatsPieChart from "@/src/components/StatsPieChart";
 
@@ -121,7 +122,9 @@ function formatMinutesWithDays(totalMinutes: number) {
   return `${hh}:${mm}`;
 }
 
-export default function StatsPage() {
+export default function StatsPage({ params }: { params: { lng: string } }) {
+  const lng = params.lng;
+  const { t } = useTranslation();
   const { contexts } = useContexts();
   const { tags } = useTags();
   const [periodMode, setPeriodMode] = useState<"week" | "month" | "custom">(
@@ -484,9 +487,9 @@ export default function StatsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-600">
             {[
-              { key: "week", label: "Неделя" },
-              { key: "month", label: "Месяц" },
-              { key: "custom", label: "Произвольный" },
+              { key: "week", label: t("stats.period.week") },
+              { key: "month", label: t("stats.period.month") },
+              { key: "custom", label: t("stats.period.custom") },
             ].map((item) => (
               <button
                 key={item.key}
@@ -505,14 +508,14 @@ export default function StatsPage() {
 
           {periodMode === "custom" ? (
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-              <span>от</span>
+              <span>{t("stats.from")}</span>
               <input
                 className="h-9 rounded-md border border-slate-200 px-3 text-sm"
                 type="date"
                 value={customStart}
                 onChange={(event) => setCustomStart(event.target.value)}
               />
-              <span>до</span>
+              <span>{t("stats.to")}</span>
               <input
                 className="h-9 rounded-md border border-slate-200 px-3 text-sm"
                 type="date"
@@ -529,14 +532,14 @@ export default function StatsPage() {
               onClick={() => setIsContextOpen((prev) => !prev)}
             >
               {selectedContextIds.length > 0
-                ? `Контексты (${selectedContextIds.length})`
-                : "Контексты"}
+                ? t("stats.contextsSelected", { count: selectedContextIds.length })
+                : t("stats.allContexts")}
             </button>
             {isContextOpen ? (
               <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
                 {contexts.length === 0 ? (
                   <p className="px-2 py-1 text-xs text-slate-500">
-                    Нет контекстов
+                    {t("stats.noContexts")}
                   </p>
                 ) : (
                   contexts.map((context) => {
@@ -573,13 +576,13 @@ export default function StatsPage() {
               onClick={() => setIsTagsOpen((prev) => !prev)}
             >
               {selectedTagIds.length > 0
-                ? `Теги (${selectedTagIds.length})`
-                : "Теги"}
+                ? t("stats.tagsSelected", { count: selectedTagIds.length })
+                : t("stats.allTags")}
             </button>
             {isTagsOpen ? (
               <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
                 {tags.length === 0 ? (
-                  <p className="px-2 py-1 text-xs text-slate-500">Нет тегов</p>
+                  <p className="px-2 py-1 text-xs text-slate-500">{t("stats.noTags")}</p>
                 ) : (
                   tags.map((tag) => {
                     const checked = selectedTagIds.includes(tag.id);
@@ -618,7 +621,7 @@ export default function StatsPage() {
               setSelectedSegment(null);
             }}
           >
-            Сбросить
+            {t("filters.reset")}
           </button>
         </div>
       </div>
@@ -631,7 +634,7 @@ export default function StatsPage() {
 
       {isLoading ? (
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          Загрузка статистики…
+          {t("stats.loading")}
         </div>
       ) : null}
 
@@ -671,7 +674,7 @@ export default function StatsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs uppercase tracking-wide text-slate-500">
-                  Время
+                  {t("stats.totalTime")}
                 </span>
                 <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-900">
                   {formatMinutesWithDays(totalTrackedMinutes)}
@@ -683,7 +686,7 @@ export default function StatsPage() {
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">Время по контекстам</h2>
+                <h2 className="text-lg font-semibold">{t("stats.timeByContexts")}</h2>
               </div>
               <div className="flex flex-wrap gap-2">
                 {visibleContextSeries.map((context) => (
@@ -706,7 +709,7 @@ export default function StatsPage() {
                 ))}
                 {visibleContextSeries.length === 0 ? (
                   <span className="text-xs text-slate-500">
-                    Нет контекстов для отображения.
+                    {t("stats.noContextsToShow")}
                   </span>
                 ) : null}
               </div>
@@ -726,7 +729,7 @@ export default function StatsPage() {
 
             {selectedSegment ? (
               <div className="mt-4 text-xs text-slate-600">
-                Выбрано:{" "}
+                {t("stats.selected")}{" "}
                 {contexts.find((ctx) => ctx.id === selectedSegment.contextId)
                   ?.name ?? selectedSegment.contextId}{" "}
                 · {formatMinutesAsHHMM(selectedSegment.minutes)}
@@ -736,12 +739,12 @@ export default function StatsPage() {
 
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <div className="flex items-center justify-center">
-              <h2 className="text-lg font-semibold">Доля контекстов</h2>
+              <h2 className="text-lg font-semibold">{t("stats.contextShare")}</h2>
             </div>
             <div className="mt-4">
               {pieSlices.length === 0 ? (
                 <p className="text-sm text-slate-500">
-                  Пока нет данных по времени.
+                  {t("stats.noTimeData")}
                 </p>
               ) : (
                 <StatsPieChart slices={pieSlices} />

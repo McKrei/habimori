@@ -6,6 +6,7 @@ import {
 } from "@/src/components/formatters";
 import type { CheckEvent, CounterEvent, GoalDetails, TimeEntry } from "./types";
 import { calculateTimeMinutes } from "./utils";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type GoalEventsListProps = {
   goal: GoalDetails;
@@ -13,6 +14,7 @@ type GoalEventsListProps = {
   counterEvents: CounterEvent[];
   checkEvents: CheckEvent[];
   onDeleteEvent: (type: "time" | "counter" | "check", id: string) => void;
+  lng: string;
 };
 
 export default function GoalEventsList({
@@ -21,21 +23,23 @@ export default function GoalEventsList({
   counterEvents,
   checkEvents,
   onDeleteEvent,
+  lng,
 }: GoalEventsListProps) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5">
-      <h2 className="text-base font-semibold">Events</h2>
+      <h2 className="text-base font-semibold">{t("goalDetails.events")}</h2>
 
       {goal.goal_type === "time" ? (
         <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-slate-700">
           {timeEntries.length === 0 ? (
-            <p className="text-sm text-slate-500">No time entries yet.</p>
+            <p className="text-sm text-slate-500">{t("goalDetails.noTimeEntries")}</p>
           ) : (
             timeEntries.map((entry) => {
               const started = formatDateTime(entry.started_at);
               const ended = entry.ended_at
                 ? formatDateTime(entry.ended_at)
-                : "Running";
+                : t("goalDetails.running");
               const minutes = calculateTimeMinutes(
                 [entry],
                 new Date(0),
@@ -59,7 +63,7 @@ export default function GoalEventsList({
                         type="button"
                         onClick={() => onDeleteEvent("time", entry.id)}
                       >
-                        Delete
+                        {t("common.delete")}
                       </button>
                     ) : null}
                   </div>
@@ -73,7 +77,7 @@ export default function GoalEventsList({
       {goal.goal_type === "counter" ? (
         <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-slate-700">
           {counterEvents.length === 0 ? (
-            <p className="text-sm text-slate-500">No counter events yet.</p>
+            <p className="text-sm text-slate-500">{t("goalDetails.noCounterEvents")}</p>
           ) : (
             counterEvents.map((event) => (
               <div key={event.id} className="flex items-center justify-between">
@@ -88,7 +92,7 @@ export default function GoalEventsList({
                       type="button"
                       onClick={() => onDeleteEvent("counter", event.id)}
                     >
-                      Delete
+                      {t("common.delete")}
                     </button>
                   ) : null}
                 </div>
@@ -101,14 +105,14 @@ export default function GoalEventsList({
       {goal.goal_type === "check" ? (
         <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-slate-700">
           {checkEvents.length === 0 ? (
-            <p className="text-sm text-slate-500">No check events yet.</p>
+            <p className="text-sm text-slate-500">{t("goalDetails.noCheckEvents")}</p>
           ) : (
             checkEvents.map((event) => (
               <div key={event.id} className="flex items-center justify-between">
                 <span>{formatDateTime(event.occurred_at)}</span>
                 <div className="flex items-center gap-3">
                   <span className="text-base font-semibold text-slate-700">
-                    {event.state ? "Done" : "Not done"}
+                    {event.state ? t("checkEvent.done") : t("checkEvent.notDone")}
                   </span>
                   {!goal.is_archived ? (
                     <button
@@ -116,7 +120,7 @@ export default function GoalEventsList({
                       type="button"
                       onClick={() => onDeleteEvent("check", event.id)}
                     >
-                      Delete
+                      {t("common.delete")}
                     </button>
                   ) : null}
                 </div>

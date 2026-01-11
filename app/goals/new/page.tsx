@@ -8,6 +8,7 @@ import { getCurrentUserId } from "@/src/components/auth";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
 import { recalcGoalPeriods } from "@/src/components/goalPeriods";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type GoalType = "" | "time" | "counter" | "check";
 type GoalPeriod = "day" | "week" | "month";
@@ -114,8 +115,10 @@ function parseTimeToMinutes(value: string) {
   return hours * 60 + minutes;
 }
 
-export default function NewGoalPage() {
+export default function NewGoalPage({ params }: { params: { lng: string } }) {
   const router = useRouter();
+  const lng = params.lng;
+  const { t } = useTranslation();
   const { contexts, ensureContext, isLoading: contextsLoading } = useContexts();
   const { tags, ensureTag, isLoading: tagsLoading } = useTags();
   const [title, setTitle] = useState("");
@@ -188,27 +191,27 @@ export default function NewGoalPage() {
 
     let parsedTarget: number | null = null;
     if (!goalType) {
-      setError("Goal type is required.");
+      setError(t("errors.goalTypeRequired"));
       return;
     }
 
     const parsedPeriodCount = Number.parseInt(periodCount, 10);
     if (!Number.isFinite(parsedPeriodCount) || parsedPeriodCount <= 0) {
-      setError("Periods count must be a positive integer.");
+      setError(t("errors.periodsCountInvalid"));
       return;
     }
 
     if (goalType === "counter") {
       const parsed = Number.parseInt(counterTargetValue, 10);
       if (!Number.isFinite(parsed) || parsed <= 0) {
-        setError("Target value must be a positive integer.");
+        setError(t("errors.targetValueInvalid"));
         return;
       }
       parsedTarget = parsed;
     } else if (goalType === "time") {
       const minutes = parseTimeToMinutes(timeTargetValue);
       if (minutes === null || minutes <= 0) {
-        setError("Enter time as HH:MM with minutes between 00 and 59.");
+        setError(t("errors.timeFormatInvalid"));
         return;
       }
       parsedTarget = minutes;
@@ -218,11 +221,11 @@ export default function NewGoalPage() {
 
     const resolvedEndDate = endDateOverride.trim() || computedEndDate;
     if (!resolvedEndDate) {
-      setError("Start date and periods are required.");
+      setError(t("errors.startDateAndPeriodsRequired"));
       return;
     }
     if (resolvedEndDate < startDate) {
-      setError("End date must be on or after start date.");
+      setError(t("errors.endDateBeforeStart"));
       return;
     }
 
@@ -234,13 +237,13 @@ export default function NewGoalPage() {
       return;
     }
     if (!userId) {
-      setError("Please log in to create a goal.");
+      setError(t("errors.loginRequired"));
       setIsSubmitting(false);
       return;
     }
     const { context, error: contextError } = await ensureContext(contextName);
     if (contextError || !context) {
-      setError(contextError ?? "Context is required.");
+      setError(contextError ?? t("errors.contextRequired"));
       setIsSubmitting(false);
       return;
     }
@@ -268,7 +271,7 @@ export default function NewGoalPage() {
     }
 
     if (!data?.id) {
-      setError("Goal created but could not read its ID.");
+      setError(t("errors.goalCreatedButNoId"));
       setIsSubmitting(false);
       return;
     }
@@ -292,17 +295,17 @@ export default function NewGoalPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-semibold">Create goal</h1>
+      <h1 className="text-2xl font-semibold">{t("goalForm.title")}</h1>
       <form
         className="max-w-3xl space-y-6 rounded-lg border border-slate-200 bg-white p-6"
         onSubmit={handleSubmit}
       >
         <div className="space-y-4">
           <label className="block text-base font-medium text-slate-700">
-            Title
+            {t("goalForm.goalName")}
             <input
               className="mt-2 w-full rounded-md border border-slate-200 px-4 py-3 text-base"
-              placeholder="Goal name"
+              placeholder={t("goalForm.goalName")}
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
@@ -310,7 +313,7 @@ export default function NewGoalPage() {
 
           <div className="grid grid-cols-2 gap-3 md:gap-4">
             <label className="block text-sm font-medium text-slate-700 md:text-base">
-              Goal type
+              {t("goalForm.goalType")}
               <select
                 className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                 value={goalType}
@@ -318,15 +321,15 @@ export default function NewGoalPage() {
                   setGoalType(event.target.value as GoalType)
                 }
               >
-                <option value="">Select goal type</option>
-                <option value="time">Timer</option>
-                <option value="counter">Counter</option>
-                <option value="check">Check</option>
+                <option value="">{t("goalForm.selectGoalType")}</option>
+                <option value="time">{t("goalTypes.timer")}</option>
+                <option value="counter">{t("goalTypes.counter")}</option>
+                <option value="check">{t("goalTypes.checkbox")}</option>
               </select>
             </label>
 
             <label className="block text-sm font-medium text-slate-700 md:text-base">
-              Period
+              {t("goalForm.period")}
               <select
                 className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                 value={period}
@@ -336,9 +339,9 @@ export default function NewGoalPage() {
                   setPeriodCount(String(defaultPeriodCounts[nextPeriod]));
                 }}
               >
-                <option value="day">Daily</option>
-                <option value="week">Weekly</option>
-                <option value="month">Monthly</option>
+                <option value="day">{t("goalPeriods.day")}</option>
+                <option value="week">{t("goalPeriods.week")}</option>
+                <option value="month">{t("goalPeriods.month")}</option>
               </select>
             </label>
           </div>
@@ -347,7 +350,7 @@ export default function NewGoalPage() {
             <>
               <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="space-y-2 text-sm font-medium text-slate-700 md:text-base">
-                  <span className="block">Goal direction</span>
+                  <span className="block">{t("goalForm.goalDirection")}</span>
                   <label className="flex items-center gap-2 text-sm font-normal text-slate-700 md:text-base">
                     <input
                       type="radio"
@@ -356,7 +359,7 @@ export default function NewGoalPage() {
                       checked={targetOp === "gte"}
                       onChange={() => setTargetOp("gte")}
                     />
-                    I want to complete
+                    {t("goalDirections.complete")}
                   </label>
                   <label className="flex items-center gap-2 text-sm font-normal text-slate-700 md:text-base">
                     <input
@@ -366,13 +369,13 @@ export default function NewGoalPage() {
                       checked={targetOp === "lte"}
                       onChange={() => setTargetOp("lte")}
                     />
-                    I want to limit
+                    {t("goalDirections.limit")}
                   </label>
                 </div>
 
                 {goalType === "counter" ? (
                   <label className="block text-sm font-medium text-slate-700 md:text-base">
-                    Target value
+                    {t("goalForm.targetValue")}
                     <input
                       className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                       inputMode="numeric"
@@ -386,7 +389,7 @@ export default function NewGoalPage() {
 
                 {goalType === "time" ? (
                   <label className="block text-sm font-medium text-slate-700 md:text-base">
-                    Target time (HH:MM)
+                    {t("goalForm.targetTime")}
                     <input
                       className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                       inputMode="numeric"
@@ -401,7 +404,7 @@ export default function NewGoalPage() {
 
               <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <label className="block text-sm font-medium text-slate-700 md:text-base">
-                  Start date
+                  {t("goalForm.startDate")}
                   <input
                     className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                     type="date"
@@ -411,7 +414,7 @@ export default function NewGoalPage() {
                 </label>
 
                 <label className="block text-sm font-medium text-slate-700 md:text-base">
-                  Periods count
+                  {t("goalForm.periodsCount")}
                   <input
                     className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                     inputMode="numeric"
@@ -423,10 +426,10 @@ export default function NewGoalPage() {
                     type="button"
                     onClick={() => setIsEndDateEditing((prev) => !prev)}
                   >
-                    End date:{" "}
+                    {t("goalForm.endDate")}{" "}
                     {formatDisplayDate(
                       endDateOverride.trim() || computedEndDate,
-                    ) || "—"}
+                    ) || t("formatters.dash")}
                   </button>
                   {isEndDateEditing ? (
                     <input
@@ -444,11 +447,11 @@ export default function NewGoalPage() {
           ) : null}
 
           <label className="block text-base font-medium text-slate-700">
-            Context
+            {t("contexts.context")}
             <input
               className="mt-2 w-full rounded-md border border-slate-200 px-4 py-3 text-base"
               list="context-options"
-              placeholder="Pick or create a context"
+              placeholder={t("contexts.pickOrCreate")}
               value={contextName}
               onChange={(event) => setContextName(event.target.value)}
             />
@@ -458,17 +461,17 @@ export default function NewGoalPage() {
               ))}
             </datalist>
             {contextsLoading ? (
-              <p className="mt-1 text-sm text-slate-500">Loading contexts…</p>
+              <p className="mt-1 text-sm text-slate-500">{t("contexts.loading")}</p>
             ) : null}
           </label>
 
           <label className="block text-base font-medium text-slate-700">
-            Tags
+            {t("tags.tags")}
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <input
                 className="flex-1 rounded-md border border-slate-200 px-4 py-3 text-base"
                 list="tag-options"
-                placeholder="Add a tag"
+                placeholder={t("tags.addTag")}
                 value={tagInput}
                 onChange={(event) => setTagInput(event.target.value)}
                 onKeyDown={(event) => {
@@ -479,7 +482,7 @@ export default function NewGoalPage() {
                     void (async () => {
                       const { tag, error: tagError } = await ensureTag(name);
                       if (tagError || !tag) {
-                        setError(tagError ?? "Failed to add tag.");
+                        setError(tagError ?? t("errors.failedToAddTag"));
                         return;
                       }
                       setSelectedTags((prev) => {
@@ -501,7 +504,7 @@ export default function NewGoalPage() {
                   void (async () => {
                     const { tag, error: tagError } = await ensureTag(name);
                     if (tagError || !tag) {
-                      setError(tagError ?? "Failed to add tag.");
+                      setError(tagError ?? t("errors.failedToAddTag"));
                       return;
                     }
                     setSelectedTags((prev) => {
@@ -512,7 +515,7 @@ export default function NewGoalPage() {
                   })();
                 }}
               >
-                Add
+                {t("common.add")}
               </button>
             </div>
             <datalist id="tag-options">
@@ -521,7 +524,7 @@ export default function NewGoalPage() {
               ))}
             </datalist>
             {tagsLoading ? (
-              <p className="mt-1 text-sm text-slate-500">Loading tags…</p>
+              <p className="mt-1 text-sm text-slate-500">{t("tags.loading")}</p>
             ) : null}
             {selectedTags.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -541,7 +544,7 @@ export default function NewGoalPage() {
                 ))}
               </div>
             ) : (
-              <p className="mt-2 text-sm text-slate-500">No tags yet.</p>
+              <p className="mt-2 text-sm text-slate-500">{t("tags.noTagsYet")}</p>
             )}
           </label>
         </div>
@@ -556,7 +559,7 @@ export default function NewGoalPage() {
             type="submit"
             disabled={isSubmitting || !canSubmit}
           >
-            {isSubmitting ? "Saving…" : "Create goal"}
+            {isSubmitting ? t("common.loading") : t("goalForm.title")}
           </button>
           <button
             className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
@@ -564,7 +567,7 @@ export default function NewGoalPage() {
             onClick={() => router.push("/")}
             disabled={isSubmitting}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
         </div>
       </form>

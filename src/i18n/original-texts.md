@@ -1,0 +1,328 @@
+# Original English Texts Reference
+
+This file contains all original English texts used in the application.
+It serves as a reference for the i18n system and for adding new languages.
+
+---
+
+## Common Actions
+
+| Key | English |
+|-----|---------|
+| `common.yes` | Yes |
+| `common.no` | No |
+| `common.ok` | OK |
+| `common.cancel` | Cancel |
+| `common.close` | Close |
+| `common.save` | Save |
+| `common.delete` | Delete |
+| `common.edit` | Edit |
+| `common.add` | Add |
+| `common.reset` | Reset |
+| `common.back` | Back |
+| `common.next` | Next |
+| `common.start` | Start |
+| `common.stop` | Stop |
+| `common.loading` | Loading... |
+| `common.error` | Error |
+| `common.success` | Success |
+
+---
+
+## Navigation
+
+| Key | English |
+|-----|---------|
+| `nav.home` | Home |
+| `nav.goals` | Goals |
+| `nav.stats` | Statistics |
+| `nav.settings` | Settings |
+
+---
+
+## Home Page
+
+| Key | English |
+|-----|---------|
+| `home.title` | My Goals |
+| `home.noActiveGoals` | No active goals yet. |
+| `home.createFirstGoal` | Create your first goal |
+| `home.loadingGoals` | Loading goals... |
+
+---
+
+## Filters
+
+| Key | English |
+|-----|---------|
+| `filters.context` | Context |
+| `filters.status` | Status |
+| `filters.tags` | Tags |
+| `filters.selected` | Selected ({count}) |
+| `filters.noTags` | No tags |
+| `filters.reset` | Reset |
+
+---
+
+## Goal Types
+
+| Key | English |
+|-----|---------|
+| `goalTypes.timer` | Timer |
+| `goalTypes.counter` | Counter |
+| `goalTypes.checkbox` | Checkbox |
+
+---
+
+## Goal Periods
+
+| Key | English |
+|-----|---------|
+| `goalPeriods.day` | Daily |
+| `goalPeriods.week` | Weekly |
+| `goalPeriods.month` | Monthly |
+
+---
+
+## Goal Directions
+
+| Key | English |
+|-----|---------|
+| `goalDirections.complete` | I want to complete |
+| `goalDirections.limit` | I want to limit |
+
+---
+
+## Goal Form
+
+| Key | English |
+|-----|---------|
+| `goalForm.title` | Create goal |
+| `goalForm.editTitle` | Edit goal |
+| `goalForm.goalName` | Goal name |
+| `goalForm.goalType` | Goal type |
+| `goalForm.selectGoalType` | Select goal type |
+| `goalForm.period` | Period |
+| `goalForm.goalDirection` | Goal direction |
+| `goalForm.targetValue` | Target value |
+| `goalForm.targetTime` | Target time (HH:MM) |
+| `goalForm.startDate` | Start date |
+| `goalForm.endDate` | End date |
+| `goalForm.periodsCount` | Periods count |
+| `goalForm.saveChanges` | Save changes |
+| `goalForm.archiveGoal` | Archive goal |
+| `goalForm.addGoal` | Add goal |
+
+---
+
+## Goal Details
+
+| Key | English |
+|-----|---------|
+| `goalDetails.notFound` | Goal not found. |
+| `goalDetails.archived` | This goal is archived and hidden from active views. |
+| `goalDetails.backToHome` | Back to Home |
+| `goalDetails.unknownContext` | Unknown context |
+| `goalDetails.progress` | Progress: |
+| `goalDetails.events` | Events |
+| `goalDetails.noTimeEntries` | No time entries yet. |
+| `goalDetails.noCounterEvents` | No counter events yet. |
+| `goalDetails.noCheckEvents` | No check events yet. |
+| `goalDetails.running` | Running |
+
+---
+
+## Time Entry Form
+
+| Key | English |
+|-----|---------|
+| `timeEntry.addTimeEntry` | Add time entry |
+| `timeEntry.start` | Start |
+| `timeEntry.end` | End |
+| `timeEntry.addEntry` | Add entry |
+
+---
+
+## Counter Event Form
+
+| Key | English |
+|-----|---------|
+| `counterEvent.addCounterEvent` | Add counter event |
+| `counterEvent.occurredAt` | Occurred at |
+| `counterEvent.delta` | Delta |
+| `counterEvent.addEvent` | Add event |
+
+---
+
+## Check Event Form
+
+| Key | English |
+|-----|---------|
+| `checkEvent.addCheckEvent` | Add check event |
+| `checkEvent.occurredAt` | Occurred at |
+| `checkEvent.state` | State |
+| `checkEvent.done` | Done |
+| `checkEvent.notDone` | Not done |
+| `checkEvent.addEvent` | Add event |
+
+---
+
+## Timer
+
+| Key | English |
+|-----|---------|
+| `timer.noActiveTimer` | No active timer |
+| `timer.startTimer` | Start timer |
+| `timer.anotherRunning` | Another timer is already running |
+
+---
+
+## Contexts
+
+| Key | English |
+|-----|---------|
+| `contexts.context` | Context |
+| `contexts.pickOrCreate` | Pick or create a context |
+| `contexts.loading` | Loading contexts... |
+| `contexts.noContexts` | No contexts |
+| `contexts.contextsSelected` | Contexts ({count}) |
+| `contexts.allContexts` | Contexts |
+
+---
+
+## Tags
+
+| Key | English |
+|-----|---------|
+| `tags.tags` | Tags |
+| `tags.addTag` | Add a tag |
+| `tags.loading` | Loading tags... |
+| `tags.noTags` | No tags |
+| `tags.noTagsYet` | No tags yet. |
+| `tags.tagsSelected` | Tags ({count}) |
+| `tags.allTags` | Tags |
+
+---
+
+## Statistics Page
+
+| Key | English |
+|-----|---------|
+| `stats.period.week` | Week |
+| `stats.period.month` | Month |
+| `stats.period.custom` | Custom |
+| `stats.from` | from |
+| `stats.to` | to |
+| `stats.totalTime` | Time |
+| `stats.timeByContexts` | Time by contexts |
+| `stats.noContextsToShow` | No contexts to display. |
+| `stats.selected` | Selected: |
+| `stats.contextShare` | Context share |
+| `stats.noTimeData` | No time data yet. |
+| `stats.loading` | Loading statistics... |
+
+---
+
+## Authentication
+
+| Key | English |
+|-----|---------|
+| `auth.checkingSession` | Checking session... |
+| `auth.loginWithGoogle` | Login with Google |
+| `auth.authFailed` | Failed to finish authentication. Try again. |
+| `auth.signingIn` | Signing you in... |
+| `auth.login` | Login |
+| `auth.logout` | Logout |
+
+---
+
+## Error Messages
+
+| Key | English |
+|-----|---------|
+| `errors.goalNotFound` | Goal not found. |
+| `errors.failedToLoadEvents` | Failed to load events. |
+| `errors.anotherTimerRunning` | Another timer is already running. |
+| `errors.loginToStartTimer` | Please log in to start a timer. |
+| `errors.failedToStartTimer` | Failed to start timer. |
+| `errors.noActiveTimerToStop` | No active timer to stop. |
+| `errors.failedToStopTimer` | Failed to stop timer. |
+| `errors.contextNameRequired` | Context name is required. |
+| `errors.loginToCreateContext` | Please log in to create a context. |
+| `errors.failedToCreateContext` | Failed to create context. |
+| `errors.tagNameRequired` | Tag name is required. |
+| `errors.loginToCreateTag` | Please log in to create a tag. |
+| `errors.failedToCreateTag` | Failed to create tag. |
+| `errors.goalTypeRequired` | Goal type is required. |
+| `errors.periodsCountInvalid` | Periods count must be a positive integer. |
+| `errors.targetValueInvalid` | Target value must be a positive integer. |
+| `errors.timeFormatInvalid` | Enter time as HH:MM with minutes between 00 and 59. |
+| `errors.startDateAndPeriodsRequired` | Start date and periods are required. |
+| `errors.endDateBeforeStart` | End date must be on or after start date. |
+| `errors.loginRequired` | Please log in to continue. |
+| `errors.contextRequired` | Context is required. |
+| `errors.goalCreatedButNoId` | Goal created but could not read its ID. |
+| `errors.failedToAddTag` | Failed to add tag. |
+
+---
+
+## Formatters
+
+| Key | English |
+|-----|---------|
+| `formatters.dash` | — |
+| `formatters.minutes` | min |
+| `formatters.hours` | h |
+| `formatters.defaultTime` | --:-- |
+| `formatters.defaultDateTime` | --:--:-- |
+
+---
+
+## Status Labels
+
+| Key | English |
+|-----|---------|
+| `status.success` | Success |
+| `status.fail` | Fail |
+| `status.inProgress` | In progress |
+| `status.archived` | Archived |
+
+---
+
+## Metadata (SEO)
+
+| Key | English |
+|-----|---------|
+| `metadata.title` | Habimori |
+| `metadata.description` | Minimal goal and time tracking |
+
+---
+
+## How to Add a New Language
+
+1. Create a new JSON file in `src/i18n/locales/` (e.g., `de.json` for German)
+2. Copy the structure from `en.json` and translate all values
+3. Add the language to `src/i18n/config.ts`:
+   - Add to `SUPPORTED_LANGUAGES`
+   - Add to `LANGUAGE_NAMES`
+   - Add to `LANGUAGE_CODES`
+4. The language will be automatically available in the UI
+
+## Interpolation
+
+Text values can use parameters with curly braces:
+
+Example: `"filters.selected": "Selected ({count})"`
+
+Usage in code:
+```typescript
+t("filters.selected", { count: 5 })
+// Output: "Selected (5)"
+```
+
+## Nested Keys
+
+All translations use dot notation for nesting. The structure is:
+- `section.subsection.key`
+
+Example: `auth.loginWithGoogle`, `goalForm.title`

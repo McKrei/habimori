@@ -4,13 +4,19 @@ import { useMemo, useState } from "react";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
 import ToastStack from "@/src/components/ToastStack";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 import HomeEmptyState from "./HomeEmptyState";
 import HomeFiltersBar from "./HomeFiltersBar";
 import HomeGoalCard from "./HomeGoalCard";
 import HomeWeekCalendar from "./HomeWeekCalendar";
 import { useHomeGoalData } from "./useHomeGoalData";
 
-export default function HomePage() {
+type HomePageProps = {
+  lng: string;
+};
+
+export default function HomePage({ lng }: HomePageProps) {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const {
     activeEntry,
@@ -101,7 +107,7 @@ export default function HomePage() {
 
       {isLoading && goals.length === 0 ? (
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          Loading goals…
+          {t("home.loadingGoals")}
         </div>
       ) : null}
 
@@ -132,9 +138,10 @@ export default function HomePage() {
           setSelectedTags([]);
           setSelectedStatus("");
         }}
+        lng={lng}
       />
 
-      {emptyState ? <HomeEmptyState /> : null}
+      {emptyState ? <HomeEmptyState lng={lng} /> : null}
 
       <div className="grid gap-4">
         {filteredGoals.map((goal) => {
@@ -170,6 +177,7 @@ export default function HomePage() {
               onStartTimer={() => handleStartTimer(goal)}
               onStopTimer={() => handleStopTimer(goal)}
               onCheckToggle={(nextState) => handleCheckToggle(goal, nextState)}
+              lng={lng}
             />
           );
         })}

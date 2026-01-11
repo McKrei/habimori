@@ -1,0 +1,195 @@
+{
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "reset": "Reset",
+    "back": "Back",
+    "next": "Next",
+    "start": "Start",
+    "stop": "Stop",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "nav": {
+    "home": "Home",
+    "goals": "Goals",
+    "stats": "Statistics",
+    "settings": "Settings"
+  },
+  "home": {
+    "title": "My Goals",
+    "noActiveGoals": "No active goals yet.",
+    "createFirstGoal": "Create your first goal",
+    "loadingGoals": "Loading goals..."
+  },
+  "filters": {
+    "context": "Context",
+    "status": "Status",
+    "tags": "Tags",
+    "selected": "Selected ({count})",
+    "noTags": "No tags",
+    "reset": "Reset"
+  },
+  "goalTypes": {
+    "timer": "Timer",
+    "counter": "Counter",
+    "checkbox": "Checkbox"
+  },
+  "goalPeriods": {
+    "day": "Daily",
+    "week": "Weekly",
+    "month": "Monthly"
+  },
+  "goalDirections": {
+    "complete": "I want to complete",
+    "limit": "I want to limit"
+  },
+  "goalForm": {
+    "title": "Create goal",
+    "editTitle": "Edit goal",
+    "goalName": "Goal name",
+    "goalType": "Goal type",
+    "selectGoalType": "Select goal type",
+    "period": "Period",
+    "goalDirection": "Goal direction",
+    "targetValue": "Target value",
+    "targetTime": "Target time (HH:MM)",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "periodsCount": "Periods count",
+    "saveChanges": "Save changes",
+    "archiveGoal": "Archive goal",
+    "addGoal": "Add goal"
+  },
+  "goalDetails": {
+    "loadingGoal": "Loading goal...",
+    "notFound": "Goal not found.",
+    "archived": "This goal is archived and hidden from active views.",
+    "backToHome": "Back to Home",
+    "unknownContext": "Unknown context",
+    "progress": "Progress:",
+    "events": "Events",
+    "noTimeEntries": "No time entries yet.",
+    "noCounterEvents": "No counter events yet.",
+    "noCheckEvents": "No check events yet.",
+    "running": "Running"
+  },
+  "timeEntry": {
+    "addTimeEntry": "Add time entry",
+    "start": "Start",
+    "end": "End",
+    "addEntry": "Add entry"
+  },
+  "counterEvent": {
+    "addCounterEvent": "Add counter event",
+    "occurredAt": "Occurred at",
+    "delta": "Delta",
+    "addEvent": "Add event"
+  },
+  "checkEvent": {
+    "addCheckEvent": "Add check event",
+    "occurredAt": "Occurred at",
+    "state": "State",
+    "done": "Done",
+    "notDone": "Not done",
+    "addEvent": "Add event"
+  },
+  "timer": {
+    "noActiveTimer": "No active timer",
+    "startTimer": "Start timer",
+    "anotherRunning": "Another timer is already running"
+  },
+  "contexts": {
+    "context": "Context",
+    "pickOrCreate": "Pick or create a context",
+    "loading": "Loading contexts...",
+    "noContexts": "No contexts",
+    "contextsSelected": "Contexts ({count})",
+    "allContexts": "Contexts"
+  },
+  "tags": {
+    "tags": "Tags",
+    "addTag": "Add a tag",
+    "loading": "Loading tags...",
+    "noTags": "No tags",
+    "noTagsYet": "No tags yet.",
+    "tagsSelected": "Tags ({count})",
+    "allTags": "Tags"
+  },
+  "stats": {
+    "period": {
+      "week": "Week",
+      "month": "Month",
+      "custom": "Custom"
+    },
+    "from": "from",
+    "to": "to",
+    "totalTime": "Time",
+    "timeByContexts": "Time by contexts",
+    "noContextsToShow": "No contexts to display.",
+    "selected": "Selected:",
+    "contextShare": "Context share",
+    "noTimeData": "No time data yet.",
+    "loading": "Loading statistics...",
+    "contextsSelected": "Contexts ({count})",
+    "allContexts": "Contexts",
+    "noContexts": "No contexts",
+    "tagsSelected": "Tags ({count})",
+    "allTags": "Tags",
+    "noTags": "No tags"
+  },
+  "auth": {
+    "checkingSession": "Checking session...",
+    "loginWithGoogle": "Login with Google",
+    "authFailed": "Failed to finish authentication. Try again.",
+    "signingIn": "Signing you in...",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "errors": {
+    "goalNotFound": "Goal not found.",
+    "failedToLoadEvents": "Failed to load events.",
+    "anotherTimerRunning": "Another timer is already running.",
+    "loginToStartTimer": "Please log in to start a timer.",
+    "failedToStartTimer": "Failed to start timer.",
+    "noActiveTimerToStop": "No active timer to stop.",
+    "failedToStopTimer": "Failed to stop timer.",
+    "contextNameRequired": "Context name is required.",
+    "loginToCreateContext": "Please log in to create a context.",
+    "failedToCreateContext": "Failed to create context.",
+    "tagNameRequired": "Tag name is required.",
+    "loginToCreateTag": "Please log in to create a tag.",
+    "failedToCreateTag": "Failed to create tag.",
+    "goalTypeRequired": "Goal type is required.",
+    "periodsCountInvalid": "Periods count must be a positive integer.",
+    "targetValueInvalid": "Target value must be a positive integer.",
+    "timeFormatInvalid": "Enter time as HH:MM with minutes between 00 and 59.",
+    "startDateAndPeriodsRequired": "Start date and periods are required.",
+    "endDateBeforeStart": "End date must be on or after start date.",
+    "loginRequired": "Please log in to continue.",
+    "contextRequired": "Context is required.",
+    "goalCreatedButNoId": "Goal created but could not read its ID.",
+    "failedToAddTag": "Failed to add tag."
+  },
+  "formatters": {
+    "dash": "—",
+    "minutes": "min",
+    "hours": "h",
+    "defaultTime": "--:--",
+    "defaultDateTime": "--:--:--"
+  },
+  "status": {
+    "success": "Success",
+    "fail": "Fail",
+    "inProgress": "In progress",
+    "archived": "Archived"
+  }
+}
