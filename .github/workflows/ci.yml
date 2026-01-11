@@ -35,6 +35,24 @@ jobs:
       - name: Unit tests
         run: npx vitest run --exclude tests/integration
 
+      - name: Telegram notify (test failure)
+        if: failure()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          set -e
+          TEXT="❌ CI TEST FAILED
+Repo: ${{ github.repository }}
+Branch: ${{ github.ref_name }}
+Event: ${{ github.event_name }}
+Actor: ${{ github.actor }}
+Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TG_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d disable_web_page_preview=true >/dev/null
+
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -53,4 +71,36 @@ jobs:
             git pull
             make docker-reload
 
+      - name: Telegram notify (deploy success)
+        if: success()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          set -e
+          TEXT="🚀 DEPLOY OK
+Repo: ${{ github.repository }}
+Branch: ${{ github.ref_name }}
+Commit: ${{ github.sha }}
+Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TG_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d disable_web_page_preview=true >/dev/null
 
+      - name: Telegram notify (deploy failure)
+        if: failure()
+        env:
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          set -e
+          TEXT="💥 DEPLOY FAILED
+Repo: ${{ github.repository }}
+Branch: ${{ github.ref_name }}
+Commit: ${{ github.sha }}
+Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TG_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d disable_web_page_preview=true >/dev/null
