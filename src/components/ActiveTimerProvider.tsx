@@ -27,8 +27,8 @@ type ActiveTimerContextValue = {
   startTimer: (payload: {
     contextId: string;
     goalId?: string | null;
-  }) => Promise<{ error?: string | { key: string; params?: any }; entryId?: string }>;
-  stopTimer: (endedAt?: string) => Promise<{ error?: string | { key: string; params?: any } }>;
+  }) => Promise<{ error?: string | { key: string; params?: Record<string, string | number> }; entryId?: string }>;
+  stopTimer: (endedAt?: string) => Promise<{ error?: string | { key: string; params?: Record<string, string | number> } }>;
 };
 
 const ActiveTimerContext = createContext<ActiveTimerContextValue | null>(null);

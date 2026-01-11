@@ -72,6 +72,7 @@ export default function GlobalTimerBar() {
       contextId: context.id,
     });
     if (startError || !entryId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const errorMessage = typeof startError === 'string' ? startError : t(startError!.key as any, startError!.params);
       setError(errorMessage);
       if (typeof startError === 'object' && startError.key === 'errors.timerAlreadyRunning') {
@@ -109,6 +110,7 @@ export default function GlobalTimerBar() {
     const endedAt = new Date().toISOString();
     const { error: stopError } = await stopTimer(endedAt);
     if (stopError) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const errorMessage = typeof stopError === 'string' ? stopError : t(stopError!.key as any, stopError!.params);
       setError(errorMessage);
       if (typeof stopError === 'object' && stopError.key === 'errors.timerAlreadyStopped') {

@@ -609,6 +609,7 @@ export function useHomeGoalData(selectedDate: Date) {
       if (timeMutationRef.current[goal.id] !== mutationId) return;
       if (startError) {
         setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const errorMessage: string = typeof startError === 'string' ? startError : t(startError.key as any, startError.params);
         pushToast(errorMessage, "error");
         if (typeof startError === 'object' && startError.key === 'errors.timerAlreadyRunning') {
@@ -648,6 +649,7 @@ export function useHomeGoalData(selectedDate: Date) {
       if (timeMutationRef.current[goal.id] !== mutationId) return;
       if (stopError) {
         setErrorByGoal((prev) => ({ ...prev, [goal.id]: true }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const errorMessage: string = typeof stopError === 'string' ? stopError : t(stopError.key as any, stopError.params);
         pushToast(errorMessage, "error");
         if (typeof stopError === 'object' && stopError.key === 'errors.timerAlreadyStopped') {
