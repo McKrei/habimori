@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import DayStatusDots from "@/src/components/calendar/DayStatusDots";
 import { useDayStatusMap } from "@/src/components/calendar/useDayStatusMap";
 import { addDays, getDateString, getTodayDateString } from "./utils";
@@ -16,6 +16,7 @@ export default function HomeWeekCalendar({
   selectedDate,
   onChange,
 }: HomeWeekCalendarProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const wheelLockRef = useRef(0);
   const swipeStartRef = useRef<number | null>(null);
   const todayKey = useMemo(() => getTodayDateString(), []);
@@ -70,21 +71,33 @@ export default function HomeWeekCalendar({
     [handleStep],
   );
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      const now = Date.now();
+      if (now - wheelLockRef.current < 120) return;
+      const delta =
+        Math.abs(event.deltaX) > Math.abs(event.deltaY)
+          ? event.deltaX
+          : event.deltaY;
+      if (Math.abs(delta) < 8) return;
+      event.preventDefault();
+      wheelLockRef.current = now;
+      handleStep(delta);
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+    };
+  }, [handleStep]);
+
   return (
     <div
+      ref={containerRef}
       className="select-none rounded-lg border border-slate-200 bg-white px-3 py-2 touch-pan-y"
-      onWheel={(event) => {
-        const now = Date.now();
-        if (now - wheelLockRef.current < 120) return;
-        const delta =
-          Math.abs(event.deltaX) > Math.abs(event.deltaY)
-            ? event.deltaX
-            : event.deltaY;
-        if (Math.abs(delta) < 8) return;
-        event.preventDefault();
-        wheelLockRef.current = now;
-        handleStep(delta);
-      }}
       onPointerDown={(event) => {
         handlePointerStart(event.clientX);
       }}

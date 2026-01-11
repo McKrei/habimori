@@ -48,6 +48,7 @@ export default function RootLayout({
                       width={50}
                       height={50}
                       className="rounded"
+                      priority
                     />
                     <span className="text-xl font-semibold tracking-tight">
                       Habimori
