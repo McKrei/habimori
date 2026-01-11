@@ -128,11 +128,9 @@ export default function StatsPage() {
     "month",
   );
   const [customStart, setCustomStart] = useState(() =>
-    toDateInput(startOfMonth(new Date())),
+    toDateInput(addDays(new Date(), -6)),
   );
-  const [customEnd, setCustomEnd] = useState(() =>
-    toDateInput(endOfMonth(new Date())),
-  );
+  const [customEnd, setCustomEnd] = useState(() => toDateInput(new Date()));
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isContextOpen, setIsContextOpen] = useState(false);
@@ -162,19 +160,22 @@ export default function StatsPage() {
   const range = useMemo(() => {
     const now = new Date();
     if (periodMode === "week") {
-      const start = startOfWeek(now);
-      const end = endOfWeek(now);
+      const start = addDays(now, -6);
+      const end = now;
       return { start, end };
     }
     if (periodMode === "month") {
-      const start = startOfMonth(now);
-      const end = endOfMonth(now);
+      const start = addDays(now, -29);
+      const end = now;
       return { start, end };
     }
     const startDate = customStart || toDateInput(now);
     const endDate = customEnd || toDateInput(now);
     const start = new Date(`${startDate}T00:00:00`);
-    const end = new Date(`${endDate}T00:00:00`);
+    let end = new Date(`${endDate}T00:00:00`);
+    if (end > now) {
+      end = now;
+    }
     if (start > end) {
       return { start: end, end: start };
     }
@@ -483,8 +484,8 @@ export default function StatsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-600">
             {[
-              { key: "week", label: "Неделя (эта)" },
-              { key: "month", label: "Месяц (этот)" },
+              { key: "week", label: "Неделя" },
+              { key: "month", label: "Месяц" },
               { key: "custom", label: "Произвольный" },
             ].map((item) => (
               <button
