@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 concurrency:
-  group: habimori-master
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
           set -e
-          TEXT="CI TEST FAILED
+          TEXT="❌ CI TEST FAILED
 Repo: ${{ github.repository }}
 Branch: ${{ github.ref_name }}
 Event: ${{ github.event_name }}
@@ -52,7 +52,6 @@ Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.r
             -d chat_id="${TG_CHAT_ID}" \
             -d text="$TEXT" \
             -d disable_web_page_preview=true >/dev/null
-
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -78,7 +77,7 @@ Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.r
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
           set -e
-          TEXT="DEPLOY OK
+          TEXT="🚀 DEPLOY OK
 Repo: ${{ github.repository }}
 Branch: ${{ github.ref_name }}
 Commit: ${{ github.sha }}
@@ -95,7 +94,7 @@ Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.r
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
           set -e
-          TEXT="DEPLOY FAILED
+          TEXT="💥 DEPLOY FAILED
 Repo: ${{ github.repository }}
 Branch: ${{ github.ref_name }}
 Commit: ${{ github.sha }}
