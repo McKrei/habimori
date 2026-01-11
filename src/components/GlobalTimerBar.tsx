@@ -7,8 +7,10 @@ import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
 import { formatSecondsAsHHMMSS } from "@/src/components/formatters";
+import { usePathname } from "next/navigation";
 
 export default function GlobalTimerBar() {
+  const pathname = usePathname();
   const { activeEntry, isLoading, startTimer, stopTimer } = useActiveTimer();
   const { contexts, ensureContext, isLoading: contextsLoading } = useContexts();
   const { tags, ensureTag, isLoading: tagsLoading } = useTags();
@@ -143,12 +145,14 @@ export default function GlobalTimerBar() {
         </div>
 
         <div className="flex items-center justify-end">
-          <Link
-            className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-            href="/goals/new"
-          >
-            Add goal
-          </Link>
+          {pathname !== "/goals/new" && (
+            <Link
+              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+              href="/goals/new"
+            >
+              Add goal
+            </Link>
+          )}
         </div>
       </div>
 
