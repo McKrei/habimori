@@ -76,7 +76,16 @@ export default function MyComponent() {
 3. Обновить `original-texts.md`
 
 ### Переключатель языка
-`LanguageSwitcher` — кнопка в шапке, показывает текущий язык и переключает на другой.
+`LanguageSwitcher` — кнопка в шапке, показывает текущий язык (EN/RU) и переключает на другой.
+
+### Сохранение языка
+- При инициализации: приоритет — БД → localStorage → браузер
+- При переключении: сохраняется в `users.language` (Supabase) и localStorage
+
+Поле `users.language` добавляется миграцией:
+```sql
+ALTER TABLE public.users ADD COLUMN language TEXT NOT NULL DEFAULT 'en';
+```
 
 ### ESLint
 Переменные с префиксом `_` игнорируются:

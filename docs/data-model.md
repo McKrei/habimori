@@ -11,7 +11,9 @@
 
 ### users
 - id (PK, auth.users FK, cascade)
-- email, name, created_at
+- email, name
+- language (text, default 'en') — язык интерфейса пользователя
+- created_at
 
 ### contexts
 - id (PK)

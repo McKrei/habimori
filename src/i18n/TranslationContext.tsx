@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { supabase } from "@/lib/supabase/client";
 import type { Language } from "./config";
 import {
   DEFAULT_LANGUAGE,
@@ -70,6 +71,27 @@ function interpolate(
 
 const TranslationContext = createContext<TranslationContextType | null>(null);
 
+async function updateUserLanguage(lang: Language) {
+  const { error } = await supabase
+    .from("users")
+    .update({ language: lang })
+    .select();
+  if (error) {
+    console.error("Failed to update user language:", error);
+  }
+}
+
+async function fetchUserLanguage(): Promise<Language | null> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("language")
+    .single();
+  if (error || !data?.language) {
+    return null;
+  }
+  return data.language as Language;
+}
+
 export function TranslationProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(DEFAULT_LANGUAGE);
   const [translations, setTranslations] = useState<Translations>(TRANSLATIONS[DEFAULT_LANGUAGE]);
@@ -79,17 +101,21 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang);
     setTranslations(TRANSLATIONS[lang]);
     setLanguageStorage(lang);
+    void updateUserLanguage(lang);
   }, []);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const storedLang = getLanguageFromStorage();
-      const browserLang = getLanguageFromBrowser();
-      const initialLang = storedLang || browserLang;
-      if (TRANSLATIONS[initialLang]) {
-        setLanguageState(initialLang);
-        setTranslations(TRANSLATIONS[initialLang]);
+    const timeout = window.setTimeout(async () => {
+      let initialLang = getLanguageFromStorage() || getLanguageFromBrowser();
+      if (DEFAULT_LANGUAGE && !TRANSLATIONS[initialLang]) {
+        initialLang = DEFAULT_LANGUAGE;
       }
+      const userLang = await fetchUserLanguage();
+      if (userLang && TRANSLATIONS[userLang]) {
+        initialLang = userLang;
+      }
+      setLanguageState(initialLang);
+      setTranslations(TRANSLATIONS[initialLang]);
       setIsInitialized(true);
     }, 0);
     return () => window.clearTimeout(timeout);
