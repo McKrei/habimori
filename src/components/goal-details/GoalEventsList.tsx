@@ -23,7 +23,7 @@ export default function GoalEventsList({
   counterEvents,
   checkEvents,
   onDeleteEvent,
-  lng,
+  lng: _lng,
 }: GoalEventsListProps) {
   const { t } = useTranslation();
   return (

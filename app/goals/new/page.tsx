@@ -117,7 +117,7 @@ function parseTimeToMinutes(value: string) {
 
 export default function NewGoalPage({ params }: { params: { lng: string } }) {
   const router = useRouter();
-  const lng = params.lng;
+  const { lng: _lng } = params;
   const { t } = useTranslation();
   const { contexts, ensureContext, isLoading: contextsLoading } = useContexts();
   const { tags, ensureTag, isLoading: tagsLoading } = useTags();

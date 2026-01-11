@@ -11,7 +11,7 @@ type AuthGateProps = {
   lng: string;
 };
 
-export default function AuthGate({ children, lng }: AuthGateProps) {
+export default function AuthGate({ children, lng: _lng }: AuthGateProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);

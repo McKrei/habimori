@@ -42,7 +42,7 @@ export default function GoalEntryForms({
   onAddTimeEntry,
   onAddCounterEvent,
   onAddCheckEvent,
-  lng,
+  lng: _lng,
 }: GoalEntryFormsProps) {
   const { t } = useTranslation();
   return (

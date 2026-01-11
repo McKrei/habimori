@@ -15,7 +15,7 @@ type HomePageProps = {
   lng: string;
 };
 
-export default function HomePage({ lng }: HomePageProps) {
+export default function HomePage({ lng: _lng }: HomePageProps) {
   const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const {
@@ -138,10 +138,10 @@ export default function HomePage({ lng }: HomePageProps) {
           setSelectedTags([]);
           setSelectedStatus("");
         }}
-        lng={lng}
+        lng={_lng}
       />
 
-      {emptyState ? <HomeEmptyState lng={lng} /> : null}
+      {emptyState ? <HomeEmptyState lng={_lng} /> : null}
 
       <div className="grid gap-4">
         {filteredGoals.map((goal) => {
@@ -177,7 +177,7 @@ export default function HomePage({ lng }: HomePageProps) {
               onStartTimer={() => handleStartTimer(goal)}
               onStopTimer={() => handleStopTimer(goal)}
               onCheckToggle={(nextState) => handleCheckToggle(goal, nextState)}
-              lng={lng}
+              lng={_lng}
             />
           );
         })}

@@ -10,7 +10,7 @@ type GoalHeaderProps = {
   lng: string;
 };
 
-export default function GoalHeader({ goal, progressValue, lng }: GoalHeaderProps) {
+export default function GoalHeader({ goal, progressValue, lng: _lng }: GoalHeaderProps) {
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">

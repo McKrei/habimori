@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useTranslation } from "@/src/i18n/TranslationContext";
 
-function AuthCallbackContent({ lng }: { lng: string }) {
+function AuthCallbackContent({ lng: _lng }: { lng: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();

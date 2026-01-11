@@ -12,7 +12,6 @@ import {
 import type { Language } from "./config";
 import {
   DEFAULT_LANGUAGE,
-  FALLBACK_LANGUAGE,
   getLanguageFromBrowser,
   getLanguageFromStorage,
   setLanguageStorage,
@@ -67,27 +66,6 @@ function interpolate(
     const value = params[key];
     return value !== undefined ? String(value) : `{${key}}`;
   });
-}
-
-function createTFunction(
-  translations: Translations,
-  lang: Language
-): TFunction {
-  return function t<Key extends NestedKeyOf<Translations>>(
-    key: Key,
-    params?: Record<string, string | number>
-  ): string {
-    const value = getNestedValue(translations, key);
-    if (typeof value === "string") {
-      return interpolate(value, params);
-    }
-    console.warn(`Translation key not found: "${key}" (language: ${lang})`);
-    const enValue = getNestedValue(TRANSLATIONS[FALLBACK_LANGUAGE], key);
-    if (typeof enValue === "string") {
-      return interpolate(enValue, params);
-    }
-    return key;
-  };
 }
 
 const TranslationContext = createContext<TranslationContextType | null>(null);

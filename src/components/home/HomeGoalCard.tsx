@@ -50,7 +50,7 @@ export default function HomeGoalCard({
   onStartTimer,
   onStopTimer,
   onCheckToggle,
-  lng,
+  lng: _lng,
 }: HomeGoalCardProps) {
   const { t } = useTranslation();
   const contextLabel = goal.context?.name ?? t("goalDetails.unknownContext");

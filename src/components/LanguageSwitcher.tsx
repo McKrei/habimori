@@ -7,7 +7,7 @@ type LanguageSwitcherProps = {
   lng: string;
 };
 
-export default function LanguageSwitcher({ lng }: LanguageSwitcherProps) {
+export default function LanguageSwitcher({ lng: _lng }: LanguageSwitcherProps) {
   const { language, setLanguage } = useTranslation();
 
   const otherLanguage: Language = language === "ru" ? "en" : "ru";

@@ -42,7 +42,7 @@ export default function GoalEditCard({
   onSave,
   onArchive,
   onTagSubmit,
-  lng,
+  lng: _lng,
 }: GoalEditCardProps) {
   const { t } = useTranslation();
   return (

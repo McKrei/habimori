@@ -63,21 +63,6 @@ function startOfWeek(date: Date) {
   return start;
 }
 
-function endOfWeek(date: Date) {
-  const start = startOfWeek(date);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-  return end;
-}
-
-function startOfMonth(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-function endOfMonth(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-}
-
 function addDays(date: Date, days: number) {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
@@ -123,7 +108,7 @@ function formatMinutesWithDays(totalMinutes: number) {
 }
 
 export default function StatsPage({ params }: { params: { lng: string } }) {
-  const lng = params.lng;
+  const { lng: _lng } = params;
   const { t } = useTranslation();
   const { contexts } = useContexts();
   const { tags } = useTags();

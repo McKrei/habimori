@@ -9,7 +9,7 @@ import GoalHeader from "./GoalHeader";
 import { useGoalDetails } from "./useGoalDetails";
 import { getTodayDateString } from "./utils";
 
-export default function GoalDetailsPage({ lng }: { lng: string }) {
+export default function GoalDetailsPage({ lng: _lng }: { lng: string }) {
   const router = useRouter();
   const params = useParams();
   const goalId = Array.isArray(params?.id) ? params.id[0] : params?.id;
@@ -101,7 +101,7 @@ export default function GoalDetailsPage({ lng }: { lng: string }) {
 
   return (
     <section className="space-y-6">
-      <GoalHeader goal={goal} progressValue={progressValue} lng={lng} />
+      <GoalHeader goal={goal} progressValue={progressValue} lng={_lng} />
 
       {error ? (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
@@ -134,7 +134,7 @@ export default function GoalDetailsPage({ lng }: { lng: string }) {
               }
               onSave={handleSaveGoal}
               onArchive={handleArchiveGoal}
-              lng={lng}
+              lng={_lng}
             />
           ) : null}
 
@@ -156,7 +156,7 @@ export default function GoalDetailsPage({ lng }: { lng: string }) {
             onAddTimeEntry={handleAddTimeEntry}
             onAddCounterEvent={handleAddCounterEvent}
             onAddCheckEvent={handleAddCheckEvent}
-            lng={lng}
+            lng={_lng}
           />
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function GoalDetailsPage({ lng }: { lng: string }) {
         counterEvents={counterEvents}
         checkEvents={checkEvents}
         onDeleteEvent={handleDeleteEvent}
-        lng={lng}
+        lng={_lng}
       />
     </section>
   );

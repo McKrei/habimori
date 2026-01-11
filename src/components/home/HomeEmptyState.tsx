@@ -7,7 +7,7 @@ type HomeEmptyStateProps = {
   lng: string;
 };
 
-export default function HomeEmptyState({ lng }: HomeEmptyStateProps) {
+export default function HomeEmptyState({ lng: _lng }: HomeEmptyStateProps) {
   const { t } = useTranslation();
   return (
     <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">

@@ -31,7 +31,7 @@ export default function HomeFiltersBar({
   onTagsToggle,
   onTagToggle,
   onReset,
-  lng,
+  lng: _lng,
 }: HomeFiltersBarProps) {
   const { t } = useTranslation();
   return (
