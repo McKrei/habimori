@@ -45,7 +45,7 @@ docker-build:
 
 docker-run:
 	docker run -d --restart unless-stopped \
-	  -p 3000:3000 \
+	  -p 127.0.0.1:3000:3000 \
 	  --env-file ./.env \
 	  --name habimori-app \
 	  habimori-app
