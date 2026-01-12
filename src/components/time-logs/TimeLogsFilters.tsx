@@ -64,11 +64,11 @@ export function TimeLogsFiltersComponent({
     >
       {/* Context Filter */}
       <div className="space-y-2">
-        <label className="block text-xs font-medium text-slate-500">
+        <label className="block text-xs font-medium text-text-muted">
           {t("filters.context")}
         </label>
         {contexts.length === 0 ? (
-          <p className="text-xs text-slate-400">{t("filters.noOptions")}</p>
+          <p className="text-xs text-text-faint">{t("filters.noOptions")}</p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {contexts.map((context) => {
@@ -82,8 +82,8 @@ export function TimeLogsFiltersComponent({
                     rounded-full px-2.5 py-1 text-xs transition-all
                     ${
                       isSelected
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        ? "bg-accent text-surface"
+                        : "bg-surface-elevated text-text-secondary hover:bg-background"
                     }
                   `}
                 >
@@ -97,11 +97,11 @@ export function TimeLogsFiltersComponent({
 
       {/* Tags Filter */}
       <div className="space-y-2">
-        <label className="block text-xs font-medium text-slate-500">
+        <label className="block text-xs font-medium text-text-muted">
           {t("filters.tags")}
         </label>
         {tags.length === 0 ? (
-          <p className="text-xs text-slate-400">{t("filters.noTags")}</p>
+          <p className="text-xs text-text-faint">{t("filters.noTags")}</p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {tags.map((tag) => {
@@ -115,8 +115,8 @@ export function TimeLogsFiltersComponent({
                     rounded-full px-2.5 py-1 text-xs transition-all
                     ${
                       isSelected
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        ? "bg-accent text-surface"
+                        : "bg-surface-elevated text-text-secondary hover:bg-background"
                     }
                   `}
                 >

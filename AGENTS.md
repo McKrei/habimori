@@ -13,6 +13,7 @@
 - Разработка и проверки: `docs/dev.md`
 - Текущее состояние/статус: `docs/plan.md`
 - Конфиг календаря (donut ring): `docs/calendar-donut.md`
+- Система тем (светлая/тёмная): `docs/theming.md`
 
 ## Supabase
 * Миграции: `./supabase/migrations`

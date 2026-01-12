@@ -44,7 +44,7 @@ export function EntryMenu({ onDelete, onEditTags, disabled }: EntryMenuProps) {
     <div className="relative" ref={menuRef}>
       <button
         type="button"
-        className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+        className="flex h-6 w-6 items-center justify-center rounded text-text-faint hover:bg-surface-elevated hover:text-text-secondary disabled:opacity-50"
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
         aria-label="Menu"
@@ -61,10 +61,10 @@ export function EntryMenu({ onDelete, onEditTags, disabled }: EntryMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-10 mt-1 w-32 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+        <div className="absolute right-0 top-full z-10 mt-1 w-32 rounded-lg border border-border bg-surface py-1 shadow-lg">
           <button
             type="button"
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-text-secondary hover:bg-background"
             onClick={handleEditTags}
           >
             <svg
@@ -81,7 +81,7 @@ export function EntryMenu({ onDelete, onEditTags, disabled }: EntryMenuProps) {
           </button>
           <button
             type="button"
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-rose-600 hover:bg-rose-50"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-rose-600 hover:bg-rose-500/10"
             onClick={handleDelete}
           >
             <svg

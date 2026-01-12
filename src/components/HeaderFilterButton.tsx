@@ -18,13 +18,13 @@ export default function HeaderFilterButton() {
   return (
     <button
       onClick={openFilter}
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
+      className="relative inline-flex h-9 w-9 items-center justify-center rounded-md bg-accent text-surface hover:bg-accent-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 transition-colors"
       aria-label="Фильтры"
       title="Фильтры"
     >
       <FilterIcon size={16} />
       {activeFilterCount > 0 && (
-        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-medium text-white">
+        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-medium text-surface">
           {activeFilterCount}
         </span>
       )}

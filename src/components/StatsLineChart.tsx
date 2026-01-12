@@ -88,14 +88,14 @@ export default function StatsLineChart({
           );
         })}
       </svg>
-      <div className="flex flex-wrap gap-3 text-xs text-slate-600">
+      <div className="flex flex-wrap gap-3 text-xs text-text-secondary">
         {series.map((line) => (
           <div key={line.id} className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full"
               style={{ backgroundColor: line.color }}
             />
-            <span className="font-medium text-slate-700">{line.label}</span>
+            <span className="font-medium text-text-secondary">{line.label}</span>
             {line.meta}
           </div>
         ))}

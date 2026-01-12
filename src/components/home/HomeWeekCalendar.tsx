@@ -152,7 +152,7 @@ export default function HomeWeekCalendar({
   return (
     <div
       ref={containerRef}
-      className="select-none rounded-lg border border-slate-200 bg-white px-3 py-3 touch-pan-y"
+      className="select-none rounded-lg border border-border bg-surface px-3 py-3 touch-pan-y transition-colors"
       onPointerDown={(event) => {
         handlePointerStart(event.clientX);
       }}

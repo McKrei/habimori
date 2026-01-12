@@ -27,13 +27,13 @@ export default function GoalEventsList({
 }: GoalEventsListProps) {
   const { t } = useTranslation();
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5">
+    <div className="rounded-lg border border-border bg-surface p-5">
       <h2 className="text-base font-semibold">{t("goalDetails.events")}</h2>
 
       {goal.goal_type === "time" ? (
-        <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-slate-700">
+        <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-text-secondary">
           {timeEntries.length === 0 ? (
-            <p className="text-sm text-slate-500">{t("goalDetails.noTimeEntries")}</p>
+            <p className="text-sm text-text-muted">{t("goalDetails.noTimeEntries")}</p>
           ) : (
             timeEntries.map((entry) => {
               const started = formatDateTime(entry.started_at);
@@ -54,12 +54,12 @@ export default function GoalEventsList({
                     {started} → {ended}
                   </span>
                   <div className="flex items-center gap-3">
-                    <span className="text-base font-semibold text-slate-700">
+                    <span className="text-base font-semibold text-text-secondary">
                       {formatDurationMinutes(minutes)}
                     </span>
                     {!goal.is_archived ? (
                       <button
-                        className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-50 hover:text-rose-800"
+                        className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
                         type="button"
                         onClick={() => onDeleteEvent("time", entry.id)}
                       >
@@ -75,20 +75,20 @@ export default function GoalEventsList({
       ) : null}
 
       {goal.goal_type === "counter" ? (
-        <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-slate-700">
+        <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-text-secondary">
           {counterEvents.length === 0 ? (
-            <p className="text-sm text-slate-500">{t("goalDetails.noCounterEvents")}</p>
+            <p className="text-sm text-text-muted">{t("goalDetails.noCounterEvents")}</p>
           ) : (
             counterEvents.map((event) => (
               <div key={event.id} className="flex items-center justify-between">
                 <span>{formatDateTime(event.occurred_at)}</span>
                 <div className="flex items-center gap-3">
-                  <span className="text-base font-semibold text-slate-700">
+                  <span className="text-base font-semibold text-text-secondary">
                     +{event.value_delta}
                   </span>
                   {!goal.is_archived ? (
                     <button
-                      className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-50 hover:text-rose-800"
+                      className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
                       type="button"
                       onClick={() => onDeleteEvent("counter", event.id)}
                     >
@@ -103,20 +103,20 @@ export default function GoalEventsList({
       ) : null}
 
       {goal.goal_type === "check" ? (
-        <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-slate-700">
+        <div className="mt-4 max-h-[460px] space-y-2 overflow-y-auto pr-2 text-sm text-text-secondary">
           {checkEvents.length === 0 ? (
-            <p className="text-sm text-slate-500">{t("goalDetails.noCheckEvents")}</p>
+            <p className="text-sm text-text-muted">{t("goalDetails.noCheckEvents")}</p>
           ) : (
             checkEvents.map((event) => (
               <div key={event.id} className="flex items-center justify-between">
                 <span>{formatDateTime(event.occurred_at)}</span>
                 <div className="flex items-center gap-3">
-                  <span className="text-base font-semibold text-slate-700">
+                  <span className="text-base font-semibold text-text-secondary">
                     {event.state ? t("checkEvent.done") : t("checkEvent.notDone")}
                   </span>
                   {!goal.is_archived ? (
                     <button
-                      className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-50 hover:text-rose-800"
+                      className="rounded-md px-4 py-2 text-base text-rose-600 hover:bg-rose-500/10 hover:text-rose-600"
                       type="button"
                       onClick={() => onDeleteEvent("check", event.id)}
                     >

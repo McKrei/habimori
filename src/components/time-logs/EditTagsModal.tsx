@@ -74,14 +74,14 @@ export function EditTagsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-accent/30 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-2xl bg-surface p-5 shadow-xl">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-text-primary">
             {t("timeLogs.editTags")}
           </h3>
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-text-faint hover:bg-surface-elevated hover:text-text-secondary"
             onClick={onClose}
             type="button"
           >
@@ -90,7 +90,7 @@ export function EditTagsModal({
         </div>
 
         {error && (
-          <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">
+          <div className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600">
             {error}
           </div>
         )}
@@ -100,7 +100,7 @@ export function EditTagsModal({
           <div className="flex gap-2">
             <input
               type="text"
-              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
+              className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
               placeholder={t("tags.addTag")}
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}
@@ -108,7 +108,7 @@ export function EditTagsModal({
             />
             <button
               type="button"
-              className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+              className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-surface hover:bg-accent-hover disabled:opacity-50"
               onClick={() => void handleAddNewTag()}
               disabled={!newTagName.trim()}
             >
@@ -120,9 +120,9 @@ export function EditTagsModal({
         {/* Tag list */}
         <div className="mt-4 max-h-60 overflow-y-auto">
           {tagsLoading ? (
-            <p className="text-sm text-slate-500">{t("tags.loading")}</p>
+            <p className="text-sm text-text-muted">{t("tags.loading")}</p>
           ) : allTags.length === 0 ? (
-            <p className="text-sm text-slate-500">{t("tags.noTagsYet")}</p>
+            <p className="text-sm text-text-muted">{t("tags.noTagsYet")}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {allTags.map((tag) => {
@@ -134,8 +134,8 @@ export function EditTagsModal({
                     onClick={() => handleToggleTag(tag.id)}
                     className={`rounded-full px-3 py-1.5 text-sm transition-all ${
                       isSelected
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        ? "bg-accent text-surface"
+                        : "bg-surface-elevated text-text-secondary hover:bg-slate-200"
                     }`}
                   >
                     {tag.name}
@@ -150,14 +150,14 @@ export function EditTagsModal({
         <div className="mt-5 flex justify-end gap-2">
           <button
             type="button"
-            className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-elevated"
             onClick={onClose}
           >
             {t("common.cancel")}
           </button>
           <button
             type="button"
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-surface hover:bg-accent-hover disabled:opacity-50"
             onClick={() => void handleSave()}
             disabled={isSaving}
           >

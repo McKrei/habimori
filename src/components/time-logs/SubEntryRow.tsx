@@ -77,7 +77,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="min-w-[3.5rem] rounded bg-slate-100 px-2 py-0.5 text-left text-slate-700 hover:bg-slate-200"
+          className="min-w-[3.5rem] rounded bg-surface-elevated px-2 py-0.5 text-left text-text-secondary hover:bg-slate-200"
           onClick={handleFromClick}
           type="button"
           disabled={isUpdating}
@@ -85,7 +85,7 @@ export function SubEntryRow({
           {fromTime}
         </button>
       )}
-      <span className="text-slate-400">-</span>
+      <span className="text-text-faint">-</span>
       {isEditingTo ? (
         <InlineTimeEditor
           value={editingTime.currentValue}
@@ -94,7 +94,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="min-w-[3.5rem] rounded bg-slate-100 px-2 py-0.5 text-left text-slate-700 hover:bg-slate-200"
+          className="min-w-[3.5rem] rounded bg-surface-elevated px-2 py-0.5 text-left text-text-secondary hover:bg-slate-200"
           onClick={handleToClick}
           type="button"
           disabled={isUpdating}
@@ -111,7 +111,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="text-slate-400 hover:text-slate-600"
+          className="text-text-faint hover:text-text-secondary"
           onClick={handleDateClick}
           type="button"
           disabled={isUpdating}
@@ -126,7 +126,7 @@ export function SubEntryRow({
         </button>
       )}
 
-      <span className="text-slate-500">{duration}</span>
+      <span className="text-text-muted">{duration}</span>
 
       <div className="ml-auto">
         <EntryMenu

@@ -10,10 +10,10 @@ type HomeEmptyStateProps = {
 export default function HomeEmptyState({ lng: _lng }: HomeEmptyStateProps) {
   const { t } = useTranslation();
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
-      <p className="text-sm text-slate-600">{t("home.noActiveGoals")}</p>
+    <div className="rounded-lg border border-dashed border-border bg-surface p-8 text-center transition-colors">
+      <p className="text-sm text-text-secondary">{t("home.noActiveGoals")}</p>
       <Link
-        className="mt-4 inline-flex rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
+        className="mt-4 inline-flex rounded-md border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:border-text-faint hover:text-text-primary transition-colors"
         href="/goals/new"
       >
         {t("home.createFirstGoal")}

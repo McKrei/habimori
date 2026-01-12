@@ -297,14 +297,14 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">{t("goalForm.title")}</h1>
       <form
-        className="max-w-3xl space-y-6 rounded-lg border border-slate-200 bg-white p-6"
+        className="max-w-3xl space-y-6 rounded-lg border border-border bg-surface p-6"
         onSubmit={handleSubmit}
       >
         <div className="space-y-4">
-          <label className="block text-base font-medium text-slate-700">
+          <label className="block text-base font-medium text-text-secondary">
             {t("goalForm.goalName")}
             <input
-              className="mt-2 w-full rounded-md border border-slate-200 px-4 py-3 text-base"
+              className="mt-2 w-full rounded-md border border-border px-4 py-3 text-base"
               placeholder={t("goalForm.goalName")}
               value={title}
               onChange={(event) => setTitle(event.target.value)}
@@ -312,10 +312,10 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
           </label>
 
           <div className="grid grid-cols-2 gap-3 md:gap-4">
-            <label className="block text-sm font-medium text-slate-700 md:text-base">
+            <label className="block text-sm font-medium text-text-secondary md:text-base">
               {t("goalForm.goalType")}
               <select
-                className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
+                className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                 value={goalType}
                 onChange={(event) =>
                   setGoalType(event.target.value as GoalType)
@@ -328,10 +328,10 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
               </select>
             </label>
 
-            <label className="block text-sm font-medium text-slate-700 md:text-base">
+            <label className="block text-sm font-medium text-text-secondary md:text-base">
               {t("goalForm.period")}
               <select
-                className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
+                className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                 value={period}
                 onChange={(event) => {
                   const nextPeriod = event.target.value as GoalPeriod;
@@ -349,9 +349,9 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
           {goalType ? (
             <>
               <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div className="space-y-2 text-sm font-medium text-slate-700 md:text-base">
+                <div className="space-y-2 text-sm font-medium text-text-secondary md:text-base">
                   <span className="block">{t("goalForm.goalDirection")}</span>
-                  <label className="flex items-center gap-2 text-sm font-normal text-slate-700 md:text-base">
+                  <label className="flex items-center gap-2 text-sm font-normal text-text-secondary md:text-base">
                     <input
                       type="radio"
                       name="targetOp"
@@ -361,7 +361,7 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
                     />
                     {t("goalDirections.complete")}
                   </label>
-                  <label className="flex items-center gap-2 text-sm font-normal text-slate-700 md:text-base">
+                  <label className="flex items-center gap-2 text-sm font-normal text-text-secondary md:text-base">
                     <input
                       type="radio"
                       name="targetOp"
@@ -374,10 +374,10 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
                 </div>
 
                 {goalType === "counter" ? (
-                  <label className="block text-sm font-medium text-slate-700 md:text-base">
+                  <label className="block text-sm font-medium text-text-secondary md:text-base">
                     {t("goalForm.targetValue")}
                     <input
-                      className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
+                      className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                       inputMode="numeric"
                       value={counterTargetValue}
                       onChange={(event) =>
@@ -388,10 +388,10 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
                 ) : null}
 
                 {goalType === "time" ? (
-                  <label className="block text-sm font-medium text-slate-700 md:text-base">
+                  <label className="block text-sm font-medium text-text-secondary md:text-base">
                     {t("goalForm.targetTime")}
                     <input
-                      className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
+                      className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                       inputMode="numeric"
                       value={timeTargetValue}
                       onChange={(event) =>
@@ -403,26 +403,26 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <label className="block text-sm font-medium text-slate-700 md:text-base">
+                <label className="block text-sm font-medium text-text-secondary md:text-base">
                   {t("goalForm.startDate")}
                   <input
-                    className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
+                    className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                     type="date"
                     value={startDate}
                     onChange={(event) => setStartDate(event.target.value)}
                   />
                 </label>
 
-                <label className="block text-sm font-medium text-slate-700 md:text-base">
+                <label className="block text-sm font-medium text-text-secondary md:text-base">
                   {t("goalForm.periodsCount")}
                   <input
-                    className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
+                    className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                     inputMode="numeric"
                     value={periodCount}
                     onChange={(event) => setPeriodCount(event.target.value)}
                   />
                   <button
-                    className="mt-1 text-xs text-slate-500 transition-colors hover:text-slate-700 md:text-sm"
+                    className="mt-1 text-xs text-text-muted transition-colors hover:text-text-secondary md:text-sm"
                     type="button"
                     onClick={() => setIsEndDateEditing((prev) => !prev)}
                   >
@@ -433,7 +433,7 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
                   </button>
                   {isEndDateEditing ? (
                     <input
-                      className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
+                      className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm md:px-4 md:py-3 md:text-base"
                       type="date"
                       value={endDateOverride || computedEndDate}
                       onChange={(event) =>
@@ -446,10 +446,10 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
             </>
           ) : null}
 
-          <label className="block text-base font-medium text-slate-700">
+          <label className="block text-base font-medium text-text-secondary">
             {t("contexts.context")}
             <input
-              className="mt-2 w-full rounded-md border border-slate-200 px-4 py-3 text-base"
+              className="mt-2 w-full rounded-md border border-border px-4 py-3 text-base"
               list="context-options"
               placeholder={t("contexts.pickOrCreate")}
               value={contextName}
@@ -461,15 +461,15 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
               ))}
             </datalist>
             {contextsLoading ? (
-              <p className="mt-1 text-sm text-slate-500">{t("contexts.loading")}</p>
+              <p className="mt-1 text-sm text-text-muted">{t("contexts.loading")}</p>
             ) : null}
           </label>
 
-          <label className="block text-base font-medium text-slate-700">
+          <label className="block text-base font-medium text-text-secondary">
             {t("tags.tags")}
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <input
-                className="flex-1 rounded-md border border-slate-200 px-4 py-3 text-base"
+                className="flex-1 rounded-md border border-border px-4 py-3 text-base"
                 list="tag-options"
                 placeholder={t("tags.addTag")}
                 value={tagInput}
@@ -496,7 +496,7 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
                 }}
               />
               <button
-                className="rounded-md border border-slate-200 px-4 py-2 text-base font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
+                className="rounded-md border border-border px-4 py-2 text-base font-medium text-text-secondary hover:border-text-faint hover:text-text-primary"
                 type="button"
                 onClick={() => {
                   const name = tagInput.trim();
@@ -524,14 +524,14 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
               ))}
             </datalist>
             {tagsLoading ? (
-              <p className="mt-1 text-sm text-slate-500">{t("tags.loading")}</p>
+              <p className="mt-1 text-sm text-text-muted">{t("tags.loading")}</p>
             ) : null}
             {selectedTags.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {selectedTags.map((tag) => (
                   <button
                     key={tag.id}
-                    className="rounded-full border border-slate-200 px-3 py-1 text-sm text-slate-700 hover:border-slate-300"
+                    className="rounded-full border border-border px-3 py-1 text-sm text-text-secondary hover:border-text-faint"
                     type="button"
                     onClick={() =>
                       setSelectedTags((prev) =>
@@ -544,7 +544,7 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
                 ))}
               </div>
             ) : (
-              <p className="mt-2 text-sm text-slate-500">{t("tags.noTagsYet")}</p>
+              <p className="mt-2 text-sm text-text-muted">{t("tags.noTagsYet")}</p>
             )}
           </label>
         </div>
@@ -555,14 +555,14 @@ export default function NewGoalPage({ params }: { params: { lng: string } }) {
 
         <div className="mt-6 flex items-center gap-3">
           <button
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-surface hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
             disabled={isSubmitting || !canSubmit}
           >
             {isSubmitting ? t("common.loading") : t("goalForm.title")}
           </button>
           <button
-            className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:border-text-faint hover:text-text-primary"
             type="button"
             onClick={() => router.push("/")}
             disabled={isSubmitting}
