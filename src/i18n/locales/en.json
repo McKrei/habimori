@@ -12,8 +12,6 @@
     "reset": "Reset",
     "back": "Back",
     "next": "Next",
-    "start": "Start",
-    "stop": "Stop",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success"

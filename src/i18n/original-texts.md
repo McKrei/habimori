@@ -21,11 +21,11 @@ It serves as a reference for the i18n system and for adding new languages.
 | `common.reset` | Reset |
 | `common.back` | Back |
 | `common.next` | Next |
-| `common.start` | Start |
-| `common.stop` | Stop |
 | `common.loading` | Loading... |
 | `common.error` | Error |
 | `common.success` | Success |
+
+Note: `common.start` and `common.stop` were removed and replaced with icon buttons (PlayIcon, StopIcon).
 
 ---
 

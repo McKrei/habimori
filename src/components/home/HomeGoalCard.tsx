@@ -4,6 +4,8 @@ import Link from "next/link";
 import { formatSecondsAsHHMMSS, formatMinutesAsHHMM } from "@/src/components/formatters";
 import type { GoalSummary, StatusMap } from "./types";
 import { useTranslation } from "@/src/i18n/TranslationContext";
+import PlayIcon from "@/src/components/icons/PlayIcon";
+import StopIcon from "@/src/components/icons/StopIcon";
 
 type HomeGoalCardProps = {
   goal: GoalSummary;
@@ -72,6 +74,7 @@ export default function HomeGoalCard({
     ? "border-emerald-400 text-emerald-500"
     : "border-rose-400 text-rose-500";
   const actionText = isPositive ? "text-emerald-500" : "text-rose-500";
+  const haloColor = isPositive ? "shadow-[0_0_0_3px_rgba(16,185,129,0.3)]" : "shadow-[0_0_0_3px_rgba(244,63,94,0.3)]";
   const baseTimeSeconds =
     goal.goal_type === "time"
       ? isActiveTimer
@@ -163,22 +166,20 @@ export default function HomeGoalCard({
               </div>
               {isActiveTimer ? (
                 <button
-                  className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg bg-white text-slate-900 ${haloColor} md:h-9 md:w-9`}
                   type="button"
                   onClick={onStopTimer}
-                  title={t("common.stop")}
                 >
-                  ⏸
+                  <StopIcon size={18} />
                 </button>
               ) : (
                 <button
-                  className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg bg-white text-slate-900 ${haloColor} disabled:opacity-40 md:h-9 md:w-9`}
                   type="button"
                   onClick={onStartTimer}
                   disabled={isTimerBlocked}
-                  title={isTimerBlocked ? t("timer.anotherRunning") : t("common.start")}
                 >
-                  ▶
+                  <PlayIcon size={18} />
                 </button>
               )}
             </>
