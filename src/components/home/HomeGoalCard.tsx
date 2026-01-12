@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { formatSecondsAsHHMMSS, formatMinutesAsHHMM } from "@/src/components/formatters";
 import type { GoalSummary, StatusMap } from "./types";
-import { useTranslation } from "@/src/i18n/TranslationContext";
+import PlayIcon from "@/src/components/icons/PlayIcon";
+import StopIcon from "@/src/components/icons/StopIcon";
+import CheckIcon from "@/src/components/icons/CheckIcon";
+import PlusIcon from "@/src/components/icons/PlusIcon";
 
 type HomeGoalCardProps = {
   goal: GoalSummary;
@@ -50,38 +53,39 @@ export default function HomeGoalCard({
   onStartTimer,
   onStopTimer,
   onCheckToggle,
-  lng: _lng,
 }: HomeGoalCardProps) {
-  const { t } = useTranslation();
-  const contextLabel = goal.context?.name ?? t("goalDetails.unknownContext");
+  const contextLabel = goal.context?.name ?? "—";
   const effectiveStatus = optimisticStatus ?? statusEntry?.status;
   const baseActual = statusEntry?.actual_value ?? 0;
   const effectiveActual =
     goal.goal_type === "counter" ? baseActual + optimisticDelta : baseActual;
   const isPositive = goal.target_op === "gte";
-  const borderColor =
+
+  // Status-based styling (subtle left border accent)
+  const statusAccent =
     effectiveStatus === "success"
-      ? "border-emerald-400"
+      ? "border-l-emerald-400"
       : effectiveStatus === "fail"
-        ? "border-rose-400"
+        ? "border-l-rose-400"
         : effectiveStatus === "in_progress"
-          ? "border-amber-400"
-          : "border-slate-200";
-  const accentColor = isPositive ? "text-emerald-500" : "text-rose-500";
-  const actionBorder = isPositive
-    ? "border-emerald-400 text-emerald-500"
-    : "border-rose-400 text-rose-500";
-  const actionText = isPositive ? "text-emerald-500" : "text-rose-500";
+          ? "border-l-amber-400"
+          : "border-l-slate-200";
+
+  // Goal type colors
+  const accentColor = isPositive ? "text-emerald-600" : "text-rose-500";
+  const accentColorLight = isPositive ? "text-emerald-500" : "text-rose-400";
+  const accentBg = isPositive ? "bg-emerald-50" : "bg-rose-50";
+  const accentBgHover = isPositive ? "hover:bg-emerald-100" : "hover:bg-rose-100";
+  const accentBorder = isPositive ? "border-emerald-200" : "border-rose-200";
+  const accentFocusRing = isPositive ? "focus:ring-emerald-200" : "focus:ring-rose-200";
+
   const baseTimeSeconds =
     goal.goal_type === "time"
       ? isActiveTimer
         ? (activeBaseSeconds[goal.id] ?? timeSecondsMap[goal.id] ?? 0)
         : (timeOverrides[goal.id] ?? timeSecondsMap[goal.id] ?? 0)
       : 0;
-  const displayValue =
-    goal.goal_type === "time"
-      ? formatSecondsAsHHMMSS(baseTimeSeconds)
-      : `${effectiveActual}`;
+
   const activeSeconds =
     isActiveTimer && activeEntryStartedAt
       ? Math.max(
@@ -96,103 +100,160 @@ export default function HomeGoalCard({
 
   return (
     <div
-      className={`relative rounded-2xl border bg-white px-5 py-2 ${borderColor}`}
+      className={`
+        group relative rounded-xl border border-slate-100 border-l-[3px] bg-white
+        px-4 py-3 shadow-sm transition-all duration-200
+        hover:shadow-md hover:border-slate-200
+        ${statusAccent}
+      `}
     >
+      {/* Status indicator dot */}
       {hasError ? (
-        <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-rose-500" />
+        <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
       ) : isPending ? (
-        <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-amber-400" />
+        <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
       ) : null}
-      <div className="grid grid-cols-[1fr_1fr] items-center gap-3">
-        <div className="min-w-0">
+
+      <div className="flex items-center gap-4">
+        {/* Left: Title and meta */}
+        <div className="min-w-0 flex-1">
           <Link
-            className="block max-h-[3.2rem] overflow-hidden break-words text-[clamp(1.15rem,4vw,1.4rem)] font-semibold leading-snug text-slate-900 hover:text-slate-700 md:text-[clamp(1.1rem,1.6vw,1.35rem)]"
+            className="block truncate text-base font-medium text-slate-800 transition-colors hover:text-slate-600"
             href={`/goals/${goal.id}`}
           >
             {goal.title}
           </Link>
-          <p className="truncate text-sm text-slate-600">
+          <p className="mt-0.5 truncate text-xs text-slate-400">
             {goal.period} · {contextLabel}
-            {goal.tags.length > 0
-              ? ` · ${goal.tags.map((tag) => `#${tag.name}`).join(" ")}`
-              : ""}
+            {goal.tags.length > 0 && (
+              <span className="text-slate-300">
+                {" "}· {goal.tags.map((tag) => `#${tag.name}`).join(" ")}
+              </span>
+            )}
           </p>
         </div>
 
-        <div className="flex flex-nowrap items-center justify-end gap-2">
-          {goal.goal_type === "counter" ? (
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
+          {/* Counter goal */}
+          {goal.goal_type === "counter" && (
             <>
-              <div className="text-xl font-semibold md:text-2xl">
-                <span className="text-slate-900">{displayValue}</span>
-                <span className="text-slate-300"> / </span>
-                <span className={accentColor}>{goal.target_value}</span>
+              <div className="text-right">
+                <div className="flex items-baseline gap-0.5">
+                  <span className="text-lg font-medium tabular-nums text-slate-700">
+                    {effectiveActual}
+                  </span>
+                  <span className="text-slate-300">/</span>
+                  <span className={`text-lg font-medium tabular-nums ${accentColorLight}`}>
+                    {goal.target_value}
+                  </span>
+                </div>
               </div>
-              <input
-                className={`w-12 rounded-md border px-2 py-1 text-sm md:w-16 ${actionBorder}`}
-                inputMode="numeric"
-                placeholder="1"
-                value={counterValue}
-                onChange={(event) => onCounterChange(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    onCounterSubmit();
-                  }
-                }}
-              />
-              <button
-                className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
-                type="button"
-                onClick={onCounterSubmit}
-              >
-                +
-              </button>
+              <div className="flex items-center gap-1.5">
+                <input
+                  className={`
+                    w-12 rounded-lg border ${accentBorder} bg-white px-2 py-1.5
+                    text-center text-sm tabular-nums text-slate-600
+                    transition-all duration-150
+                    placeholder:text-slate-300
+                    focus:outline-none focus:ring-2 ${accentFocusRing} focus:border-transparent
+                  `}
+                  inputMode="numeric"
+                  placeholder="1"
+                  value={counterValue}
+                  onChange={(event) => onCounterChange(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      onCounterSubmit();
+                    }
+                  }}
+                />
+                <button
+                  className={`
+                    flex h-8 w-8 items-center justify-center rounded-lg
+                    ${accentBg} ${accentColor} border ${accentBorder}
+                    transition-all duration-150
+                    ${accentBgHover} hover:scale-105
+                    active:scale-95
+                  `}
+                  type="button"
+                  onClick={onCounterSubmit}
+                >
+                  <PlusIcon size={18} />
+                </button>
+              </div>
             </>
-          ) : null}
+          )}
 
-          {goal.goal_type === "time" ? (
+          {/* Time goal */}
+          {goal.goal_type === "time" && (
             <>
-              <div className="flex flex-col items-end">
-                <div className={`text-xl font-semibold md:text-2xl ${accentColor}`}>
+              <div className="text-right">
+                <div className={`text-lg font-medium tabular-nums ${accentColor}`}>
                   {isActiveTimer
                     ? formatSecondsAsHHMMSS(totalSeconds)
                     : formatSecondsAsHHMMSS(baseTimeSeconds)}
                 </div>
-                <div className="text-xs text-slate-400">
+                <div className="text-[10px] tabular-nums text-slate-400">
                   {formatMinutesAsHHMM(goal.target_value)}
                 </div>
               </div>
               {isActiveTimer ? (
                 <button
-                  className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
+                  className={`
+                    flex h-9 w-9 items-center justify-center rounded-xl
+                    ${accentBg} ${accentColor} border ${accentBorder}
+                    transition-all duration-150
+                    ${accentBgHover} hover:scale-105
+                    active:scale-95
+                  `}
                   type="button"
                   onClick={onStopTimer}
-                  title={t("common.stop")}
                 >
-                  ⏸
+                  <StopIcon size={18} />
                 </button>
               ) : (
                 <button
-                  className={`h-9 w-9 rounded-lg border-2 ${actionBorder} text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
+                  className={`
+                    flex h-9 w-9 items-center justify-center rounded-xl
+                    ${accentBg} ${accentColor} border ${accentBorder}
+                    transition-all duration-150
+                    ${accentBgHover} hover:scale-105
+                    active:scale-95
+                    disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100
+                  `}
                   type="button"
                   onClick={onStartTimer}
                   disabled={isTimerBlocked}
-                  title={isTimerBlocked ? t("timer.anotherRunning") : t("common.start")}
                 >
-                  ▶
+                  <PlayIcon size={18} />
                 </button>
               )}
             </>
-          ) : null}
+          )}
 
-          {goal.goal_type === "check" ? (
+          {/* Check goal */}
+          {goal.goal_type === "check" && (
             <button
-              className={`h-9 w-9 rounded-lg border-2 ${actionBorder} bg-white text-xl font-semibold leading-none md:h-10 md:w-10 md:text-2xl`}
+              className={`
+                flex h-9 w-9 items-center justify-center rounded-xl
+                border transition-all duration-200
+                ${
+                  checkState
+                    ? `${accentBg} ${accentColor} ${accentBorder}`
+                    : "border-slate-200 bg-white text-slate-300 hover:border-slate-300 hover:text-slate-400"
+                }
+                hover:scale-105 active:scale-95
+              `}
               type="button"
               onClick={() => onCheckToggle(!checkState)}
             >
-              <span className={actionText}>{checkState ? "✓" : ""}</span>
+              <CheckIcon
+                size={20}
+                className={`transition-all duration-200 ${checkState ? "opacity-100" : "opacity-30"}`}
+              />
             </button>
-          ) : null}
+          )}
         </div>
       </div>
     </div>
