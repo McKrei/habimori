@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import DayStatusDots from "@/src/components/calendar/DayStatusDots";
 import { useDayStatusMap } from "@/src/components/calendar/useDayStatusMap";
 import { addDays, getDateString, getTodayDateString } from "./utils";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 type HomeWeekCalendarProps = {
   selectedDate: Date;
@@ -16,6 +17,7 @@ export default function HomeWeekCalendar({
   selectedDate,
   onChange,
 }: HomeWeekCalendarProps) {
+  const { language } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wheelLockRef = useRef(0);
   const swipeStartRef = useRef<number | null>(null);
@@ -39,12 +41,13 @@ export default function HomeWeekCalendar({
   const dayDates = useMemo(() => days.map((day) => day.date), [days]);
   const { statusMap } = useDayStatusMap(dayDates);
 
+  const locale = language === "ru" ? "ru-RU" : "en-US";
   const formatWeekday = useMemo(
     () =>
-      new Intl.DateTimeFormat("ru-RU", {
+      new Intl.DateTimeFormat(locale, {
         weekday: "short",
       }),
-    [],
+    [locale],
   );
 
   const handleStep = useCallback(
