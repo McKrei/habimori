@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CalendarDay from "@/src/components/calendar/CalendarDay";
 import { useDayStatusMap } from "@/src/components/calendar/useDayStatusMap";
 import { addDays, getDateString, getTodayDateString } from "./utils";
@@ -11,7 +11,56 @@ type HomeWeekCalendarProps = {
   onChange: (nextDate: Date) => void;
 };
 
-const DAY_OFFSETS = [-2, -1, 0, 1, 2];
+// Breakpoints for responsive day count
+const BREAKPOINTS = {
+  mobile: 640,  // sm breakpoint
+  tablet: 768,  // md breakpoint
+  desktop: 1024, // lg breakpoint
+};
+
+// Day counts per screen size
+const DAY_COUNTS = {
+  mobile: 5,    // minimum on small screens
+  tablet: 7,    // medium screens
+  desktop: 9,   // large screens
+  wide: 11,     // extra wide screens
+};
+
+function getDayCountForWidth(width: number): number {
+  if (width >= 1280) return DAY_COUNTS.wide;
+  if (width >= BREAKPOINTS.desktop) return DAY_COUNTS.desktop;
+  if (width >= BREAKPOINTS.tablet) return DAY_COUNTS.tablet;
+  if (width >= BREAKPOINTS.mobile) return DAY_COUNTS.tablet;
+  return DAY_COUNTS.mobile;
+}
+
+function useResponsiveDayCount(): number {
+  const [dayCount, setDayCount] = useState(() => {
+    // Initialize with correct value on client side
+    if (typeof window !== "undefined") {
+      return getDayCountForWidth(window.innerWidth);
+    }
+    return DAY_COUNTS.desktop; // SSR fallback - use larger value
+  });
+
+  useEffect(() => {
+    const updateDayCount = () => {
+      setDayCount(getDayCountForWidth(window.innerWidth));
+    };
+
+    // Update on mount to ensure correct value after hydration
+    updateDayCount();
+    window.addEventListener("resize", updateDayCount);
+    return () => window.removeEventListener("resize", updateDayCount);
+  }, []);
+
+  return dayCount;
+}
+
+function generateDayOffsets(count: number): number[] {
+  const half = Math.floor(count / 2);
+  return Array.from({ length: count }, (_, i) => i - half);
+}
 
 export default function HomeWeekCalendar({
   selectedDate,
@@ -27,16 +76,19 @@ export default function HomeWeekCalendar({
     [selectedDate],
   );
 
+  const dayCount = useResponsiveDayCount();
+  const dayOffsets = useMemo(() => generateDayOffsets(dayCount), [dayCount]);
+
   const days = useMemo(
     () =>
-      DAY_OFFSETS.map((offset) => {
+      dayOffsets.map((offset) => {
         const date = addDays(selectedDate, offset);
         return {
           date,
           key: getDateString(date),
         };
       }),
-    [selectedDate],
+    [selectedDate, dayOffsets],
   );
   const dayDates = useMemo(() => days.map((day) => day.date), [days]);
   const { statusMap } = useDayStatusMap(dayDates);
