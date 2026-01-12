@@ -191,5 +191,23 @@
     "fail": "Не выполнено",
     "inProgress": "В процессе",
     "archived": "Архивировано"
+  },
+  "timeLogs": {
+    "title": "Логи времени",
+    "noLogs": "Нет записей времени",
+    "allContexts": "Контексты",
+    "allTags": "Теги",
+    "contextsSelected": "Контексты ({count})",
+    "tagsSelected": "Теги ({count})",
+    "loading": "Загрузка...",
+    "noContexts": "Нет контекстов",
+    "noTags": "Нет тегов",
+    "totalDuration": "Всего: {duration}",
+    "deleteAllTitle": "Удалить записи?",
+    "deleteAllConfirm": "Будет удалено {count} записей. Это действие нельзя отменить.",
+    "deleteEntryTitle": "Удалить запись?",
+    "deleteEntryConfirm": "Удалить эту запись?",
+    "entryCount": "{count} записей",
+    "noTagsToShow": "Нет тегов"
   }
 }

@@ -289,6 +289,29 @@ It serves as a reference for the i18n system and for adding new languages.
 
 ---
 
+## Time Logs Page
+
+| Key | English |
+|-----|---------|
+| `timeLogs.title` | Time Logs |
+| `timeLogs.noLogs` | No time logs |
+| `timeLogs.allContexts` | Contexts |
+| `timeLogs.allTags` | Tags |
+| `timeLogs.contextsSelected` | Contexts ({count}) |
+| `timeLogs.tagsSelected` | Tags ({count}) |
+| `timeLogs.loading` | Loading... |
+| `timeLogs.noContexts` | No contexts |
+| `timeLogs.noTags` | No tags |
+| `timeLogs.totalDuration` | Total: {duration} |
+| `timeLogs.deleteAllTitle` | Delete entries? |
+| `timeLogs.deleteAllConfirm` | {count} entries will be deleted. This action cannot be undone. |
+| `timeLogs.deleteEntryTitle` | Delete entry? |
+| `timeLogs.deleteEntryConfirm` | Delete this entry? |
+| `timeLogs.entryCount` | {count} entries |
+| `timeLogs.noTagsToShow` | No tags |
+
+---
+
 ## Metadata (SEO)
 
 | Key | English |

@@ -58,8 +58,28 @@ export default function RootLayout({
                         Habimori
                       </span>
                     </Link>
-                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
                       <LanguageSwitcher lng={DEFAULT_LANGUAGE} />
+                      <Link
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
+                        href="/time-logs"
+                        aria-label="Логи времени"
+                        title="Логи времени"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12,6 12,12 16,14" />
+                        </svg>
+                      </Link>
                       <Link
                         className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
                         href="/stats"

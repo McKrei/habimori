@@ -191,5 +191,23 @@
     "fail": "Fail",
     "inProgress": "In progress",
     "archived": "Archived"
+  },
+  "timeLogs": {
+    "title": "Time Logs",
+    "noLogs": "No time logs",
+    "allContexts": "Contexts",
+    "allTags": "Tags",
+    "contextsSelected": "Contexts ({count})",
+    "tagsSelected": "Tags ({count})",
+    "loading": "Loading...",
+    "noContexts": "No contexts",
+    "noTags": "No tags",
+    "totalDuration": "Total: {duration}",
+    "deleteAllTitle": "Delete entries?",
+    "deleteAllConfirm": "{count} entries will be deleted. This action cannot be undone.",
+    "deleteEntryTitle": "Delete entry?",
+    "deleteEntryConfirm": "Delete this entry?",
+    "entryCount": "{count} entries",
+    "noTagsToShow": "No tags"
   }
 }

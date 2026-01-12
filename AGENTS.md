@@ -83,6 +83,7 @@ return <button>{t("common.save")}</button>;
 - Создание цели: `app/goals/new/page.tsx`
 - Детали цели: `app/goals/[id]/page.tsx`
 - Статистика: `app/stats/page.tsx`
+- Логи времени: `app/time-logs/page.tsx`
 - Глобальный таймер: `src/components/GlobalTimerBar.tsx`
 - Активный таймер (контекст): `src/components/ActiveTimerProvider.tsx`
 - Логика периодов/статусов: `src/components/goalPeriods.ts`
