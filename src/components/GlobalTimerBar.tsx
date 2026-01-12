@@ -9,6 +9,8 @@ import { useTags } from "@/src/components/useTags";
 import { formatSecondsAsHHMMSS } from "@/src/components/formatters";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/src/i18n/TranslationContext";
+import PlayIcon from "@/src/components/icons/PlayIcon";
+import StopIcon from "@/src/components/icons/StopIcon";
 
 export default function GlobalTimerBar() {
   const pathname = usePathname();
@@ -134,24 +136,24 @@ export default function GlobalTimerBar() {
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center">
           {activeEntry ? (
             <button
-              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               type="button"
               onClick={handleStop}
               disabled={isWorking}
             >
-              {t("common.stop")}
+              <StopIcon size={28} />
             </button>
           ) : (
             <button
-              className="rounded-full bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               type="button"
               onClick={() => setIsSheetOpen(true)}
               disabled={isLoading}
             >
-              {t("common.start")}
+              <PlayIcon size={32} />
             </button>
           )}
         </div>
@@ -307,12 +309,13 @@ export default function GlobalTimerBar() {
                 {t("common.cancel")}
               </button>
               <button
-                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                 type="button"
                 onClick={handleStart}
                 disabled={isWorking || contextsLoading || tagsLoading}
               >
-                {t("common.start")}
+                <PlayIcon size={16} />
+                {t("timer.startTimer")}
               </button>
             </div>
           </div>
