@@ -219,6 +219,7 @@
     "deleteEntryTitle": "Удалить запись?",
     "deleteEntryConfirm": "Удалить эту запись?",
     "entryCount": "{count} записей",
-    "noTagsToShow": "Нет тегов"
+    "noTagsToShow": "Нет тегов",
+    "editTags": "Теги"
   }
 }

@@ -12,6 +12,7 @@ interface TimeLogsListProps {
   calculateDuration: (startedAt: string, endedAt: string | null) => number;
   parseTimeToDate: (baseDate: Date, timeStr: string) => Date;
   onUpdateEntry: (entryId: string, updates: { started_at: string; ended_at: string | null }) => Promise<{ error: string | null }>;
+  onUpdateEntryTags: (entryId: string, tagIds: string[]) => Promise<{ error: string | null }>;
   onDeleteEntry: (entryId: string) => Promise<{ error: string | null }>;
   onDeleteAll: (contextId: string, dateKey: string) => Promise<{ error: string | null }>;
   onToggleExpanded: (dateKey: string, contextId: string) => void;
@@ -25,6 +26,7 @@ export function TimeLogsList({
   calculateDuration,
   parseTimeToDate,
   onUpdateEntry,
+  onUpdateEntryTags,
   onDeleteEntry,
   onDeleteAll,
   onToggleExpanded,
@@ -66,6 +68,7 @@ export function TimeLogsList({
                 calculateDuration={calculateDuration}
                 parseTimeToDate={parseTimeToDate}
                 onUpdateEntry={onUpdateEntry}
+                onUpdateEntryTags={onUpdateEntryTags}
                 onDeleteEntry={onDeleteEntry}
                 onDeleteAll={onDeleteAll}
                 onToggleExpanded={onToggleExpanded}

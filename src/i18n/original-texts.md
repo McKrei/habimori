@@ -322,6 +322,7 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | `timeLogs.deleteEntryConfirm` | Delete this entry? |
 | `timeLogs.entryCount` | {count} entries |
 | `timeLogs.noTagsToShow` | No tags |
+| `timeLogs.editTags` | Tags |
 
 ---
 

@@ -28,7 +28,10 @@ export function SummaryRow({
 
   const handlePlay = async () => {
     if (isTimerRunning) return;
-    await startTimer({ contextId: context.id });
+    await startTimer({
+      contextId: context.id,
+      tagIds: tags.map((tag) => tag.id),
+    });
   };
 
   const displayedTags = tags.slice(0, 3);

@@ -246,6 +246,39 @@ export function useTimeLogs() {
     [refresh],
   );
 
+  const updateEntryTags = useCallback(
+    async (entryId: string, tagIds: string[]) => {
+      // Delete existing tags
+      const { error: deleteError } = await supabase
+        .from("time_entry_tags")
+        .delete()
+        .eq("time_entry_id", entryId);
+
+      if (deleteError) {
+        return { error: deleteError.message };
+      }
+
+      // Insert new tags
+      if (tagIds.length > 0) {
+        const tagInserts = tagIds.map((tagId) => ({
+          time_entry_id: entryId,
+          tag_id: tagId,
+        }));
+        const { error: insertError } = await supabase
+          .from("time_entry_tags")
+          .insert(tagInserts);
+
+        if (insertError) {
+          return { error: insertError.message };
+        }
+      }
+
+      await refresh();
+      return { error: null };
+    },
+    [refresh],
+  );
+
   const toggleContextExpanded = useCallback(
     (_dateKey: string, _contextId: string) => {
       setEntries((prev) => prev);
@@ -279,6 +312,7 @@ export function useTimeLogs() {
     setFilters,
     refresh,
     updateEntry,
+    updateEntryTags,
     deleteEntry,
     deleteEntriesByContextAndDate,
     toggleContextExpanded,

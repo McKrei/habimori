@@ -3,6 +3,7 @@
 import { TimeEntryWithDetails } from "./types";
 import { InlineTimeEditor } from "./InlineTimeEditor";
 import { InlineDatePicker } from "./InlineDatePicker";
+import { EntryMenu } from "./EntryMenu";
 
 interface SubEntryRowProps {
   entry: TimeEntryWithDetails;
@@ -22,6 +23,7 @@ interface SubEntryRowProps {
   onTimeClick: (field: "from" | "to", value: string, baseDate: globalThis.Date) => void;
   onDateClick: (date: string) => void;
   onDelete: () => void;
+  onEditTags: () => void;
   onTimeSave: (value: string) => void;
   onDateSave: (value: string) => void;
   onTimeCancel: () => void;
@@ -38,6 +40,7 @@ export function SubEntryRow({
   onTimeClick,
   onDateClick,
   onDelete,
+  onEditTags,
   onTimeSave,
   onDateSave,
   onTimeCancel,
@@ -125,18 +128,13 @@ export function SubEntryRow({
 
       <span className="text-slate-500">{duration}</span>
 
-      <button
-        className="ml-auto text-slate-400 hover:text-rose-600 disabled:opacity-50"
-        onClick={onDelete}
-        type="button"
-        disabled={isUpdating}
-        title="Delete"
-      >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="3 6 5 6 21 6" />
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        </svg>
-      </button>
+      <div className="ml-auto">
+        <EntryMenu
+          onDelete={onDelete}
+          onEditTags={onEditTags}
+          disabled={isUpdating}
+        />
+      </div>
     </div>
   );
 }
