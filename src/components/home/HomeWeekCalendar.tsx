@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CalendarDay from "@/src/components/calendar/CalendarDay";
 import { useDayStatusMap } from "@/src/components/calendar/useDayStatusMap";
 import { addDays, getDateString, getTodayDateString } from "./utils";
@@ -11,7 +11,50 @@ type HomeWeekCalendarProps = {
   onChange: (nextDate: Date) => void;
 };
 
-const DAY_OFFSETS = [-2, -1, 0, 1, 2];
+// Breakpoints for responsive day count
+const BREAKPOINTS = {
+  mobile: 640,  // sm breakpoint
+  tablet: 768,  // md breakpoint
+  desktop: 1024, // lg breakpoint
+};
+
+// Day counts per screen size
+const DAY_COUNTS = {
+  mobile: 5,    // minimum on small screens
+  tablet: 7,    // medium screens
+  desktop: 9,   // large screens
+  wide: 11,     // extra wide screens
+};
+
+function useResponsiveDayCount(): number {
+  const [dayCount, setDayCount] = useState(DAY_COUNTS.mobile);
+
+  useEffect(() => {
+    const updateDayCount = () => {
+      const width = window.innerWidth;
+      if (width >= BREAKPOINTS.desktop) {
+        setDayCount(width >= 1280 ? DAY_COUNTS.wide : DAY_COUNTS.desktop);
+      } else if (width >= BREAKPOINTS.tablet) {
+        setDayCount(DAY_COUNTS.tablet);
+      } else if (width >= BREAKPOINTS.mobile) {
+        setDayCount(DAY_COUNTS.tablet);
+      } else {
+        setDayCount(DAY_COUNTS.mobile);
+      }
+    };
+
+    updateDayCount();
+    window.addEventListener("resize", updateDayCount);
+    return () => window.removeEventListener("resize", updateDayCount);
+  }, []);
+
+  return dayCount;
+}
+
+function generateDayOffsets(count: number): number[] {
+  const half = Math.floor(count / 2);
+  return Array.from({ length: count }, (_, i) => i - half);
+}
 
 export default function HomeWeekCalendar({
   selectedDate,
@@ -27,16 +70,19 @@ export default function HomeWeekCalendar({
     [selectedDate],
   );
 
+  const dayCount = useResponsiveDayCount();
+  const dayOffsets = useMemo(() => generateDayOffsets(dayCount), [dayCount]);
+
   const days = useMemo(
     () =>
-      DAY_OFFSETS.map((offset) => {
+      dayOffsets.map((offset) => {
         const date = addDays(selectedDate, offset);
         return {
           date,
           key: getDateString(date),
         };
       }),
-    [selectedDate],
+    [selectedDate, dayOffsets],
   );
   const dayDates = useMemo(() => days.map((day) => day.date), [days]);
   const { statusMap } = useDayStatusMap(dayDates);
