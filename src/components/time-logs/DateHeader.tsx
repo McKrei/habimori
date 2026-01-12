@@ -1,26 +1,31 @@
 "use client";
 
+import { useMemo } from "react";
+import { useTranslation } from "@/src/i18n/TranslationContext";
+
 interface DateHeaderProps {
   date: Date;
   totalSeconds: number;
   formatSeconds: (seconds: number) => string;
 }
 
-const DAYS = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
-const MONTHS = [
-  "янв", "фев", "мар", "апр", "май", "июн",
-  "июл", "авг", "сен", "окт", "ноя", "дек",
-];
-
 export function DateHeader({ date, totalSeconds, formatSeconds }: DateHeaderProps) {
-  const dayName = DAYS[date.getDay()];
-  const dayNum = date.getDate();
-  const monthName = MONTHS[date.getMonth()];
+  const { language } = useTranslation();
+
+  const locale = language === "ru" ? "ru-RU" : "en-US";
+
+  const dateLabel = useMemo(() => {
+    return new Intl.DateTimeFormat(locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(date);
+  }, [date, locale]);
 
   return (
     <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
       <span className="text-sm font-medium text-slate-700">
-        {dayName}, {dayNum} {monthName}
+        {dateLabel}
       </span>
       <span className="text-sm font-medium text-slate-600">
         {formatSeconds(totalSeconds)}
