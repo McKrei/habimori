@@ -222,10 +222,15 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | `stats.from` | from |
 | `stats.to` | to |
 | `stats.totalTime` | Time |
+| `stats.byContexts` | By contexts |
+| `stats.byTags` | By tags |
 | `stats.timeByContexts` | Time by contexts |
+| `stats.timeByTags` | Time by tags |
 | `stats.noContextsToShow` | No contexts to display. |
+| `stats.noTagsToShow` | No tags to display. |
 | `stats.selected` | Selected: |
 | `stats.contextShare` | Context share |
+| `stats.tagShare` | Tag share |
 | `stats.noTimeData` | No time data yet. |
 | `stats.loading` | Loading statistics... |
 
