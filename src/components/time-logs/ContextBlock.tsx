@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/src/i18n/TranslationContext";
-import { GroupedTimeLogs } from "./types";
+import { GroupedTimeLogs, TagOption } from "./types";
 import { SummaryRow } from "./SummaryRow";
 import { SubEntryRow } from "./SubEntryRow";
 import { TagsOverflowModal } from "./TagsOverflowModal";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
+import { EditTagsModal } from "./EditTagsModal";
 
 interface ContextBlockProps {
   dateKey: string;
@@ -16,6 +17,7 @@ interface ContextBlockProps {
   calculateDuration: (startedAt: string, endedAt: string | null) => number;
   parseTimeToDate: (baseDate: Date, timeStr: string) => Date;
   onUpdateEntry: (entryId: string, updates: { started_at: string; ended_at: string | null }) => Promise<{ error: string | null }>;
+  onUpdateEntryTags: (entryId: string, tagIds: string[]) => Promise<{ error: string | null }>;
   onDeleteEntry: (entryId: string) => Promise<{ error: string | null }>;
   onDeleteAll: (contextId: string, dateKey: string) => Promise<{ error: string | null }>;
   onToggleExpanded: (dateKey: string, contextId: string) => void;
@@ -30,6 +32,7 @@ export function ContextBlock({
   calculateDuration,
   parseTimeToDate,
   onUpdateEntry,
+  onUpdateEntryTags,
   onDeleteEntry,
   onDeleteAll,
   onToggleExpanded,
@@ -48,6 +51,10 @@ export function ContextBlock({
     currentDate: string;
   } | null>(null);
   const [showTagsModal, setShowTagsModal] = useState(false);
+  const [editTagsEntry, setEditTagsEntry] = useState<{
+    entryId: string;
+    currentTags: TagOption[];
+  } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     type: "single" | "all";
     entryId?: string;
@@ -183,6 +190,12 @@ export function ContextBlock({
                   setEditingDate({ entryId: entry.id, currentDate: date })
                 }
                 onDelete={() => setDeleteConfirm({ type: "single", entryId: entry.id })}
+                onEditTags={() =>
+                  setEditTagsEntry({
+                    entryId: entry.id,
+                    currentTags: entry.tags.map((t) => t.tag),
+                  })
+                }
                 onTimeSave={handleTimeSave}
                 onDateSave={handleDateSave}
                 onTimeCancel={() => setEditingTime(null)}
@@ -216,6 +229,15 @@ export function ContextBlock({
           onConfirm={handleDelete}
           onCancel={() => setDeleteConfirm(null)}
           lng={lng}
+        />
+      )}
+
+      {editTagsEntry && (
+        <EditTagsModal
+          entryId={editTagsEntry.entryId}
+          currentTags={editTagsEntry.currentTags}
+          onSave={onUpdateEntryTags}
+          onClose={() => setEditTagsEntry(null)}
         />
       )}
     </>

@@ -27,6 +27,7 @@ type ActiveTimerContextValue = {
   startTimer: (payload: {
     contextId: string;
     goalId?: string | null;
+    tagIds?: string[];
   }) => Promise<{ error?: string | { key: string; params?: Record<string, string | number> }; entryId?: string }>;
   stopTimer: (endedAt?: string) => Promise<{ error?: string | { key: string; params?: Record<string, string | number> } }>;
 };
@@ -91,9 +92,11 @@ export function ActiveTimerProvider({
     async ({
       contextId,
       goalId,
+      tagIds,
     }: {
       contextId: string;
       goalId?: string | null;
+      tagIds?: string[];
     }) => {
       // Check if there's already an active timer in DB
       const { entry: existingEntry } = await fetchActiveEntry();
@@ -152,6 +155,15 @@ export function ActiveTimerProvider({
          setActiveEntry(previousEntry ?? null);
          return { error: { key: "errors.failedToStartTimer" } };
        }
+
+      // Insert tags for the time entry
+      if (tagIds && tagIds.length > 0) {
+        const tagInserts = tagIds.map((tagId) => ({
+          time_entry_id: data.id,
+          tag_id: tagId,
+        }));
+        await supabase.from("time_entry_tags").insert(tagInserts);
+      }
 
       setActiveEntry({
         id: data.id,

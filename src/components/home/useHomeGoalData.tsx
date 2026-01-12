@@ -605,6 +605,7 @@ export function useHomeGoalData(selectedDate: Date) {
     void startTimer({
       contextId: goal.context_id,
       goalId: goal.id,
+      tagIds: goal.tags.map((tag) => tag.id),
     }).then(({ error: startError }) => {
       if (timeMutationRef.current[goal.id] !== mutationId) return;
       if (startError) {

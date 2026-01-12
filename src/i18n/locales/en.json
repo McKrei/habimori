@@ -219,6 +219,7 @@
     "deleteEntryTitle": "Delete entry?",
     "deleteEntryConfirm": "Delete this entry?",
     "entryCount": "{count} entries",
-    "noTagsToShow": "No tags"
+    "noTagsToShow": "No tags",
+    "editTags": "Tags"
   }
 }

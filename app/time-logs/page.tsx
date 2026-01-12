@@ -21,6 +21,7 @@ export default function TimeLogsPage() {
     calculateDurationSeconds,
     parseTimeToDate,
     updateEntry,
+    updateEntryTags,
     deleteEntry,
     deleteEntriesByContextAndDate,
   } = useTimeLogs();
@@ -38,6 +39,14 @@ export default function TimeLogsPage() {
     const result = await updateEntry(entryId, updates);
     if (result.error) {
       console.error("Failed to update entry:", result.error);
+    }
+    return result;
+  };
+
+  const handleUpdateEntryTags = async (entryId: string, tagIds: string[]) => {
+    const result = await updateEntryTags(entryId, tagIds);
+    if (result.error) {
+      console.error("Failed to update entry tags:", result.error);
     }
     return result;
   };
@@ -93,6 +102,7 @@ export default function TimeLogsPage() {
           calculateDuration={calculateDurationSeconds}
           parseTimeToDate={parseTimeToDate}
           onUpdateEntry={handleUpdateEntry}
+          onUpdateEntryTags={handleUpdateEntryTags}
           onDeleteEntry={handleDeleteEntry}
           onDeleteAll={handleDeleteAll}
           onToggleExpanded={handleToggleExpanded}
