@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslation } from "@/src/i18n/TranslationContext";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
+import PlayIcon from "@/src/components/icons/PlayIcon";
 import { ContextOption, TagOption } from "./types";
 
 interface SummaryRowProps {
@@ -22,10 +22,12 @@ export function SummaryRow({
   onExpandToggle,
   onShowAllTags,
 }: SummaryRowProps) {
-  const { t } = useTranslation();
-  const { startTimer } = useActiveTimer();
+  const { activeEntry, startTimer } = useActiveTimer();
+
+  const isTimerRunning = Boolean(activeEntry);
 
   const handlePlay = async () => {
+    if (isTimerRunning) return;
     await startTimer({ contextId: context.id });
   };
 
@@ -71,12 +73,16 @@ export function SummaryRow({
         <span className="text-sm text-slate-600">{totalDuration}</span>
 
         <button
-          className="flex h-7 items-center justify-center rounded bg-slate-900 px-3 text-xs font-medium text-white hover:bg-slate-800"
+          className={`flex h-7 w-7 items-center justify-center rounded ${
+            isTimerRunning
+              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+              : "bg-slate-900 text-white hover:bg-slate-800"
+          }`}
           onClick={handlePlay}
           type="button"
-          title={t("common.start")}
+          disabled={isTimerRunning}
         >
-          ▶
+          <PlayIcon size={14} />
         </button>
       </div>
     </div>
