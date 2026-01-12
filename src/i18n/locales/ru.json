@@ -29,12 +29,18 @@
     "loadingGoals": "Загрузка целей..."
   },
   "filters": {
+    "title": "Фильтры",
     "context": "Контекст",
     "status": "Статус",
     "tags": "Теги",
     "selected": "Выбрано ({count})",
     "noTags": "Нет тегов",
-    "reset": "Сбросить"
+    "noOptions": "Нет опций",
+    "reset": "Сбросить",
+    "apply": "Применить",
+    "allContexts": "Все контексты",
+    "allTags": "Все теги",
+    "allStatuses": "Любой статус"
   },
   "goalTypes": {
     "timer": "Таймер",
@@ -124,10 +130,12 @@
   },
   "stats": {
     "period": {
+      "label": "Период",
       "week": "Неделя",
       "month": "Месяц",
       "custom": "Произвольный"
     },
+    "dateRange": "Диапазон дат",
     "from": "от",
     "to": "до",
     "totalTime": "Время",

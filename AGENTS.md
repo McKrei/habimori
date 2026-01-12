@@ -109,5 +109,9 @@ src/i18n/
 - Логи времени: `app/time-logs/page.tsx`
 - Глобальный таймер: `src/components/GlobalTimerBar.tsx`
 - Активный таймер (контекст): `src/components/ActiveTimerProvider.tsx`
+- Фильтры (контекст): `src/components/FilterContext.tsx`
+- Кнопка фильтров в шапке: `src/components/HeaderFilterButton.tsx`
+- Модальная панель фильтров: `src/components/ui/FilterPanel.tsx`
 - Логика периодов/статусов: `src/components/goalPeriods.ts`
 - Supabase client: `lib/supabase/client.ts`
+- Иконки: `src/components/icons/` (PlayIcon, StopIcon, CheckIcon, PlusIcon, FilterIcon, CloseIcon)

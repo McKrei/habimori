@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
+import { useFilter } from "@/src/components/FilterContext";
 import ToastStack from "@/src/components/ToastStack";
 import { useTranslation } from "@/src/i18n/TranslationContext";
+import FilterPanel from "@/src/components/ui/FilterPanel";
 import HomeEmptyState from "./HomeEmptyState";
-import HomeFiltersBar from "./HomeFiltersBar";
 import HomeGoalCard from "./HomeGoalCard";
 import HomeWeekCalendar from "./HomeWeekCalendar";
 import { useHomeGoalData } from "./useHomeGoalData";
@@ -17,6 +18,7 @@ type HomePageProps = {
 
 export default function HomePage({ lng: _lng }: HomePageProps) {
   const { t } = useTranslation();
+  const { isFilterOpen, closeFilter, setActiveFilterCount } = useFilter();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const {
     activeEntry,
@@ -48,7 +50,14 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
   const [selectedContext, setSelectedContext] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [isTagsOpen, setIsTagsOpen] = useState(false);
+
+  const hasActiveFilters = selectedContext !== "" || selectedTags.length > 0 || selectedStatus !== "";
+  const activeFilterCount = (selectedContext ? 1 : 0) + (selectedTags.length > 0 ? 1 : 0) + (selectedStatus ? 1 : 0);
+
+  // Sync active filter count to header
+  useEffect(() => {
+    setActiveFilterCount(activeFilterCount);
+  }, [activeFilterCount, setActiveFilterCount]);
 
   const filteredGoals = useMemo(() => {
     const statusRank: Record<string, number> = {
@@ -97,16 +106,22 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
     [filteredGoals, isLoading],
   );
 
+  const handleReset = () => {
+    setSelectedContext("");
+    setSelectedTags([]);
+    setSelectedStatus("");
+  };
+
   return (
-    <section className="space-y-6">
+    <section className="space-y-3">
       {error ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
           {error}
         </div>
       ) : null}
 
       {isLoading && goals.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <div className="rounded-lg border border-slate-100 bg-white p-4 text-sm text-slate-500">
           {t("home.loadingGoals")}
         </div>
       ) : null}
@@ -116,34 +131,100 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
         onChange={setSelectedDate}
       />
 
-      <HomeFiltersBar
-        contexts={contexts}
-        tags={tags}
-        selectedContext={selectedContext}
-        selectedStatus={selectedStatus}
-        selectedTags={selectedTags}
-        isTagsOpen={isTagsOpen}
-        onContextChange={setSelectedContext}
-        onStatusChange={setSelectedStatus}
-        onTagsToggle={() => setIsTagsOpen((prev) => !prev)}
-        onTagToggle={(tagId) =>
-          setSelectedTags((prev) =>
-            prev.includes(tagId)
-              ? prev.filter((id) => id !== tagId)
-              : [...prev, tagId],
-          )
-        }
-        onReset={() => {
-          setSelectedContext("");
-          setSelectedTags([]);
-          setSelectedStatus("");
-        }}
-        lng={_lng}
-      />
+      {/* Filter Panel */}
+      <FilterPanel
+        isOpen={isFilterOpen}
+        onClose={closeFilter}
+        onReset={handleReset}
+        hasActiveFilters={hasActiveFilters}
+      >
+        {/* Context Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.context")}
+          </label>
+          <select
+            value={selectedContext}
+            onChange={(e) => setSelectedContext(e.target.value)}
+            className="
+              w-full rounded-lg border border-slate-200 bg-white px-3 py-2
+              text-sm text-slate-700 transition-colors
+              focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-100
+            "
+          >
+            <option value="">{t("filters.allContexts")}</option>
+            {contexts.map((context) => (
+              <option key={context.id} value={context.id}>
+                {context.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Status Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.status")}
+          </label>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="
+              w-full rounded-lg border border-slate-200 bg-white px-3 py-2
+              text-sm text-slate-700 transition-colors
+              focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-100
+            "
+          >
+            <option value="">{t("filters.allStatuses")}</option>
+            <option value="success">{t("status.success")}</option>
+            <option value="fail">{t("status.fail")}</option>
+            <option value="in_progress">{t("status.inProgress")}</option>
+          </select>
+        </div>
+
+        {/* Tags Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.tags")}
+          </label>
+          {tags.length === 0 ? (
+            <p className="text-xs text-slate-400">{t("filters.noTags")}</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.map((tag) => {
+                const isSelected = selectedTags.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedTags((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== tag.id)
+                          : [...prev, tag.id]
+                      )
+                    }
+                    className={`
+                      rounded-full px-2.5 py-1 text-xs transition-all
+                      ${
+                        isSelected
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }
+                    `}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </FilterPanel>
 
       {emptyState ? <HomeEmptyState lng={_lng} /> : null}
 
-      <div className="grid gap-4">
+      <div className="grid gap-2">
         {filteredGoals.map((goal) => {
           const isActiveTimer = activeGoalId === goal.id;
           const isTimerBlocked = Boolean(activeEntry) && !isActiveTimer;

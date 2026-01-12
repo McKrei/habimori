@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
+import { useFilter } from "@/src/components/FilterContext";
 import { formatMinutesAsHHMM } from "@/src/components/formatters";
 import { useTranslation } from "@/src/i18n/TranslationContext";
 import StatsStackedBarChart from "@/src/components/StatsStackedBarChart";
 import StatsPieChart from "@/src/components/StatsPieChart";
+import FilterPanel from "@/src/components/ui/FilterPanel";
 
 const STATUS_COLORS: Record<string, string> = {
   success: "#10b981",
@@ -121,8 +123,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
   const [customEnd, setCustomEnd] = useState(() => toDateInput(new Date()));
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [isContextOpen, setIsContextOpen] = useState(false);
-  const [isTagsOpen, setIsTagsOpen] = useState(false);
+  const { isFilterOpen, closeFilter, setActiveFilterCount } = useFilter();
   const [chartContextIds, setChartContextIds] = useState<string[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<{
     contextId: string;
@@ -466,11 +467,43 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
       meta: formatMinutesAsHHMM(item.value),
     }));
 
+  const hasActiveFilters = selectedContextIds.length > 0 || selectedTagIds.length > 0 || periodMode !== "month";
+  const activeFilterCount = 
+    (selectedContextIds.length > 0 ? 1 : 0) + 
+    (selectedTagIds.length > 0 ? 1 : 0) + 
+    (periodMode !== "month" ? 1 : 0);
+
+  // Sync active filter count to header
+  useEffect(() => {
+    setActiveFilterCount(activeFilterCount);
+  }, [activeFilterCount, setActiveFilterCount]);
+
+  const handleResetFilters = () => {
+    setSelectedContextIds([]);
+    setSelectedTagIds([]);
+    setChartContextIds([]);
+    setSelectedSegment(null);
+    setPeriodMode("month");
+    setCustomStart(toDateInput(addDays(new Date(), -6)));
+    setCustomEnd(toDateInput(new Date()));
+  };
+
   return (
-    <section className="space-y-6">
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-600">
+    <section className="space-y-4">
+
+      {/* Filter Panel */}
+      <FilterPanel
+        isOpen={isFilterOpen}
+        onClose={closeFilter}
+        onReset={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      >
+        {/* Period Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("stats.period.label")}
+          </label>
+          <div className="flex flex-wrap gap-1.5">
             {[
               { key: "week", label: t("stats.period.week") },
               { key: "month", label: t("stats.period.month") },
@@ -478,138 +511,125 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             ].map((item) => (
               <button
                 key={item.key}
-                className={`rounded-full px-3 py-1.5 ${
-                  periodMode === item.key
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600"
-                }`}
                 type="button"
                 onClick={() => setPeriodMode(item.key as typeof periodMode)}
+                className={`
+                  rounded-full px-2.5 py-1 text-xs transition-all
+                  ${
+                    periodMode === item.key
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }
+                `}
               >
                 {item.label}
               </button>
             ))}
           </div>
+        </div>
 
-          {periodMode === "custom" ? (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-              <span>{t("stats.from")}</span>
+        {/* Custom Date Range */}
+        {periodMode === "custom" && (
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-slate-500">
+              {t("stats.dateRange")}
+            </label>
+            <div className="flex items-center gap-1.5">
               <input
-                className="h-9 rounded-md border border-slate-200 px-3 text-sm"
+                className="w-[120px] rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
                 type="date"
                 value={customStart}
-                onChange={(event) => setCustomStart(event.target.value)}
+                onChange={(e) => setCustomStart(e.target.value)}
               />
-              <span>{t("stats.to")}</span>
+              <span className="text-xs text-slate-400">—</span>
               <input
-                className="h-9 rounded-md border border-slate-200 px-3 text-sm"
+                className="w-[120px] rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
                 type="date"
                 value={customEnd}
-                onChange={(event) => setCustomEnd(event.target.value)}
+                onChange={(e) => setCustomEnd(e.target.value)}
               />
             </div>
-          ) : null}
-
-          <div className="relative">
-            <button
-              className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
-              type="button"
-              onClick={() => setIsContextOpen((prev) => !prev)}
-            >
-              {selectedContextIds.length > 0
-                ? t("stats.contextsSelected", { count: selectedContextIds.length })
-                : t("stats.allContexts")}
-            </button>
-            {isContextOpen ? (
-              <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
-                {contexts.length === 0 ? (
-                  <p className="px-2 py-1 text-xs text-slate-500">
-                    {t("stats.noContexts")}
-                  </p>
-                ) : (
-                  contexts.map((context) => {
-                    const checked = selectedContextIds.includes(context.id);
-                    return (
-                      <label
-                        key={context.id}
-                        className="flex items-center gap-2 px-2 py-1 text-sm text-slate-700"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() =>
-                            setSelectedContextIds((prev) =>
-                              checked
-                                ? prev.filter((id) => id !== context.id)
-                                : [...prev, context.id],
-                            )
-                          }
-                        />
-                        {context.name}
-                      </label>
-                    );
-                  })
-                )}
-              </div>
-            ) : null}
           </div>
+        )}
 
-          <div className="relative">
-            <button
-              className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
-              type="button"
-              onClick={() => setIsTagsOpen((prev) => !prev)}
-            >
-              {selectedTagIds.length > 0
-                ? t("stats.tagsSelected", { count: selectedTagIds.length })
-                : t("stats.allTags")}
-            </button>
-            {isTagsOpen ? (
-              <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
-                {tags.length === 0 ? (
-                  <p className="px-2 py-1 text-xs text-slate-500">{t("stats.noTags")}</p>
-                ) : (
-                  tags.map((tag) => {
-                    const checked = selectedTagIds.includes(tag.id);
-                    return (
-                      <label
-                        key={tag.id}
-                        className="flex items-center gap-2 px-2 py-1 text-sm text-slate-700"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() =>
-                            setSelectedTagIds((prev) =>
-                              checked
-                                ? prev.filter((id) => id !== tag.id)
-                                : [...prev, tag.id],
-                            )
-                          }
-                        />
-                        {tag.name}
-                      </label>
-                    );
-                  })
-                )}
-              </div>
-            ) : null}
-          </div>
-
-          <button
-            className="ml-auto h-9 rounded-md bg-slate-900 px-4 text-xs font-medium text-white hover:bg-slate-800"
-            type="button"
-            onClick={() => {
-              setSelectedContextIds([]);
-              setSelectedTagIds([]);
-              setChartContextIds([]);
-              setSelectedSegment(null);
-            }}
-          >
-            {t("filters.reset")}
-          </button>
+        {/* Context Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.context")}
+          </label>
+          {contexts.length === 0 ? (
+            <p className="text-xs text-slate-400">{t("filters.noOptions")}</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {contexts.map((context) => {
+                const isSelected = selectedContextIds.includes(context.id);
+                return (
+                  <button
+                    key={context.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedContextIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== context.id)
+                          : [...prev, context.id]
+                      )
+                    }
+                    className={`
+                      rounded-full px-2.5 py-1 text-xs transition-all
+                      ${
+                        isSelected
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }
+                    `}
+                  >
+                    {context.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
-      </div>
+
+        {/* Tags Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.tags")}
+          </label>
+          {tags.length === 0 ? (
+            <p className="text-xs text-slate-400">{t("filters.noTags")}</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.map((tag) => {
+                const isSelected = selectedTagIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedTagIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== tag.id)
+                          : [...prev, tag.id]
+                      )
+                    }
+                    className={`
+                      rounded-full px-2.5 py-1 text-xs transition-all
+                      ${
+                        isSelected
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }
+                    `}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </FilterPanel>
 
       {error ? (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">

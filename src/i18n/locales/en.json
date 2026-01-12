@@ -29,12 +29,18 @@
     "loadingGoals": "Loading goals..."
   },
   "filters": {
+    "title": "Filters",
     "context": "Context",
     "status": "Status",
     "tags": "Tags",
     "selected": "Selected ({count})",
     "noTags": "No tags",
-    "reset": "Reset"
+    "noOptions": "No options",
+    "reset": "Reset",
+    "apply": "Apply",
+    "allContexts": "All contexts",
+    "allTags": "All tags",
+    "allStatuses": "Any status"
   },
   "goalTypes": {
     "timer": "Timer",
@@ -124,10 +130,12 @@
   },
   "stats": {
     "period": {
+      "label": "Period",
       "week": "Week",
       "month": "Month",
       "custom": "Custom"
     },
+    "dateRange": "Date range",
     "from": "from",
     "to": "to",
     "totalTime": "Time",
