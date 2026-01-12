@@ -8,6 +8,8 @@ import { formatMinutesAsHHMM } from "@/src/components/formatters";
 import { useTranslation } from "@/src/i18n/TranslationContext";
 import StatsStackedBarChart from "@/src/components/StatsStackedBarChart";
 import StatsPieChart from "@/src/components/StatsPieChart";
+import FilterIcon from "@/src/components/icons/FilterIcon";
+import FilterPanel from "@/src/components/ui/FilterPanel";
 
 const STATUS_COLORS: Record<string, string> = {
   success: "#10b981",
@@ -121,8 +123,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
   const [customEnd, setCustomEnd] = useState(() => toDateInput(new Date()));
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [isContextOpen, setIsContextOpen] = useState(false);
-  const [isTagsOpen, setIsTagsOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [chartContextIds, setChartContextIds] = useState<string[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<{
     contextId: string;
@@ -466,6 +467,16 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
       meta: formatMinutesAsHHMM(item.value),
     }));
 
+  const hasActiveFilters = selectedContextIds.length > 0 || selectedTagIds.length > 0;
+  const activeFilterCount = (selectedContextIds.length > 0 ? 1 : 0) + (selectedTagIds.length > 0 ? 1 : 0);
+
+  const handleResetFilters = () => {
+    setSelectedContextIds([]);
+    setSelectedTagIds([]);
+    setChartContextIds([]);
+    setSelectedSegment(null);
+  };
+
   return (
     <section className="space-y-6">
       <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -510,106 +521,113 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             </div>
           ) : null}
 
-          <div className="relative">
-            <button
-              className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
-              type="button"
-              onClick={() => setIsContextOpen((prev) => !prev)}
-            >
-              {selectedContextIds.length > 0
-                ? t("stats.contextsSelected", { count: selectedContextIds.length })
-                : t("stats.allContexts")}
-            </button>
-            {isContextOpen ? (
-              <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
-                {contexts.length === 0 ? (
-                  <p className="px-2 py-1 text-xs text-slate-500">
-                    {t("stats.noContexts")}
-                  </p>
-                ) : (
-                  contexts.map((context) => {
-                    const checked = selectedContextIds.includes(context.id);
-                    return (
-                      <label
-                        key={context.id}
-                        className="flex items-center gap-2 px-2 py-1 text-sm text-slate-700"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() =>
-                            setSelectedContextIds((prev) =>
-                              checked
-                                ? prev.filter((id) => id !== context.id)
-                                : [...prev, context.id],
-                            )
-                          }
-                        />
-                        {context.name}
-                      </label>
-                    );
-                  })
-                )}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="relative">
-            <button
-              className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
-              type="button"
-              onClick={() => setIsTagsOpen((prev) => !prev)}
-            >
-              {selectedTagIds.length > 0
-                ? t("stats.tagsSelected", { count: selectedTagIds.length })
-                : t("stats.allTags")}
-            </button>
-            {isTagsOpen ? (
-              <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
-                {tags.length === 0 ? (
-                  <p className="px-2 py-1 text-xs text-slate-500">{t("stats.noTags")}</p>
-                ) : (
-                  tags.map((tag) => {
-                    const checked = selectedTagIds.includes(tag.id);
-                    return (
-                      <label
-                        key={tag.id}
-                        className="flex items-center gap-2 px-2 py-1 text-sm text-slate-700"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() =>
-                            setSelectedTagIds((prev) =>
-                              checked
-                                ? prev.filter((id) => id !== tag.id)
-                                : [...prev, tag.id],
-                            )
-                          }
-                        />
-                        {tag.name}
-                      </label>
-                    );
-                  })
-                )}
-              </div>
-            ) : null}
-          </div>
-
           <button
-            className="ml-auto h-9 rounded-md bg-slate-900 px-4 text-xs font-medium text-white hover:bg-slate-800"
-            type="button"
-            onClick={() => {
-              setSelectedContextIds([]);
-              setSelectedTagIds([]);
-              setChartContextIds([]);
-              setSelectedSegment(null);
-            }}
+            onClick={() => setIsFilterOpen(true)}
+            className={`
+              relative flex h-9 items-center gap-2 rounded-lg border px-3 transition-all
+              ${
+                hasActiveFilters
+                  ? "border-slate-300 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+              }
+            `}
           >
-            {t("filters.reset")}
+            <FilterIcon size={16} />
+            <span className="text-sm">{t("filters.title")}</span>
+            {activeFilterCount > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-medium text-white">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
+
+      {/* Filter Panel */}
+      <FilterPanel
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onReset={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      >
+        {/* Context Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.context")}
+          </label>
+          {contexts.length === 0 ? (
+            <p className="text-xs text-slate-400">{t("filters.noOptions")}</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {contexts.map((context) => {
+                const isSelected = selectedContextIds.includes(context.id);
+                return (
+                  <button
+                    key={context.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedContextIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== context.id)
+                          : [...prev, context.id]
+                      )
+                    }
+                    className={`
+                      rounded-full px-2.5 py-1 text-xs transition-all
+                      ${
+                        isSelected
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }
+                    `}
+                  >
+                    {context.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Tags Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.tags")}
+          </label>
+          {tags.length === 0 ? (
+            <p className="text-xs text-slate-400">{t("filters.noTags")}</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.map((tag) => {
+                const isSelected = selectedTagIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedTagIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== tag.id)
+                          : [...prev, tag.id]
+                      )
+                    }
+                    className={`
+                      rounded-full px-2.5 py-1 text-xs transition-all
+                      ${
+                        isSelected
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }
+                    `}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </FilterPanel>
 
       {error ? (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">

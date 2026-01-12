@@ -29,12 +29,18 @@
     "loadingGoals": "Loading goals..."
   },
   "filters": {
+    "title": "Filters",
     "context": "Context",
     "status": "Status",
     "tags": "Tags",
     "selected": "Selected ({count})",
     "noTags": "No tags",
-    "reset": "Reset"
+    "noOptions": "No options",
+    "reset": "Reset",
+    "apply": "Apply",
+    "allContexts": "All contexts",
+    "allTags": "All tags",
+    "allStatuses": "Any status"
   },
   "goalTypes": {
     "timer": "Timer",

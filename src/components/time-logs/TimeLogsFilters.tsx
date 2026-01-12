@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useTranslation } from "@/src/i18n/TranslationContext";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
+import FilterIcon from "@/src/components/icons/FilterIcon";
+import FilterPanel from "@/src/components/ui/FilterPanel";
 import { TimeLogsFilters } from "./types";
 
 interface TimeLogsFiltersProps {
@@ -18,8 +20,10 @@ export function TimeLogsFiltersComponent({
   const { t } = useTranslation();
   const { contexts } = useContexts();
   const { tags } = useTags();
-  const [isContextOpen, setIsContextOpen] = useState(false);
-  const [isTagsOpen, setIsTagsOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const hasActiveFilters = filters.contextIds.length > 0 || filters.tagIds.length > 0;
+  const activeFilterCount = (filters.contextIds.length > 0 ? 1 : 0) + (filters.tagIds.length > 0 ? 1 : 0);
 
   const handleContextToggle = (contextId: string) => {
     onFiltersChange({
@@ -47,90 +51,99 @@ export function TimeLogsFiltersComponent({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="relative">
-        <button
-          className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
-          type="button"
-          onClick={() => setIsContextOpen((prev) => !prev)}
-        >
-          {filters.contextIds.length > 0
-            ? t("contexts.contextsSelected", { count: filters.contextIds.length })
-            : t("contexts.allContexts")}
-        </button>
-        {isContextOpen ? (
-          <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
-            {contexts.length === 0 ? (
-              <p className="px-2 py-1 text-xs text-slate-500">
-                {t("stats.noContexts")}
-              </p>
-            ) : (
-              contexts.map((context) => {
-                const checked = filters.contextIds.includes(context.id);
+    <>
+      <button
+        onClick={() => setIsFilterOpen(true)}
+        className={`
+          relative flex h-9 items-center gap-2 rounded-lg border px-3 transition-all
+          ${
+            hasActiveFilters
+              ? "border-slate-300 bg-slate-900 text-white"
+              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+          }
+        `}
+      >
+        <FilterIcon size={16} />
+        <span className="text-sm">{t("filters.title")}</span>
+        {activeFilterCount > 0 && (
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-medium text-white">
+            {activeFilterCount}
+          </span>
+        )}
+      </button>
+
+      <FilterPanel
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onReset={handleReset}
+        hasActiveFilters={hasActiveFilters}
+      >
+        {/* Context Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.context")}
+          </label>
+          {contexts.length === 0 ? (
+            <p className="text-xs text-slate-400">{t("filters.noOptions")}</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {contexts.map((context) => {
+                const isSelected = filters.contextIds.includes(context.id);
                 return (
-                  <label
+                  <button
                     key={context.id}
-                    className="flex items-center gap-2 px-2 py-1 text-sm text-slate-700"
+                    type="button"
+                    onClick={() => handleContextToggle(context.id)}
+                    className={`
+                      rounded-full px-2.5 py-1 text-xs transition-all
+                      ${
+                        isSelected
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }
+                    `}
                   >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => handleContextToggle(context.id)}
-                    />
                     {context.name}
-                  </label>
+                  </button>
                 );
-              })
-            )}
-          </div>
-        ) : null}
-      </div>
+              })}
+            </div>
+          )}
+        </div>
 
-      <div className="relative">
-        <button
-          className="h-9 rounded-md border border-slate-200 px-3 text-sm text-slate-700"
-          type="button"
-          onClick={() => setIsTagsOpen((prev) => !prev)}
-        >
-          {filters.tagIds.length > 0
-            ? t("tags.tagsSelected", { count: filters.tagIds.length })
-            : t("tags.allTags")}
-        </button>
-        {isTagsOpen ? (
-          <div className="absolute left-0 top-10 z-10 max-h-56 w-56 overflow-auto rounded-md border border-slate-200 bg-white p-2 shadow-lg">
-            {tags.length === 0 ? (
-              <p className="px-2 py-1 text-xs text-slate-500">{t("stats.noTags")}</p>
-            ) : (
-              tags.map((tag) => {
-                const checked = filters.tagIds.includes(tag.id);
+        {/* Tags Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("filters.tags")}
+          </label>
+          {tags.length === 0 ? (
+            <p className="text-xs text-slate-400">{t("filters.noTags")}</p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.map((tag) => {
+                const isSelected = filters.tagIds.includes(tag.id);
                 return (
-                  <label
+                  <button
                     key={tag.id}
-                    className="flex items-center gap-2 px-2 py-1 text-sm text-slate-700"
+                    type="button"
+                    onClick={() => handleTagToggle(tag.id)}
+                    className={`
+                      rounded-full px-2.5 py-1 text-xs transition-all
+                      ${
+                        isSelected
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }
+                    `}
                   >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => handleTagToggle(tag.id)}
-                    />
                     {tag.name}
-                  </label>
+                  </button>
                 );
-              })
-            )}
-          </div>
-        ) : null}
-      </div>
-
-      {(filters.contextIds.length > 0 || filters.tagIds.length > 0) ? (
-        <button
-          className="h-9 rounded-md bg-slate-100 px-3 text-xs font-medium text-slate-600 hover:bg-slate-200"
-          type="button"
-          onClick={handleReset}
-        >
-          {t("filters.reset")}
-        </button>
-      ) : null}
-    </div>
+              })}
+            </div>
+          )}
+        </div>
+      </FilterPanel>
+    </>
   );
 }
