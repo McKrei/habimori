@@ -10,6 +10,7 @@
 - Модель данных: `docs/data-model.md`
 - Разработка и проверки: `docs/dev.md`
 - Текущее состояние/статус: `docs/plan.md`
+- Конфиг календаря (donut ring): `docs/calendar-donut.md`
 
 ## Технологии
 - Next.js (App Router) + TypeScript

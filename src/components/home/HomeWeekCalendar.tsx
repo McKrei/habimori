@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import DayStatusDots from "@/src/components/calendar/DayStatusDots";
+import CalendarDay from "@/src/components/calendar/CalendarDay";
 import { useDayStatusMap } from "@/src/components/calendar/useDayStatusMap";
 import { addDays, getDateString, getTodayDateString } from "./utils";
 
@@ -97,7 +97,7 @@ export default function HomeWeekCalendar({
   return (
     <div
       ref={containerRef}
-      className="select-none rounded-lg border border-slate-200 bg-white px-3 py-2 touch-pan-y"
+      className="select-none rounded-lg border border-slate-200 bg-white px-3 py-3 touch-pan-y"
       onPointerDown={(event) => {
         handlePointerStart(event.clientX);
       }}
@@ -118,33 +118,21 @@ export default function HomeWeekCalendar({
         handlePointerEnd(touch.clientX);
       }}
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-around">
         {days.map((day) => {
           const isToday = day.key === todayKey;
           const isSelected = day.key === selectedKey;
-          const baseStyles =
-            "flex w-full flex-col items-center gap-1 rounded-lg px-2 py-2 text-center transition";
-          const highlightStyles = isToday
-            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-            : isSelected
-              ? "bg-slate-900 text-white"
-              : "text-slate-700 hover:bg-slate-100";
           const dayLabel = formatWeekday.format(day.date);
           return (
-            <button
+            <CalendarDay
               key={day.key}
-              className={`${baseStyles} ${highlightStyles}`}
-              type="button"
+              weekday={dayLabel}
+              date={day.date.getDate()}
+              counts={statusMap[day.key]}
+              isToday={isToday}
+              isSelected={isSelected}
               onClick={() => onChange(day.date)}
-            >
-              <span className="text-[11px] uppercase tracking-wide">
-                {dayLabel}
-              </span>
-              <span className="text-lg font-semibold">
-                {day.date.getDate()}
-              </span>
-              <DayStatusDots statuses={statusMap[day.key]} />
-            </button>
+            />
           );
         })}
       </div>

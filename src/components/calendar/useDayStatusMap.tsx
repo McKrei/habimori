@@ -22,18 +22,25 @@ type PeriodRow = {
   period_end: string;
 };
 
+/** @deprecated Use DayStatusCounts instead */
 export type DayStatusPresence = {
   success: boolean;
   in_progress: boolean;
   fail: boolean;
 };
 
-type DayStatusMap = Record<string, DayStatusPresence>;
+export type DayStatusCounts = {
+  success: number;
+  in_progress: number;
+  fail: number;
+};
 
-const EMPTY_STATUS: DayStatusPresence = {
-  success: false,
-  in_progress: false,
-  fail: false,
+type DayStatusMap = Record<string, DayStatusCounts>;
+
+const EMPTY_COUNTS: DayStatusCounts = {
+  success: 0,
+  in_progress: 0,
+  fail: 0,
 };
 
 export function useDayStatusMap(days: Date[]) {
@@ -163,16 +170,16 @@ export function useDayStatusMap(days: Date[]) {
 
         const nextStatusMap: DayStatusMap = {};
         for (const dayKey of dayKeys) {
-          const presence = { ...EMPTY_STATUS };
+          const counts = { ...EMPTY_COUNTS };
           for (const periodKey of dayToPeriodKeys[dayKey]) {
             const status = statusByKey.get(periodKey);
             if (!status || status === "archived") continue;
-            if (status === "success") presence.success = true;
-            if (status === "in_progress") presence.in_progress = true;
-            if (status === "fail") presence.fail = true;
+            if (status === "success") counts.success++;
+            if (status === "in_progress") counts.in_progress++;
+            if (status === "fail") counts.fail++;
           }
-          if (presence.success || presence.in_progress || presence.fail) {
-            nextStatusMap[dayKey] = presence;
+          if (counts.success > 0 || counts.in_progress > 0 || counts.fail > 0) {
+            nextStatusMap[dayKey] = counts;
           }
         }
 
