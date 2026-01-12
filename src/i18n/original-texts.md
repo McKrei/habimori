@@ -55,12 +55,18 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 
 | Key | English |
 |-----|---------|
+| `filters.title` | Filters |
 | `filters.context` | Context |
 | `filters.status` | Status |
 | `filters.tags` | Tags |
 | `filters.selected` | Selected ({count}) |
 | `filters.noTags` | No tags |
+| `filters.noOptions` | No options |
 | `filters.reset` | Reset |
+| `filters.apply` | Apply |
+| `filters.allContexts` | All contexts |
+| `filters.allTags` | All tags |
+| `filters.allStatuses` | Any status |
 
 ---
 
@@ -208,9 +214,11 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 
 | Key | English |
 |-----|---------|
+| `stats.period.label` | Period |
 | `stats.period.week` | Week |
 | `stats.period.month` | Month |
 | `stats.period.custom` | Custom |
+| `stats.dateRange` | Date range |
 | `stats.from` | from |
 | `stats.to` | to |
 | `stats.totalTime` | Time |

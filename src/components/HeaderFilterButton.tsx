@@ -18,7 +18,7 @@ export default function HeaderFilterButton() {
   return (
     <button
       onClick={openFilter}
-      className="relative inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2 sm:h-9 sm:w-9"
+      className="relative inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
       aria-label="Фильтры"
       title="Фильтры"
     >

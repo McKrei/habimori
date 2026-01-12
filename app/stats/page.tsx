@@ -534,16 +534,16 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             <label className="block text-xs font-medium text-slate-500">
               {t("stats.dateRange")}
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <input
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="w-[120px] rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
                 type="date"
                 value={customStart}
                 onChange={(e) => setCustomStart(e.target.value)}
               />
               <span className="text-xs text-slate-400">—</span>
               <input
-                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="w-[120px] rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
                 type="date"
                 value={customEnd}
                 onChange={(e) => setCustomEnd(e.target.value)}

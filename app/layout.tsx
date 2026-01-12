@@ -65,7 +65,7 @@ export default function RootLayout({
                         <HeaderFilterButton />
                         <LanguageSwitcher lng={DEFAULT_LANGUAGE} />
                         <Link
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2 sm:h-9 sm:w-9"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
                           href="/time-logs"
                           aria-label="Логи времени"
                           title="Логи времени"
@@ -85,7 +85,7 @@ export default function RootLayout({
                           </svg>
                         </Link>
                         <Link
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2 sm:h-9 sm:w-9"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
                           href="/stats"
                           aria-label="Статистика"
                           title="Статистика"
