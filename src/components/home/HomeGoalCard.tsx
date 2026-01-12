@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatSecondsAsHHMMSS } from "@/src/components/formatters";
+import { formatSecondsAsHHMMSS, formatMinutesAsHHMM } from "@/src/components/formatters";
 import type { GoalSummary, StatusMap } from "./types";
 import { useTranslation } from "@/src/i18n/TranslationContext";
 
@@ -151,10 +151,15 @@ export default function HomeGoalCard({
 
           {goal.goal_type === "time" ? (
             <>
-              <div className={`text-xl font-semibold md:text-2xl ${accentColor}`}>
-                {isActiveTimer
-                  ? formatSecondsAsHHMMSS(totalSeconds)
-                  : formatSecondsAsHHMMSS(baseTimeSeconds)}
+              <div className="flex flex-col items-end">
+                <div className={`text-xl font-semibold md:text-2xl ${accentColor}`}>
+                  {isActiveTimer
+                    ? formatSecondsAsHHMMSS(totalSeconds)
+                    : formatSecondsAsHHMMSS(baseTimeSeconds)}
+                </div>
+                <div className="text-xs text-slate-400">
+                  {formatMinutesAsHHMM(goal.target_value)}
+                </div>
               </div>
               {isActiveTimer ? (
                 <button
