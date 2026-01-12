@@ -130,10 +130,12 @@
   },
   "stats": {
     "period": {
+      "label": "Period",
       "week": "Week",
       "month": "Month",
       "custom": "Custom"
     },
+    "dateRange": "Date range",
     "from": "from",
     "to": "to",
     "totalTime": "Time",

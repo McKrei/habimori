@@ -6,7 +6,9 @@ import "./globals.css";
 import AuthButton from "@/src/components/AuthButton";
 import AuthGate from "@/src/components/AuthGate";
 import { ActiveTimerProvider } from "@/src/components/ActiveTimerProvider";
+import { FilterProvider } from "@/src/components/FilterContext";
 import GlobalTimerBar from "@/src/components/GlobalTimerBar";
+import HeaderFilterButton from "@/src/components/HeaderFilterButton";
 import { TranslationProvider, DEFAULT_LANGUAGE } from "@/src/i18n";
 import LanguageSwitcher from "@/src/components/LanguageSwitcher";
 
@@ -42,78 +44,81 @@ export default function RootLayout({
         <TranslationProvider>
           <AuthGate lng={DEFAULT_LANGUAGE}>
             <ActiveTimerProvider>
-              <div className="min-h-screen pb-24">
-                <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
-                  <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
-                    <Link className="flex items-center gap-2" href="/">
-                      <Image
-                        src="/images/logo-header.png"
-                        alt="Habimori"
-                        width={50}
-                        height={50}
-                        className="rounded"
-                        priority
-                      />
-                      <span className="text-xl font-semibold tracking-tight">
-                        Habimori
-                      </span>
-                    </Link>
-                      <div className="flex items-center gap-2">
-                      <LanguageSwitcher lng={DEFAULT_LANGUAGE} />
-                      <Link
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
-                        href="/time-logs"
-                        aria-label="Логи времени"
-                        title="Логи времени"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          <circle cx="12" cy="12" r="10" />
-                          <polyline points="12,6 12,12 16,14" />
-                        </svg>
+              <FilterProvider>
+                <div className="min-h-screen pb-24">
+                  <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
+                    <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-3 py-3 sm:px-4 sm:py-4">
+                      <Link className="flex items-center gap-1.5 sm:gap-2" href="/">
+                        <Image
+                          src="/images/logo-header.png"
+                          alt="Habimori"
+                          width={40}
+                          height={40}
+                          className="rounded sm:h-[50px] sm:w-[50px]"
+                          priority
+                        />
+                        <span className="text-base font-semibold tracking-tight sm:text-xl">
+                          Habimori
+                        </span>
                       </Link>
-                      <Link
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2"
-                        href="/stats"
-                        aria-label="Статистика"
-                        title="Статистика"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <HeaderFilterButton />
+                        <LanguageSwitcher lng={DEFAULT_LANGUAGE} />
+                        <Link
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2 sm:h-9 sm:w-9"
+                          href="/time-logs"
+                          aria-label="Логи времени"
+                          title="Логи времени"
                         >
-                          <path d="M3 3v18h18" />
-                          <path d="M7 15v3" />
-                          <path d="M11 11v7" />
-                          <path d="M15 7v11" />
-                          <path d="M19 9v9" />
-                        </svg>
-                      </Link>
-                      <AuthButton />
+                          <svg
+                            className="h-4 w-4"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12,6 12,12 16,14" />
+                          </svg>
+                        </Link>
+                        <Link
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2 sm:h-9 sm:w-9"
+                          href="/stats"
+                          aria-label="Статистика"
+                          title="Статистика"
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                          >
+                            <path d="M3 3v18h18" />
+                            <path d="M7 15v3" />
+                            <path d="M11 11v7" />
+                            <path d="M15 7v11" />
+                            <path d="M19 9v9" />
+                          </svg>
+                        </Link>
+                        <AuthButton />
+                      </div>
                     </div>
-                  </div>
-                </header>
+                  </header>
 
-                <main className="mx-auto w-full max-w-5xl px-4 py-3">
-                  {children}
-                </main>
+                  <main className="mx-auto w-full max-w-5xl px-4 py-3">
+                    {children}
+                  </main>
 
-                <GlobalTimerBar />
-              </div>
+                  <GlobalTimerBar />
+                </div>
+              </FilterProvider>
             </ActiveTimerProvider>
           </AuthGate>
         </TranslationProvider>

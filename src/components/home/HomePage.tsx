@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
+import { useFilter } from "@/src/components/FilterContext";
 import ToastStack from "@/src/components/ToastStack";
 import { useTranslation } from "@/src/i18n/TranslationContext";
-import FilterIcon from "@/src/components/icons/FilterIcon";
 import FilterPanel from "@/src/components/ui/FilterPanel";
 import HomeEmptyState from "./HomeEmptyState";
 import HomeGoalCard from "./HomeGoalCard";
@@ -18,6 +18,7 @@ type HomePageProps = {
 
 export default function HomePage({ lng: _lng }: HomePageProps) {
   const { t } = useTranslation();
+  const { isFilterOpen, closeFilter, setActiveFilterCount } = useFilter();
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const {
     activeEntry,
@@ -49,10 +50,14 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
   const [selectedContext, setSelectedContext] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const hasActiveFilters = selectedContext !== "" || selectedTags.length > 0 || selectedStatus !== "";
   const activeFilterCount = (selectedContext ? 1 : 0) + (selectedTags.length > 0 ? 1 : 0) + (selectedStatus ? 1 : 0);
+
+  // Sync active filter count to header
+  useEffect(() => {
+    setActiveFilterCount(activeFilterCount);
+  }, [activeFilterCount, setActiveFilterCount]);
 
   const filteredGoals = useMemo(() => {
     const statusRank: Record<string, number> = {
@@ -121,39 +126,15 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
         </div>
       ) : null}
 
-      {/* Calendar + Filter Button Row */}
-      <div className="flex items-start gap-2">
-        <div className="flex-1">
-          <HomeWeekCalendar
-            selectedDate={selectedDate}
-            onChange={setSelectedDate}
-          />
-        </div>
-        <button
-          onClick={() => setIsFilterOpen(true)}
-          className={`
-            relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg
-            border transition-all
-            ${
-              hasActiveFilters
-                ? "border-slate-300 bg-slate-900 text-white"
-                : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
-            }
-          `}
-        >
-          <FilterIcon size={18} />
-          {activeFilterCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-medium text-white">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-      </div>
+      <HomeWeekCalendar
+        selectedDate={selectedDate}
+        onChange={setSelectedDate}
+      />
 
       {/* Filter Panel */}
       <FilterPanel
         isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
+        onClose={closeFilter}
         onReset={handleReset}
         hasActiveFilters={hasActiveFilters}
       >

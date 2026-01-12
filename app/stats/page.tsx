@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
+import { useFilter } from "@/src/components/FilterContext";
 import { formatMinutesAsHHMM } from "@/src/components/formatters";
 import { useTranslation } from "@/src/i18n/TranslationContext";
 import StatsStackedBarChart from "@/src/components/StatsStackedBarChart";
 import StatsPieChart from "@/src/components/StatsPieChart";
-import FilterIcon from "@/src/components/icons/FilterIcon";
 import FilterPanel from "@/src/components/ui/FilterPanel";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -123,7 +123,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
   const [customEnd, setCustomEnd] = useState(() => toDateInput(new Date()));
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { isFilterOpen, closeFilter, setActiveFilterCount } = useFilter();
   const [chartContextIds, setChartContextIds] = useState<string[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<{
     contextId: string;
@@ -467,21 +467,43 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
       meta: formatMinutesAsHHMM(item.value),
     }));
 
-  const hasActiveFilters = selectedContextIds.length > 0 || selectedTagIds.length > 0;
-  const activeFilterCount = (selectedContextIds.length > 0 ? 1 : 0) + (selectedTagIds.length > 0 ? 1 : 0);
+  const hasActiveFilters = selectedContextIds.length > 0 || selectedTagIds.length > 0 || periodMode !== "month";
+  const activeFilterCount = 
+    (selectedContextIds.length > 0 ? 1 : 0) + 
+    (selectedTagIds.length > 0 ? 1 : 0) + 
+    (periodMode !== "month" ? 1 : 0);
+
+  // Sync active filter count to header
+  useEffect(() => {
+    setActiveFilterCount(activeFilterCount);
+  }, [activeFilterCount, setActiveFilterCount]);
 
   const handleResetFilters = () => {
     setSelectedContextIds([]);
     setSelectedTagIds([]);
     setChartContextIds([]);
     setSelectedSegment(null);
+    setPeriodMode("month");
+    setCustomStart(toDateInput(addDays(new Date(), -6)));
+    setCustomEnd(toDateInput(new Date()));
   };
 
   return (
-    <section className="space-y-6">
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold text-slate-600">
+    <section className="space-y-4">
+
+      {/* Filter Panel */}
+      <FilterPanel
+        isOpen={isFilterOpen}
+        onClose={closeFilter}
+        onReset={handleResetFilters}
+        hasActiveFilters={hasActiveFilters}
+      >
+        {/* Period Filter */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {t("stats.period.label")}
+          </label>
+          <div className="flex flex-wrap gap-1.5">
             {[
               { key: "week", label: t("stats.period.week") },
               { key: "month", label: t("stats.period.month") },
@@ -489,67 +511,47 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             ].map((item) => (
               <button
                 key={item.key}
-                className={`rounded-full px-3 py-1.5 ${
-                  periodMode === item.key
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600"
-                }`}
                 type="button"
                 onClick={() => setPeriodMode(item.key as typeof periodMode)}
+                className={`
+                  rounded-full px-2.5 py-1 text-xs transition-all
+                  ${
+                    periodMode === item.key
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }
+                `}
               >
                 {item.label}
               </button>
             ))}
           </div>
+        </div>
 
-          {periodMode === "custom" ? (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-              <span>{t("stats.from")}</span>
+        {/* Custom Date Range */}
+        {periodMode === "custom" && (
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-slate-500">
+              {t("stats.dateRange")}
+            </label>
+            <div className="flex items-center gap-2">
               <input
-                className="h-9 rounded-md border border-slate-200 px-3 text-sm"
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
                 type="date"
                 value={customStart}
-                onChange={(event) => setCustomStart(event.target.value)}
+                onChange={(e) => setCustomStart(e.target.value)}
               />
-              <span>{t("stats.to")}</span>
+              <span className="text-xs text-slate-400">—</span>
               <input
-                className="h-9 rounded-md border border-slate-200 px-3 text-sm"
+                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
                 type="date"
                 value={customEnd}
-                onChange={(event) => setCustomEnd(event.target.value)}
+                onChange={(e) => setCustomEnd(e.target.value)}
               />
             </div>
-          ) : null}
+          </div>
+        )}
 
-          <button
-            onClick={() => setIsFilterOpen(true)}
-            className={`
-              relative flex h-9 items-center gap-2 rounded-lg border px-3 transition-all
-              ${
-                hasActiveFilters
-                  ? "border-slate-300 bg-slate-900 text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-              }
-            `}
-          >
-            <FilterIcon size={16} />
-            <span className="text-sm">{t("filters.title")}</span>
-            {activeFilterCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-medium text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Filter Panel */}
-      <FilterPanel
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-        onReset={handleResetFilters}
-        hasActiveFilters={hasActiveFilters}
-      >
         {/* Context Filter */}
         <div className="space-y-2">
           <label className="block text-xs font-medium text-slate-500">
