@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useContexts } from "@/src/components/useContexts";
 import { useTags } from "@/src/components/useTags";
@@ -17,7 +17,7 @@ const STATUS_COLORS: Record<string, string> = {
   fail: "#ef4444",
 };
 
-const CONTEXT_COLORS = [
+const CHART_COLORS = [
   "#0ea5e9",
   "#22c55e",
   "#f97316",
@@ -124,9 +124,10 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const { isFilterOpen, closeFilter, setActiveFilterCount } = useFilter();
-  const [chartContextIds, setChartContextIds] = useState<string[]>([]);
+  const [chartMode, setChartMode] = useState<"contexts" | "tags">("contexts");
+  const [chartVisibleIds, setChartVisibleIds] = useState<string[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<{
-    contextId: string;
+    itemId: string;
     minutes: number;
   } | null>(null);
   const [statusSeries, setStatusSeries] = useState<{
@@ -141,6 +142,12 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
     { id: string; label: string; color: string; values: number[] }[]
   >([]);
   const [contextTotals, setContextTotals] = useState<
+    { id: string; label: string; color: string; value: number }[]
+  >([]);
+  const [tagSeries, setTagSeries] = useState<
+    { id: string; label: string; color: string; values: number[] }[]
+  >([]);
+  const [tagTotals, setTagTotals] = useState<
     { id: string; label: string; color: string; value: number }[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -176,27 +183,48 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
   const contextColorMap = useMemo(() => {
     const map = new Map<string, string>();
     contexts.forEach((context, index) => {
-      map.set(context.id, CONTEXT_COLORS[index % CONTEXT_COLORS.length]);
+      map.set(context.id, CHART_COLORS[index % CHART_COLORS.length]);
     });
     return map;
   }, [contexts]);
 
+  const tagColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    tags.forEach((tag, index) => {
+      map.set(tag.id, CHART_COLORS[index % CHART_COLORS.length]);
+    });
+    return map;
+  }, [tags]);
+
+  // Sync visible chart items when mode or data changes
+  const currentSeries = chartMode === "contexts" ? contextSeries : tagSeries;
+  
+  // Track previous mode to detect changes
+  const prevChartModeRef = useRef(chartMode);
+  
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      if (selectedContextIds.length > 0) {
-        setChartContextIds(selectedContextIds);
+      // If mode changed, reset to show all items
+      if (prevChartModeRef.current !== chartMode) {
+        prevChartModeRef.current = chartMode;
+        setChartVisibleIds(currentSeries.map((item) => item.id));
+        setSelectedSegment(null);
         return;
       }
-      if (chartContextIds.length === 0 && contextSeries.length > 0) {
-        setChartContextIds(contextSeries.map((item) => item.id));
+      
+      // Initialize if empty
+      if (chartVisibleIds.length === 0 && currentSeries.length > 0) {
+        setChartVisibleIds(currentSeries.map((item) => item.id));
         return;
       }
-      setChartContextIds((prev) =>
-        prev.filter((id) => contextSeries.some((item) => item.id === id)),
+      
+      // Filter out removed items
+      setChartVisibleIds((prev) =>
+        prev.filter((id) => currentSeries.some((item) => item.id === id)),
       );
     }, 0);
     return () => window.clearTimeout(timeout);
-  }, [selectedContextIds, contextSeries, chartContextIds.length]);
+  }, [currentSeries, chartVisibleIds.length, chartMode]);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -315,10 +343,14 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
       const contextByDay = new Map<string, number[]>(
         contexts.map((context) => [context.id, dateLabels.map(() => 0)]),
       );
+      const tagByDay = new Map<string, number[]>(
+        tags.map((tag) => [tag.id, dateLabels.map(() => 0)]),
+      );
 
       filteredEntries.forEach((entry) => {
         const entryStart = new Date(entry.started_at);
         const entryEnd = entry.ended_at ? new Date(entry.ended_at) : new Date();
+        const entryTags = entry.time_entry_tags ?? [];
 
         dayRanges.forEach((rangeItem, index) => {
           const overlapStart =
@@ -329,15 +361,27 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
           const minutes =
             (overlapEnd.getTime() - overlapStart.getTime()) / 60000;
           totalsByDay[index] += minutes;
+          
+          // Context time
           const contextValues = contextByDay.get(entry.context_id);
           if (contextValues) {
             contextValues[index] += minutes;
           }
+          
+          // Tag time (same entry time goes to each tag)
+          entryTags.forEach((entryTag) => {
+            const tagValues = tagByDay.get(entryTag.tag_id);
+            if (tagValues) {
+              tagValues[index] += minutes;
+            }
+          });
         });
       });
 
       const totalMinutes = totalsByDay.reduce((sum, value) => sum + value, 0);
       const contextIds = contexts.map((context) => context.id);
+      const tagIds = tags.map((tag) => tag.id);
+      
       const dayItems = dateLabels.map((label, index) => {
         const date = new Date(`${label}T00:00:00`);
         return {
@@ -345,6 +389,9 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
           total: totalsByDay[index],
           contextValues: contextIds.map(
             (id) => contextByDay.get(id)?.[index] ?? 0,
+          ),
+          tagValues: tagIds.map(
+            (id) => tagByDay.get(id)?.[index] ?? 0,
           ),
         };
       });
@@ -361,6 +408,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
           end: Date;
           total: number;
           contextValues: number[];
+          tagValues: number[];
         }[] = [];
 
         items.forEach((item) => {
@@ -380,6 +428,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
               end: item.date,
               total: 0,
               contextValues: contextIds.map(() => 0),
+              tagValues: tagIds.map(() => 0),
             });
           }
           const current = groups[groups.length - 1];
@@ -387,6 +436,9 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
           current.total += item.total;
           current.contextValues = current.contextValues.map(
             (value, idx) => value + (item.contextValues[idx] ?? 0),
+          );
+          current.tagValues = current.tagValues.map(
+            (value, idx) => value + (item.tagValues[idx] ?? 0),
           );
         });
 
@@ -409,6 +461,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
       );
       const roundedTotals = grouped.map((group) => Math.round(group.total));
 
+      // Context series
       const nextContextSeries = contextIds
         .map((id, index) => ({
           id,
@@ -427,11 +480,32 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
         value: item.values.reduce((sum, value) => sum + value, 0),
       }));
 
+      // Tag series
+      const nextTagSeries = tagIds
+        .map((id, index) => ({
+          id,
+          label: tags.find((tag) => tag.id === id)?.name ?? id,
+          color: tagColorMap.get(id) ?? "#64748b",
+          values: grouped.map((group) =>
+            Math.round(group.tagValues[index] ?? 0),
+          ),
+        }))
+        .filter((item) => item.values.some((value) => value > 0));
+
+      const nextTagTotals = nextTagSeries.map((item) => ({
+        id: item.id,
+        label: item.label,
+        color: item.color,
+        value: item.values.reduce((sum, value) => sum + value, 0),
+      }));
+
       setStatusSeries(nextStatusSeries);
       setTimeTotals(roundedTotals);
       setTimeLabels(nextTimeLabels);
       setContextSeries(nextContextSeries);
       setContextTotals(nextContextTotals);
+      setTagSeries(nextTagSeries);
+      setTagTotals(nextTagTotals);
       setTotalTrackedMinutes(totalMinutes);
       setIsLoading(false);
     };
@@ -439,7 +513,9 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
     void loadStats();
   }, [
     contexts,
+    tags,
     contextColorMap,
+    tagColorMap,
     dateLabels,
     range.end,
     range.start,
@@ -447,18 +523,23 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
     selectedTagIds,
   ]);
 
-  const visibleContextSeries = contextSeries.filter((item) =>
-    chartContextIds.includes(item.id),
+  // Select active series based on chart mode
+  const activeSeries = chartMode === "contexts" ? contextSeries : tagSeries;
+  const activeTotals = chartMode === "contexts" ? contextTotals : tagTotals;
+  const activeItems = chartMode === "contexts" ? contexts : tags;
+
+  const visibleSeries = activeSeries.filter((item) =>
+    chartVisibleIds.includes(item.id),
   );
 
-  const totalsForVisibleContexts = timeTotals.map((_, index) =>
-    visibleContextSeries.reduce(
+  const totalsForVisible = timeTotals.map((_, index) =>
+    visibleSeries.reduce(
       (sum, item) => sum + (item.values[index] ?? 0),
       0,
     ),
   );
-  const pieSlices = contextTotals
-    .filter((item) => chartContextIds.includes(item.id))
+  const pieSlices = activeTotals
+    .filter((item) => chartVisibleIds.includes(item.id))
     .map((item) => ({
       id: item.id,
       label: item.label,
@@ -481,7 +562,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
   const handleResetFilters = () => {
     setSelectedContextIds([]);
     setSelectedTagIds([]);
-    setChartContextIds([]);
+    setChartVisibleIds([]);
     setSelectedSegment(null);
     setPeriodMode("month");
     setCustomStart(toDateInput(addDays(new Date(), -6)));
@@ -688,33 +769,68 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             </div>
           </div>
 
+          {/* Chart Mode Toggle */}
+          <div className="flex justify-center">
+            <div className="inline-flex rounded-full border border-slate-200 bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setChartMode("contexts")}
+                className={`
+                  relative rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200
+                  ${chartMode === "contexts"
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                  }
+                `}
+              >
+                {t("stats.byContexts")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartMode("tags")}
+                className={`
+                  relative rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200
+                  ${chartMode === "tags"
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                  }
+                `}
+              >
+                {t("stats.byTags")}
+              </button>
+            </div>
+          </div>
+
+          {/* Stacked Bar Chart */}
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">{t("stats.timeByContexts")}</h2>
+                <h2 className="text-lg font-semibold">
+                  {chartMode === "contexts" ? t("stats.timeByContexts") : t("stats.timeByTags")}
+                </h2>
               </div>
               <div className="flex flex-wrap gap-2">
-                {visibleContextSeries.map((context) => (
+                {visibleSeries.map((item) => (
                   <button
-                    key={context.id}
+                    key={item.id}
                     type="button"
                     className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700"
                     onClick={() =>
-                      setChartContextIds((prev) =>
-                        prev.filter((id) => id !== context.id),
+                      setChartVisibleIds((prev) =>
+                        prev.filter((id) => id !== item.id),
                       )
                     }
                   >
                     <span
                       className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: context.color }}
+                      style={{ backgroundColor: item.color }}
                     />
-                    {context.label}
+                    {item.label}
                   </button>
                 ))}
-                {visibleContextSeries.length === 0 ? (
+                {visibleSeries.length === 0 ? (
                   <span className="text-xs text-slate-500">
-                    {t("stats.noContextsToShow")}
+                    {chartMode === "contexts" ? t("stats.noContextsToShow") : t("stats.noTagsToShow")}
                   </span>
                 ) : null}
               </div>
@@ -723,11 +839,11 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             <div className="mt-6">
               <StatsStackedBarChart
                 labels={timeLabels}
-                series={visibleContextSeries}
-                totals={totalsForVisibleContexts}
+                series={visibleSeries}
+                totals={totalsForVisible}
                 formatTotal={(value) => formatMinutesAsHHMM(value)}
-                onSegmentClick={(contextId, value) =>
-                  setSelectedSegment({ contextId, minutes: value })
+                onSegmentClick={(itemId, value) =>
+                  setSelectedSegment({ itemId, minutes: value })
                 }
               />
             </div>
@@ -735,16 +851,19 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             {selectedSegment ? (
               <div className="mt-4 text-xs text-slate-600">
                 {t("stats.selected")}{" "}
-                {contexts.find((ctx) => ctx.id === selectedSegment.contextId)
-                  ?.name ?? selectedSegment.contextId}{" "}
+                {activeItems.find((item) => item.id === selectedSegment.itemId)
+                  ?.name ?? selectedSegment.itemId}{" "}
                 · {formatMinutesAsHHMM(selectedSegment.minutes)}
               </div>
             ) : null}
           </div>
 
+          {/* Pie Chart */}
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <div className="flex items-center justify-center">
-              <h2 className="text-lg font-semibold">{t("stats.contextShare")}</h2>
+              <h2 className="text-lg font-semibold">
+                {chartMode === "contexts" ? t("stats.contextShare") : t("stats.tagShare")}
+              </h2>
             </div>
             <div className="mt-4">
               {pieSlices.length === 0 ? (
