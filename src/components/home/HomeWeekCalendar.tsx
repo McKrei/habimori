@@ -26,23 +26,29 @@ const DAY_COUNTS = {
   wide: 11,     // extra wide screens
 };
 
+function getDayCountForWidth(width: number): number {
+  if (width >= 1280) return DAY_COUNTS.wide;
+  if (width >= BREAKPOINTS.desktop) return DAY_COUNTS.desktop;
+  if (width >= BREAKPOINTS.tablet) return DAY_COUNTS.tablet;
+  if (width >= BREAKPOINTS.mobile) return DAY_COUNTS.tablet;
+  return DAY_COUNTS.mobile;
+}
+
 function useResponsiveDayCount(): number {
-  const [dayCount, setDayCount] = useState(DAY_COUNTS.mobile);
+  const [dayCount, setDayCount] = useState(() => {
+    // Initialize with correct value on client side
+    if (typeof window !== "undefined") {
+      return getDayCountForWidth(window.innerWidth);
+    }
+    return DAY_COUNTS.desktop; // SSR fallback - use larger value
+  });
 
   useEffect(() => {
     const updateDayCount = () => {
-      const width = window.innerWidth;
-      if (width >= BREAKPOINTS.desktop) {
-        setDayCount(width >= 1280 ? DAY_COUNTS.wide : DAY_COUNTS.desktop);
-      } else if (width >= BREAKPOINTS.tablet) {
-        setDayCount(DAY_COUNTS.tablet);
-      } else if (width >= BREAKPOINTS.mobile) {
-        setDayCount(DAY_COUNTS.tablet);
-      } else {
-        setDayCount(DAY_COUNTS.mobile);
-      }
+      setDayCount(getDayCountForWidth(window.innerWidth));
     };
 
+    // Update on mount to ensure correct value after hydration
     updateDayCount();
     window.addEventListener("resize", updateDayCount);
     return () => window.removeEventListener("resize", updateDayCount);
