@@ -114,7 +114,7 @@ export default function HomeGoalCard({
         <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
       ) : null}
 
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 items-center gap-4">
         {/* Left: Title and meta */}
         <div className="min-w-0 flex-1">
           <Link
@@ -134,7 +134,7 @@ export default function HomeGoalCard({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {/* Counter goal */}
           {goal.goal_type === "counter" && (
             <>
