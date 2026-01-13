@@ -12,8 +12,8 @@ function getNextPath(pathname: string, direction: "left" | "right") {
   if (index === -1) return null;
   const nextIndex =
     direction === "left"
-      ? (index + 1) % SWIPE_PAGES.length
-      : (index - 1 + SWIPE_PAGES.length) % SWIPE_PAGES.length;
+      ? (index - 1 + SWIPE_PAGES.length) % SWIPE_PAGES.length
+      : (index + 1) % SWIPE_PAGES.length;
   return SWIPE_PAGES[nextIndex];
 }
 
@@ -39,7 +39,11 @@ function shouldIgnoreSwipe(target: EventTarget | null) {
   return false;
 }
 
-export default function SwipeNavigator({ children }: { children: React.ReactNode }) {
+export default function SwipeNavigator({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const startX = useRef<number | null>(null);
@@ -56,9 +60,13 @@ export default function SwipeNavigator({ children }: { children: React.ReactNode
 
       // Prefer View Transitions for a smoother swipe animation.
       if ("startViewTransition" in document) {
-        const transition = (document as Document & {
-          startViewTransition?: (callback: () => void) => { finished: Promise<void> };
-        }).startViewTransition?.(() => {
+        const transition = (
+          document as Document & {
+            startViewTransition?: (callback: () => void) => {
+              finished: Promise<void>;
+            };
+          }
+        ).startViewTransition?.(() => {
           router.push(nextPath);
         });
         transition?.finished.finally(() => {
@@ -83,7 +91,11 @@ export default function SwipeNavigator({ children }: { children: React.ReactNode
   };
 
   const onTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (!isTracking.current || startX.current === null || startY.current === null) {
+    if (
+      !isTracking.current ||
+      startX.current === null ||
+      startY.current === null
+    ) {
       return;
     }
     const touch = event.touches[0];
@@ -104,7 +116,9 @@ export default function SwipeNavigator({ children }: { children: React.ReactNode
     startY.current = null;
   };
 
-  const isEnabled = SWIPE_PAGES.includes(pathname as (typeof SWIPE_PAGES)[number]);
+  const isEnabled = SWIPE_PAGES.includes(
+    pathname as (typeof SWIPE_PAGES)[number],
+  );
 
   return (
     <div
