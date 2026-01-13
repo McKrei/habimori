@@ -1,0 +1,43 @@
+FROM public.ecr.aws/docker/library/node:20-alpine AS deps
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --prefer-offline
+
+
+FROM public.ecr.aws/docker/library/node:20-alpine AS builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Replace prod manifest/icons with dev variants inside the image only.
+RUN cp public/manifest.dev.json public/manifest.json && \
+    cp public/icon-192-dev.png public/icon-192.png && \
+    cp public/icon-512-dev.png public/icon-512.png
+
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
+
+
+FROM public.ecr.aws/docker/library/node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+EXPOSE 3000
+CMD ["node", "server.js"]
