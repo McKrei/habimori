@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AuthButton from "@/src/components/AuthButton";
 import AuthGate from "@/src/components/AuthGate";
 import { ActiveTimerProvider } from "@/src/components/ActiveTimerProvider";
 import { FilterProvider } from "@/src/components/FilterContext";
@@ -11,9 +10,8 @@ import { ThemeProvider } from "@/src/components/ThemeProvider";
 import GlobalTimerBar from "@/src/components/GlobalTimerBar";
 import HeaderFilterButton from "@/src/components/HeaderFilterButton";
 import HeaderPageButtons from "@/src/components/HeaderPageButtons";
-import ThemeSwitcher from "@/src/components/ThemeSwitcher";
+import HeaderSettingsLink from "@/src/components/HeaderSettingsLink";
 import { TranslationProvider, DEFAULT_LANGUAGE } from "@/src/i18n";
-import LanguageSwitcher from "@/src/components/LanguageSwitcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,11 +67,11 @@ export default function RootLayout({
                           </span>
                         </Link>
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          <HeaderFilterButton />
-                          <LanguageSwitcher lng={DEFAULT_LANGUAGE} />
+                          <div className="mr-2.5">
+                            <HeaderFilterButton />
+                          </div>
                           <HeaderPageButtons />
-                          <ThemeSwitcher />
-                          <AuthButton />
+                          <HeaderSettingsLink />
                         </div>
                       </div>
                     </header>

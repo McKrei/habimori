@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase/client";
+import { useTranslation } from "@/src/i18n/TranslationContext";
 
 function getDisplayName(user: User) {
   const metadata = user.user_metadata ?? {};
@@ -17,6 +18,7 @@ function getDisplayName(user: User) {
 export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [isWorking, setIsWorking] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let isMounted = true;
@@ -90,7 +92,7 @@ export default function AuthButton() {
     setIsWorking(false);
   };
 
-  const buttonLabel = user ? "Выйти" : "Войти через Google";
+  const buttonLabel = user ? t("auth.logout") : t("auth.loginWithGoogle");
 
   return (
     <button

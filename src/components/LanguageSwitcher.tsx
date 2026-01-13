@@ -8,10 +8,13 @@ type LanguageSwitcherProps = {
 };
 
 export default function LanguageSwitcher({ lng: _lng }: LanguageSwitcherProps) {
-  const { language, setLanguage } = useTranslation();
+  const { language, setLanguage, t } = useTranslation();
 
   const otherLanguage: Language = language === "ru" ? "en" : "ru";
-  const label = language === "ru" ? "Switch to English" : "Переключиться на русский";
+  const label =
+    language === "ru"
+      ? t("language.switchToEnglish")
+      : t("language.switchToRussian");
 
   return (
     <button
@@ -21,7 +24,9 @@ export default function LanguageSwitcher({ lng: _lng }: LanguageSwitcherProps) {
       aria-label={label}
       type="button"
     >
-      <span className="text-xs font-semibold">{otherLanguage.toUpperCase()}</span>
+      <span className="text-xs font-semibold">
+        {otherLanguage.toUpperCase()}
+      </span>
     </button>
   );
 }
