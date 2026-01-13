@@ -46,7 +46,10 @@ export default function FilterPanel({
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
         <div
           ref={panelRef}
           className="
@@ -74,9 +77,7 @@ export default function FilterPanel({
 
           {/* Content */}
           <div className="max-h-[60vh] overflow-y-auto px-4 py-4">
-            <div className="space-y-4">
-              {children}
-            </div>
+            <div className="space-y-4">{children}</div>
           </div>
 
           {/* Footer */}
