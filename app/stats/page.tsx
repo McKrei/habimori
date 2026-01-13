@@ -98,15 +98,9 @@ function formatRangeLabel(start: Date, end: Date) {
 
 function formatMinutesWithDays(totalMinutes: number) {
   const minutes = Math.max(0, Math.round(totalMinutes));
-  const days = Math.floor(minutes / (24 * 60));
-  const hours = Math.floor((minutes % (24 * 60)) / 60);
+  const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  const hh = String(hours).padStart(2, "0");
-  const mm = String(mins).padStart(2, "0");
-  if (days > 0) {
-    return `${String(days).padStart(2, "0")}:${hh}:${mm}`;
-  }
-  return `${hh}:${mm}`;
+  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
 export default function StatsPage({ params }: { params: { lng: string } }) {
