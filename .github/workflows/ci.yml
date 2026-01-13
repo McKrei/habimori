@@ -49,7 +49,7 @@ jobs:
             -d disable_web_page_preview=true >/dev/null
 
   deploy_prod:
-    needs: deploy_dev_master
+    needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
