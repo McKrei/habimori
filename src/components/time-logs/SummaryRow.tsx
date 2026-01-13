@@ -38,48 +38,53 @@ export function SummaryRow({
   const hasMoreTags = tags.length > 3;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-nowrap items-center gap-2">
       {onExpandToggle ? (
         <button
-          className="flex min-w-[1.75rem] items-center justify-center rounded bg-accent px-2 py-1 text-xs font-medium text-surface"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-surface shadow-sm hover:bg-accent-hover"
           onClick={onExpandToggle}
           type="button"
         >
           {entryCount}
         </button>
       ) : (
-        <div className="h-6 min-w-[1.75rem] px-2 py-1" aria-hidden />
+        <div className="h-9 w-9 shrink-0" aria-hidden />
       )}
 
-      <span className="text-sm font-medium text-text-primary">{context.name}</span>
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+        <span className="min-w-0 truncate text-sm font-semibold text-text-primary">
+          {context.name}
+        </span>
+        {tags.length > 0 && (
+          <div className="flex min-w-0 flex-nowrap items-center gap-1 overflow-hidden">
+            {displayedTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="max-w-24 shrink-0 truncate rounded-full border border-border/60 bg-surface-elevated px-2 py-0.5 text-xs text-text-secondary"
+              >
+                {tag.name}
+              </span>
+            ))}
+            {hasMoreTags && (
+              <button
+                className="shrink-0 rounded-full border border-dashed border-border/60 px-2 py-0.5 text-xs text-text-muted hover:text-text-secondary"
+                onClick={onShowAllTags}
+                type="button"
+              >
+                +{tags.length - 3}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
-      {tags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1">
-          {displayedTags.map((tag) => (
-            <span
-              key={tag.id}
-              className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700"
-            >
-              {tag.name}
-            </span>
-          ))}
-          {hasMoreTags && (
-            <button
-              className="text-xs text-text-muted hover:text-text-secondary"
-              onClick={onShowAllTags}
-              type="button"
-            >
-              +{tags.length - 3}
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="ml-auto flex items-center gap-3">
-        <span className="text-sm text-text-secondary">{totalDuration}</span>
+      <div className="flex shrink-0 items-center gap-2">
+        <span className="rounded-full bg-surface-elevated px-2 py-0.5 text-xs font-medium text-text-secondary sm:text-sm">
+          {totalDuration}
+        </span>
 
         <button
-          className={`flex h-7 w-7 items-center justify-center rounded ${
+          className={`flex h-9 w-9 items-center justify-center rounded-full shadow-sm ${
             isTimerRunning
               ? "bg-slate-200 text-text-faint cursor-not-allowed"
               : "bg-accent text-surface hover:bg-accent-hover"

@@ -37,14 +37,14 @@ export function TimeLogsList({
 
   if (dateKeys.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-8 text-center text-sm text-text-muted">
+      <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-text-muted shadow-sm">
         {t("timeLogs.noLogs", { lng })}
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-slate-100 border border-border bg-surface">
+    <div className="space-y-2">
       {dateKeys.map((dateKey) => {
         const dayData = groupedLogs[dateKey];
         const contextEntries = Object.values(dayData.contexts);
@@ -52,30 +52,35 @@ export function TimeLogsList({
         if (contextEntries.length === 0) return null;
 
         return (
-          <div key={dateKey}>
+          <section
+            key={dateKey}
+            className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm"
+          >
             <DateHeader
               date={dayData.dateObj}
               totalSeconds={dayData.totalSeconds}
               formatSeconds={formatSeconds}
             />
-            {contextEntries.map((contextData) => (
-              <ContextBlock
-                key={`${dateKey}-${contextData.context.id}`}
-                dateKey={dateKey}
-                contextData={contextData}
-                formatSeconds={formatSeconds}
-                formatTime={formatTime}
-                calculateDuration={calculateDuration}
-                parseTimeToDate={parseTimeToDate}
-                onUpdateEntry={onUpdateEntry}
-                onUpdateEntryTags={onUpdateEntryTags}
-                onDeleteEntry={onDeleteEntry}
-                onDeleteAll={onDeleteAll}
-                onToggleExpanded={onToggleExpanded}
-                lng={lng}
-              />
-            ))}
-          </div>
+            <div className="divide-y divide-border/60">
+              {contextEntries.map((contextData) => (
+                <ContextBlock
+                  key={`${dateKey}-${contextData.context.id}`}
+                  dateKey={dateKey}
+                  contextData={contextData}
+                  formatSeconds={formatSeconds}
+                  formatTime={formatTime}
+                  calculateDuration={calculateDuration}
+                  parseTimeToDate={parseTimeToDate}
+                  onUpdateEntry={onUpdateEntry}
+                  onUpdateEntryTags={onUpdateEntryTags}
+                  onDeleteEntry={onDeleteEntry}
+                  onDeleteAll={onDeleteAll}
+                  onToggleExpanded={onToggleExpanded}
+                  lng={lng}
+                />
+              ))}
+            </div>
+          </section>
         );
       })}
     </div>
