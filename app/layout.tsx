@@ -11,6 +11,7 @@ import GlobalTimerBar from "@/src/components/GlobalTimerBar";
 import HeaderFilterButton from "@/src/components/HeaderFilterButton";
 import HeaderPageButtons from "@/src/components/HeaderPageButtons";
 import HeaderSettingsLink from "@/src/components/HeaderSettingsLink";
+import SwipeNavigator from "@/src/components/SwipeNavigator";
 import { TranslationProvider, DEFAULT_LANGUAGE } from "@/src/i18n";
 
 const geistSans = Geist({
@@ -76,9 +77,11 @@ export default function RootLayout({
                       </div>
                     </header>
 
-                    <main className="mx-auto w-full max-w-5xl px-4 py-3">
-                      {children}
-                    </main>
+                    <SwipeNavigator>
+                      <main className="mx-auto w-full max-w-5xl px-4 py-3">
+                        {children}
+                      </main>
+                    </SwipeNavigator>
 
                     <GlobalTimerBar />
                   </div>

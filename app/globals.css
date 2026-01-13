@@ -53,7 +53,77 @@ body {
     background: var(--background);
     color: var(--foreground);
     font-family: Arial, Helvetica, sans-serif;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 280ms;
+        animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    html[data-nav-direction="left"]::view-transition-old(root) {
+        animation-name: swipe-out-left;
+    }
+
+    html[data-nav-direction="left"]::view-transition-new(root) {
+        animation-name: swipe-in-left;
+    }
+
+    html[data-nav-direction="right"]::view-transition-old(root) {
+        animation-name: swipe-out-right;
+    }
+
+    html[data-nav-direction="right"]::view-transition-new(root) {
+        animation-name: swipe-in-right;
+    }
+}
+
+@keyframes swipe-out-left {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-20%);
+        opacity: 0;
+    }
+}
+
+@keyframes swipe-in-left {
+    from {
+        transform: translateX(20%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes swipe-out-right {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(20%);
+        opacity: 0;
+    }
+}
+
+@keyframes swipe-in-right {
+    from {
+        transform: translateX(-20%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 button[aria-label="Open Next.js Dev Tools"],
