@@ -68,7 +68,7 @@ export function SubEntryRow({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 py-1 text-sm">
+    <div className="flex w-full flex-nowrap items-center gap-1.5 rounded-xl bg-surface-elevated/70 px-2 py-1 text-xs shadow-sm sm:text-sm">
       {isEditingFrom ? (
         <InlineTimeEditor
           value={editingTime.currentValue}
@@ -77,7 +77,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="min-w-[3.5rem] rounded bg-surface-elevated px-2 py-0.5 text-left text-text-secondary hover:bg-slate-200"
+          className="min-w-[3.1rem] rounded-lg border border-border/60 bg-background px-2 py-0.5 text-left text-text-secondary hover:bg-surface"
           onClick={handleFromClick}
           type="button"
           disabled={isUpdating}
@@ -94,7 +94,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="min-w-[3.5rem] rounded bg-surface-elevated px-2 py-0.5 text-left text-text-secondary hover:bg-slate-200"
+          className="min-w-[3.1rem] rounded-lg border border-border/60 bg-background px-2 py-0.5 text-left text-text-secondary hover:bg-surface"
           onClick={handleToClick}
           type="button"
           disabled={isUpdating}
@@ -111,7 +111,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="text-text-faint hover:text-text-secondary"
+          className="rounded-lg border border-border/60 bg-background p-1 text-text-faint hover:text-text-secondary"
           onClick={handleDateClick}
           type="button"
           disabled={isUpdating}
@@ -126,15 +126,15 @@ export function SubEntryRow({
         </button>
       )}
 
-      <span className="text-text-muted">{duration}</span>
+      <span className="ml-auto shrink-0 text-xs text-text-muted sm:text-sm">
+        {duration}
+      </span>
 
-      <div className="ml-auto">
-        <EntryMenu
-          onDelete={onDelete}
-          onEditTags={onEditTags}
-          disabled={isUpdating}
-        />
-      </div>
+      <EntryMenu
+        onDelete={onDelete}
+        onEditTags={onEditTags}
+        disabled={isUpdating}
+      />
     </div>
   );
 }
