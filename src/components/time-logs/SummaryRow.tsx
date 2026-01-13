@@ -38,45 +38,50 @@ export function SummaryRow({
   const hasMoreTags = tags.length > 3;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="grid grid-cols-[auto,1fr,auto] items-start gap-2 sm:items-center">
       {onExpandToggle ? (
         <button
-          className="flex min-w-[2rem] items-center justify-center rounded-full bg-accent px-2 py-1 text-xs font-semibold text-surface shadow-sm hover:bg-accent-hover"
+          className="flex h-8 min-w-[2.25rem] items-center justify-center rounded-full bg-accent px-2 text-xs font-semibold text-surface shadow-sm hover:bg-accent-hover"
           onClick={onExpandToggle}
           type="button"
         >
           {entryCount}
         </button>
       ) : (
-        <div className="h-6 min-w-[1.75rem] px-2 py-1" aria-hidden />
+        <div className="h-8 min-w-[2.25rem]" aria-hidden />
       )}
 
-      <span className="text-sm font-semibold text-text-primary">{context.name}</span>
-
-      {tags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1">
-          {displayedTags.map((tag) => (
-            <span
-              key={tag.id}
-              className="rounded-full border border-border/60 bg-surface-elevated px-2 py-0.5 text-xs text-text-secondary"
-            >
-              {tag.name}
-            </span>
-          ))}
-          {hasMoreTags && (
-            <button
-              className="rounded-full border border-dashed border-border/60 px-2 py-0.5 text-xs text-text-muted hover:text-text-secondary"
-              onClick={onShowAllTags}
-              type="button"
-            >
-              +{tags.length - 3}
-            </button>
+      <div className="min-w-0">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+          <span className="min-w-0 truncate text-sm font-semibold text-text-primary">
+            {context.name}
+          </span>
+          {tags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1">
+              {displayedTags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="rounded-full border border-border/60 bg-surface-elevated px-2 py-0.5 text-xs text-text-secondary"
+                >
+                  {tag.name}
+                </span>
+              ))}
+              {hasMoreTags && (
+                <button
+                  className="rounded-full border border-dashed border-border/60 px-2 py-0.5 text-xs text-text-muted hover:text-text-secondary"
+                  onClick={onShowAllTags}
+                  type="button"
+                >
+                  +{tags.length - 3}
+                </button>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
-      <div className="ml-auto flex items-center gap-3">
-        <span className="rounded-full bg-surface-elevated px-3 py-1 text-sm font-medium text-text-secondary">
+      <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <span className="rounded-full bg-surface-elevated px-2.5 py-1 text-xs font-medium text-text-secondary sm:text-sm">
           {totalDuration}
         </span>
 

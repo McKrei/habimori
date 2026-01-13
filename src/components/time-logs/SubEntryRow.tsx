@@ -68,7 +68,7 @@ export function SubEntryRow({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl bg-surface-elevated/70 px-3 py-2 text-sm shadow-sm">
+    <div className="flex w-full items-center gap-2 rounded-xl bg-surface-elevated/70 px-2.5 py-1.5 text-sm shadow-sm">
       {isEditingFrom ? (
         <InlineTimeEditor
           value={editingTime.currentValue}
@@ -77,7 +77,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="min-w-[3.5rem] rounded-lg border border-border/60 bg-background px-2 py-0.5 text-left text-text-secondary hover:bg-surface"
+          className="min-w-[3.25rem] rounded-lg border border-border/60 bg-background px-2 py-0.5 text-left text-text-secondary hover:bg-surface"
           onClick={handleFromClick}
           type="button"
           disabled={isUpdating}
@@ -94,7 +94,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="min-w-[3.5rem] rounded-lg border border-border/60 bg-background px-2 py-0.5 text-left text-text-secondary hover:bg-surface"
+          className="min-w-[3.25rem] rounded-lg border border-border/60 bg-background px-2 py-0.5 text-left text-text-secondary hover:bg-surface"
           onClick={handleToClick}
           type="button"
           disabled={isUpdating}
@@ -126,15 +126,13 @@ export function SubEntryRow({
         </button>
       )}
 
-      <span className="text-text-muted">{duration}</span>
+      <span className="ml-auto text-xs text-text-muted sm:text-sm">{duration}</span>
 
-      <div className="ml-auto">
-        <EntryMenu
-          onDelete={onDelete}
-          onEditTags={onEditTags}
-          disabled={isUpdating}
-        />
-      </div>
+      <EntryMenu
+        onDelete={onDelete}
+        onEditTags={onEditTags}
+        disabled={isUpdating}
+      />
     </div>
   );
 }

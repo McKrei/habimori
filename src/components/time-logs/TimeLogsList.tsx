@@ -44,7 +44,7 @@ export function TimeLogsList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {dateKeys.map((dateKey) => {
         const dayData = groupedLogs[dateKey];
         const contextEntries = Object.values(dayData.contexts);
