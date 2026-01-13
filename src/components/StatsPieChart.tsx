@@ -83,8 +83,8 @@ export default function StatsPieChart({
             key={arc.id}
             d={arc.path}
             fill={arc.color}
-            stroke="#000"
-            strokeWidth={1.5}
+            stroke="#1f2937"
+            strokeWidth={0.75}
             strokeLinejoin="round"
             data-angle={arc.startAngle}
             className={onSliceClick ? "cursor-pointer" : undefined}
