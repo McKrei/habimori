@@ -156,9 +156,11 @@ jobs:
             set -e
             PR=${{ github.event.pull_request.number }}
             cd ~/habimori-dev
-            git fetch origin +refs/pull/$PR/head:pr-$PR
-            git checkout pr-$PR
-            git reset --hard pr-$PR
+
+            git fetch origin +refs/pull/$PR/head:refs/remotes/origin/pr-$PR
+            git checkout -B pr-$PR origin/pr-$PR
+            git reset --hard origin/pr-$PR
+
             make docker-dev-reload
 
       - name: Telegram notify (dev deploy PR success)
