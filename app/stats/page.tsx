@@ -124,6 +124,10 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
     itemId: string;
     minutes: number;
   } | null>(null);
+  const [selectedPieSegment, setSelectedPieSegment] = useState<{
+    itemId: string;
+    minutes: number;
+  } | null>(null);
   const [statusSeries, setStatusSeries] = useState<{
     success: number[];
     fail: number[];
@@ -203,6 +207,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
         prevChartModeRef.current = chartMode;
         setChartVisibleIds(currentSeries.map((item) => item.id));
         setSelectedSegment(null);
+        setSelectedPieSegment(null);
         return;
       }
       
@@ -558,6 +563,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
     setSelectedTagIds([]);
     setChartVisibleIds([]);
     setSelectedSegment(null);
+    setSelectedPieSegment(null);
     setPeriodMode("month");
     setCustomStart(toDateInput(addDays(new Date(), -6)));
     setCustomEnd(toDateInput(new Date()));
@@ -865,9 +871,22 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                   {t("stats.noTimeData")}
                 </p>
               ) : (
-                <StatsPieChart slices={pieSlices} />
+                <StatsPieChart
+                  slices={pieSlices}
+                  onSliceClick={(itemId, value) =>
+                    setSelectedPieSegment({ itemId, minutes: value })
+                  }
+                />
               )}
             </div>
+            {selectedPieSegment ? (
+              <div className="mt-4 text-xs text-text-secondary">
+                {t("stats.selected")}{" "}
+                {activeItems.find((item) => item.id === selectedPieSegment.itemId)
+                  ?.name ?? selectedPieSegment.itemId}{" "}
+                · {formatMinutesAsHHMM(selectedPieSegment.minutes)}
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

@@ -9,6 +9,7 @@ type Slice = {
 type StatsPieChartProps = {
   slices: Slice[];
   size?: number;
+  onSliceClick?: (sliceId: string, value: number) => void;
 };
 
 function describeArc(
@@ -31,6 +32,7 @@ function describeArc(
 export default function StatsPieChart({
   slices,
   size = 220,
+  onSliceClick,
 }: StatsPieChartProps) {
   const total = slices.reduce((sum, slice) => sum + slice.value, 0) || 1;
   const arcs = slices.reduce(
@@ -50,6 +52,7 @@ export default function StatsPieChart({
         color: slice.color,
         path,
         startAngle,
+        value: slice.value,
       });
       acc.angle = endAngle;
       return acc;
@@ -61,6 +64,7 @@ export default function StatsPieChart({
         color: string;
         path: string;
         startAngle: number;
+        value: number;
       }[],
     },
   );
@@ -79,7 +83,12 @@ export default function StatsPieChart({
             key={arc.id}
             d={arc.path}
             fill={arc.color}
+            stroke="#1f2937"
+            strokeWidth={0.75}
+            strokeLinejoin="round"
             data-angle={arc.startAngle}
+            className={onSliceClick ? "cursor-pointer" : undefined}
+            onClick={() => onSliceClick?.(arc.id, arc.value)}
           />
         ))}
       </svg>
