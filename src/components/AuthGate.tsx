@@ -46,8 +46,8 @@ export default function AuthGate({ children, lng: _lng }: AuthGateProps) {
 
   if (isChecking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="rounded-md border border-border bg-surface px-4 py-3 text-sm text-text-secondary">
           {t("auth.checkingSession")}
         </div>
       </div>
@@ -56,9 +56,9 @@ export default function AuthGate({ children, lng: _lng }: AuthGateProps) {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <button
-          className="rounded-md bg-slate-900 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-accent px-5 py-3 text-base font-semibold text-surface shadow-sm hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           type="button"
           onClick={async () => {
             setIsWorking(true);

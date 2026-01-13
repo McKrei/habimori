@@ -40,7 +40,7 @@ export function SummaryRow({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <button
-        className="flex min-w-[1.75rem] items-center justify-center rounded bg-slate-900 px-2 py-1 text-xs font-medium text-white"
+        className="flex min-w-[1.75rem] items-center justify-center rounded bg-accent px-2 py-1 text-xs font-medium text-surface"
         onClick={onExpandToggle}
         type="button"
         style={{ cursor: onExpandToggle ? 'pointer' : 'default' }}
@@ -48,7 +48,7 @@ export function SummaryRow({
         {entryCount}
       </button>
 
-      <span className="text-sm font-medium text-slate-900">{context.name}</span>
+      <span className="text-sm font-medium text-text-primary">{context.name}</span>
 
       {tags.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">
@@ -62,7 +62,7 @@ export function SummaryRow({
           ))}
           {hasMoreTags && (
             <button
-              className="text-xs text-slate-500 hover:text-slate-700"
+              className="text-xs text-text-muted hover:text-text-secondary"
               onClick={onShowAllTags}
               type="button"
             >
@@ -73,13 +73,13 @@ export function SummaryRow({
       )}
 
       <div className="ml-auto flex items-center gap-3">
-        <span className="text-sm text-slate-600">{totalDuration}</span>
+        <span className="text-sm text-text-secondary">{totalDuration}</span>
 
         <button
           className={`flex h-7 w-7 items-center justify-center rounded ${
             isTimerRunning
-              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-              : "bg-slate-900 text-white hover:bg-slate-800"
+              ? "bg-slate-200 text-text-faint cursor-not-allowed"
+              : "bg-accent text-surface hover:bg-accent-hover"
           }`}
           onClick={handlePlay}
           type="button"

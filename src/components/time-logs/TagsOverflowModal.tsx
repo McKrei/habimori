@@ -13,14 +13,14 @@ export function TagsOverflowModal({ tags, onClose, lng }: TagsOverflowModalProps
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30">
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-accent/30">
+      <div className="w-full max-w-sm rounded-xl bg-surface p-6 shadow-xl">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-text-primary">
             {t("tags.tags", { lng })}
           </h3>
           <button
-            className="text-slate-400 hover:text-slate-600"
+            className="text-text-faint hover:text-text-secondary"
             onClick={onClose}
             type="button"
           >
@@ -33,7 +33,7 @@ export function TagsOverflowModal({ tags, onClose, lng }: TagsOverflowModalProps
 
         <div className="mt-4 flex flex-wrap gap-2">
           {tags.length === 0 ? (
-            <p className="text-sm text-slate-500">{t("timeLogs.noTagsToShow", { lng })}</p>
+            <p className="text-sm text-text-muted">{t("timeLogs.noTagsToShow", { lng })}</p>
           ) : (
             tags.map((tag) => (
               <span

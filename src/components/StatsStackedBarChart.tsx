@@ -38,7 +38,7 @@ export default function StatsStackedBarChart({
               key={`${label}-${index}`}
               className="flex flex-1 flex-col items-center gap-2"
             >
-              <div className="text-[10px] font-semibold text-slate-500">
+              <div className="text-[10px] font-semibold text-text-muted">
                 {formatTotal(total)}
               </div>
               <div
@@ -46,11 +46,11 @@ export default function StatsStackedBarChart({
                 style={{ height: barHeight }}
               >
                 <div
-                  className="flex w-full flex-col-reverse overflow-hidden rounded-md border border-slate-200"
+                  className="flex w-full flex-col-reverse overflow-hidden rounded-md border border-border"
                   style={{ height }}
                 >
                   {visibleSeries.length === 0 ? (
-                    <div className="h-full w-full bg-slate-100" />
+                    <div className="h-full w-full bg-surface-elevated" />
                   ) : (
                     visibleSeries.map((item) => {
                       const value = item.values[index] ?? 0;
@@ -71,7 +71,7 @@ export default function StatsStackedBarChart({
                   )}
                 </div>
               </div>
-              <div className="text-[10px] text-slate-500">{label}</div>
+              <div className="text-[10px] text-text-muted">{label}</div>
             </div>
           );
         })}

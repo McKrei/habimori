@@ -74,7 +74,7 @@ export default function TimeLogsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-text-primary">
           {t("timeLogs.title")}
         </h1>
       </div>
@@ -85,13 +85,13 @@ export default function TimeLogsPage() {
       />
 
       {error && (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+        <div className="rounded-md border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-600">
           {error}
         </div>
       )}
 
       {isLoading ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+        <div className="rounded-lg border border-border bg-surface p-8 text-center text-sm text-text-muted">
           {t("timeLogs.loading")}
         </div>
       ) : (

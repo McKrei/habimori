@@ -123,9 +123,9 @@ export default function GlobalTimerBar() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white">
+    <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-surface transition-colors">
       <div className="mx-auto grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3">
-        <div className="text-sm text-slate-600">
+        <div className="text-sm text-text-secondary">
           {activeEntry ? (
             <span>
               {formatSecondsAsHHMMSS(elapsedSeconds)}
@@ -139,7 +139,7 @@ export default function GlobalTimerBar() {
         <div className="flex items-center justify-center">
           {activeEntry ? (
             <button
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-surface shadow-lg hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
               type="button"
               onClick={handleStop}
               disabled={isWorking}
@@ -148,7 +148,7 @@ export default function GlobalTimerBar() {
             </button>
           ) : (
             <button
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-surface shadow-lg hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
               type="button"
               onClick={() => setIsSheetOpen(true)}
               disabled={isLoading}
@@ -161,7 +161,7 @@ export default function GlobalTimerBar() {
         <div className="flex items-center justify-end">
           {pathname !== "/goals/new" && (
             <Link
-              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-surface shadow-sm hover:bg-accent-hover transition-colors"
               href="/goals/new"
             >
               {t("goalForm.addGoal")}
@@ -171,18 +171,18 @@ export default function GlobalTimerBar() {
       </div>
 
       {error && !isSheetOpen ? (
-        <div className="mx-auto w-full max-w-5xl px-4 pb-3 text-xs font-medium text-rose-600">
+        <div className="mx-auto w-full max-w-5xl px-4 pb-3 text-xs font-medium text-rose-500">
           {error}
         </div>
       ) : null}
 
       {isSheetOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/30 px-4 pb-20">
-          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm px-4 pb-20">
+          <div className="w-full max-w-xl rounded-2xl bg-surface p-6 shadow-xl border border-border transition-colors">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{t("timer.startTimer")}</h2>
+              <h2 className="text-lg font-semibold text-text-primary">{t("timer.startTimer")}</h2>
               <button
-                className="text-sm text-slate-500 hover:text-slate-700"
+                className="text-sm text-text-muted hover:text-text-secondary transition-colors"
                 type="button"
                 onClick={() => setIsSheetOpen(false)}
                 disabled={isWorking}
@@ -192,11 +192,11 @@ export default function GlobalTimerBar() {
             </div>
 
             <div className="mt-4 space-y-3">
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-text-secondary">
                 {t("contexts.context")}
               </label>
               <input
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent/30 transition-colors"
                 list="global-context-options"
                 placeholder={t("contexts.pickOrCreate")}
                 value={contextName}
@@ -208,20 +208,20 @@ export default function GlobalTimerBar() {
                 ))}
               </datalist>
               {contextsLoading ? (
-                <p className="text-xs text-slate-500">{t("contexts.loading")}</p>
+                <p className="text-xs text-text-muted">{t("contexts.loading")}</p>
               ) : null}
               {error ? (
-                <p className="text-xs font-medium text-rose-600">{error}</p>
+                <p className="text-xs font-medium text-rose-500">{error}</p>
               ) : null}
             </div>
 
             <div className="mt-4 space-y-2">
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-text-secondary">
                 {t("tags.tags")}
               </label>
               <div className="flex flex-wrap items-center gap-2">
                 <input
-                  className="flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm"
+                  className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent/30 transition-colors"
                   list="global-tag-options"
                   placeholder={t("tags.addTag")}
                   value={tagInput}
@@ -248,7 +248,7 @@ export default function GlobalTimerBar() {
                   }}
                 />
                 <button
-                  className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
+                  className="rounded-md border border-border px-3 py-2 text-sm font-medium text-text-secondary hover:border-text-faint hover:text-text-primary transition-colors"
                   type="button"
                   onClick={() => {
                     const name = tagInput.trim();
@@ -277,14 +277,14 @@ export default function GlobalTimerBar() {
                 ))}
               </datalist>
               {tagsLoading ? (
-                <p className="text-xs text-slate-500">{t("tags.loading")}</p>
+                <p className="text-xs text-text-muted">{t("tags.loading")}</p>
               ) : null}
               {selectedTags.length > 0 ? (
                 <div className="flex flex-wrap gap-2 pt-2">
                   {selectedTags.map((tag) => (
                     <button
                       key={tag.id}
-                      className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700 hover:border-slate-300"
+                      className="rounded-full border border-border px-3 py-1 text-xs text-text-secondary hover:border-text-faint transition-colors"
                       type="button"
                       onClick={() =>
                         setSelectedTags((prev) =>
@@ -301,7 +301,7 @@ export default function GlobalTimerBar() {
 
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
-                className="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800"
+                className="rounded-md border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:border-text-faint hover:text-text-primary transition-colors"
                 type="button"
                 onClick={() => setIsSheetOpen(false)}
                 disabled={isWorking}
@@ -309,7 +309,7 @@ export default function GlobalTimerBar() {
                 {t("common.cancel")}
               </button>
               <button
-                className="flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-surface hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                 type="button"
                 onClick={handleStart}
                 disabled={isWorking || contextsLoading || tagsLoading}

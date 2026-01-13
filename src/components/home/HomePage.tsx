@@ -115,13 +115,13 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
   return (
     <section className="space-y-3">
       {error ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-600">
           {error}
         </div>
       ) : null}
 
       {isLoading && goals.length === 0 ? (
-        <div className="rounded-lg border border-slate-100 bg-white p-4 text-sm text-slate-500">
+        <div className="rounded-lg border border-border-light bg-surface p-4 text-sm text-text-muted">
           {t("home.loadingGoals")}
         </div>
       ) : null}
@@ -140,16 +140,16 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
       >
         {/* Context Filter */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-slate-500">
+          <label className="block text-xs font-medium text-text-muted">
             {t("filters.context")}
           </label>
           <select
             value={selectedContext}
             onChange={(e) => setSelectedContext(e.target.value)}
             className="
-              w-full rounded-lg border border-slate-200 bg-white px-3 py-2
-              text-sm text-slate-700 transition-colors
-              focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-100
+              w-full rounded-lg border border-border bg-surface px-3 py-2
+              text-sm text-text-secondary transition-colors
+              focus:border-border focus:outline-none focus:ring-2 focus:ring-accent/20
             "
           >
             <option value="">{t("filters.allContexts")}</option>
@@ -163,16 +163,16 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
 
         {/* Status Filter */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-slate-500">
+          <label className="block text-xs font-medium text-text-muted">
             {t("filters.status")}
           </label>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="
-              w-full rounded-lg border border-slate-200 bg-white px-3 py-2
-              text-sm text-slate-700 transition-colors
-              focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-100
+              w-full rounded-lg border border-border bg-surface px-3 py-2
+              text-sm text-text-secondary transition-colors
+              focus:border-border focus:outline-none focus:ring-2 focus:ring-accent/20
             "
           >
             <option value="">{t("filters.allStatuses")}</option>
@@ -184,11 +184,11 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
 
         {/* Tags Filter */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-slate-500">
+          <label className="block text-xs font-medium text-text-muted">
             {t("filters.tags")}
           </label>
           {tags.length === 0 ? (
-            <p className="text-xs text-slate-400">{t("filters.noTags")}</p>
+            <p className="text-xs text-text-faint">{t("filters.noTags")}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {tags.map((tag) => {
@@ -208,8 +208,8 @@ export default function HomePage({ lng: _lng }: HomePageProps) {
                       rounded-full px-2.5 py-1 text-xs transition-all
                       ${
                         isSelected
-                          ? "bg-slate-900 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          ? "bg-accent text-surface"
+                          : "bg-surface-elevated text-text-secondary hover:bg-surface-elevated"
                       }
                     `}
                   >

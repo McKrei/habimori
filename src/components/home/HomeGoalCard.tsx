@@ -74,10 +74,10 @@ export default function HomeGoalCard({
   // Goal type colors
   const accentColor = isPositive ? "text-emerald-600" : "text-rose-500";
   const accentColorLight = isPositive ? "text-emerald-500" : "text-rose-400";
-  const accentBg = isPositive ? "bg-emerald-50" : "bg-rose-50";
-  const accentBgHover = isPositive ? "hover:bg-emerald-100" : "hover:bg-rose-100";
-  const accentBorder = isPositive ? "border-emerald-200" : "border-rose-200";
-  const accentFocusRing = isPositive ? "focus:ring-emerald-200" : "focus:ring-rose-200";
+  const accentBg = isPositive ? "bg-emerald-500/10" : "bg-rose-500/10";
+  const accentBgHover = isPositive ? "hover:bg-emerald-500/15" : "hover:bg-rose-500/15";
+  const accentBorder = isPositive ? "border-emerald-500/30" : "border-rose-500/30";
+  const accentFocusRing = isPositive ? "focus:ring-emerald-500/30" : "focus:ring-rose-500/30";
 
   const baseTimeSeconds =
     goal.goal_type === "time"
@@ -101,9 +101,9 @@ export default function HomeGoalCard({
   return (
     <div
       className={`
-        group relative rounded-xl border border-slate-100 border-l-[3px] bg-white
+        group relative rounded-xl border border-border-light border-l-[3px] bg-surface
         px-4 py-3 shadow-sm transition-all duration-200
-        hover:shadow-md hover:border-slate-200
+        hover:shadow-md hover:border-border
         ${statusAccent}
       `}
     >
@@ -118,15 +118,15 @@ export default function HomeGoalCard({
         {/* Left: Title and meta */}
         <div className="min-w-0 flex-1">
           <Link
-            className="block truncate text-base font-medium text-slate-800 transition-colors hover:text-slate-600"
+            className="block truncate text-base font-medium text-text-primary transition-colors hover:text-text-secondary"
             href={`/goals/${goal.id}`}
           >
             {goal.title}
           </Link>
-          <p className="mt-0.5 truncate text-xs text-slate-400">
+          <p className="mt-0.5 truncate text-xs text-text-faint">
             {goal.period} · {contextLabel}
             {goal.tags.length > 0 && (
-              <span className="text-slate-300">
+              <span className="opacity-70">
                 {" "}· {goal.tags.map((tag) => `#${tag.name}`).join(" ")}
               </span>
             )}
@@ -140,10 +140,10 @@ export default function HomeGoalCard({
             <>
               <div className="text-right">
                 <div className="flex items-baseline gap-0.5">
-                  <span className="text-lg font-medium tabular-nums text-slate-700">
+                  <span className="text-lg font-medium tabular-nums text-text-secondary">
                     {effectiveActual}
                   </span>
-                  <span className="text-slate-300">/</span>
+                  <span className="text-text-faint">/</span>
                   <span className={`text-lg font-medium tabular-nums ${accentColorLight}`}>
                     {goal.target_value}
                   </span>
@@ -152,10 +152,10 @@ export default function HomeGoalCard({
               <div className="flex items-center gap-1.5">
                 <input
                   className={`
-                    w-12 rounded-lg border ${accentBorder} bg-white px-2 py-1.5
-                    text-center text-sm tabular-nums text-slate-600
+                    w-12 rounded-lg border ${accentBorder} bg-surface px-2 py-1.5
+                    text-center text-sm tabular-nums text-text-secondary
                     transition-all duration-150
-                    placeholder:text-slate-300
+                    placeholder:text-text-faint
                     focus:outline-none focus:ring-2 ${accentFocusRing} focus:border-transparent
                   `}
                   inputMode="numeric"
@@ -194,7 +194,7 @@ export default function HomeGoalCard({
                     ? formatSecondsAsHHMMSS(totalSeconds)
                     : formatSecondsAsHHMMSS(baseTimeSeconds)}
                 </div>
-                <div className="text-[10px] tabular-nums text-slate-400">
+                <div className="text-[10px] tabular-nums text-text-faint">
                   {formatMinutesAsHHMM(goal.target_value)}
                 </div>
               </div>
@@ -241,7 +241,7 @@ export default function HomeGoalCard({
                 ${
                   checkState
                     ? `${accentBg} ${accentColor} ${accentBorder}`
-                    : "border-slate-200 bg-white text-slate-300 hover:border-slate-300 hover:text-slate-400"
+                    : "border-border bg-surface text-text-faint hover:border-text-faint hover:text-text-muted"
                 }
                 hover:scale-105 active:scale-95
               `}

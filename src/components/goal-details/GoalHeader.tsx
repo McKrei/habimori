@@ -16,15 +16,15 @@ export default function GoalHeader({ goal, progressValue, lng: _lng }: GoalHeade
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 className="text-2xl font-semibold">{goal.title}</h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-text-secondary">
           {goal.goal_type} · {goal.period} · {formatGoalTarget(goal)}
         </p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-text-muted">
           {formatDate(goal.start_date)} → {formatDate(goal.end_date)} ·{" "}
           {goal.context?.name ?? t("goalDetails.unknownContext")}
         </p>
       </div>
-      <div className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
+      <div className="rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-secondary">
         {t("goalDetails.progress")} {progressValue}
       </div>
     </div>

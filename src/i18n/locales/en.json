@@ -203,6 +203,10 @@
     "inProgress": "In progress",
     "archived": "Archived"
   },
+  "theme": {
+    "dark": "Dark theme",
+    "light": "Light theme"
+  },
   "timeLogs": {
     "title": "Time Logs",
     "noLogs": "No time logs",

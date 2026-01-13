@@ -37,14 +37,14 @@ export function TimeLogsList({
 
   if (dateKeys.length === 0) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+      <div className="rounded-lg border border-border bg-surface p-8 text-center text-sm text-text-muted">
         {t("timeLogs.noLogs", { lng })}
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-slate-100 border border-slate-200 bg-white">
+    <div className="divide-y divide-slate-100 border border-border bg-surface">
       {dateKeys.map((dateKey) => {
         const dayData = groupedLogs[dateKey];
         const contextEntries = Object.values(dayData.contexts);

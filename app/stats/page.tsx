@@ -581,7 +581,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
       >
         {/* Period Filter */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-slate-500">
+          <label className="block text-xs font-medium text-text-muted">
             {t("stats.period.label")}
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -598,8 +598,8 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                   rounded-full px-2.5 py-1 text-xs transition-all
                   ${
                     periodMode === item.key
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-accent text-surface"
+                      : "bg-surface-elevated text-text-secondary hover:bg-slate-200"
                   }
                 `}
               >
@@ -612,19 +612,19 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
         {/* Custom Date Range */}
         {periodMode === "custom" && (
           <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-500">
+            <label className="block text-xs font-medium text-text-muted">
               {t("stats.dateRange")}
             </label>
             <div className="flex items-center gap-1.5">
               <input
-                className="w-[120px] rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
+                className="w-[120px] rounded-lg border border-border px-2 py-1.5 text-xs"
                 type="date"
                 value={customStart}
                 onChange={(e) => setCustomStart(e.target.value)}
               />
-              <span className="text-xs text-slate-400">—</span>
+              <span className="text-xs text-text-faint">—</span>
               <input
-                className="w-[120px] rounded-lg border border-slate-200 px-2 py-1.5 text-xs"
+                className="w-[120px] rounded-lg border border-border px-2 py-1.5 text-xs"
                 type="date"
                 value={customEnd}
                 onChange={(e) => setCustomEnd(e.target.value)}
@@ -635,11 +635,11 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
 
         {/* Context Filter */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-slate-500">
+          <label className="block text-xs font-medium text-text-muted">
             {t("filters.context")}
           </label>
           {contexts.length === 0 ? (
-            <p className="text-xs text-slate-400">{t("filters.noOptions")}</p>
+            <p className="text-xs text-text-faint">{t("filters.noOptions")}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {contexts.map((context) => {
@@ -659,8 +659,8 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                       rounded-full px-2.5 py-1 text-xs transition-all
                       ${
                         isSelected
-                          ? "bg-slate-900 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          ? "bg-accent text-surface"
+                          : "bg-surface-elevated text-text-secondary hover:bg-slate-200"
                       }
                     `}
                   >
@@ -674,11 +674,11 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
 
         {/* Tags Filter */}
         <div className="space-y-2">
-          <label className="block text-xs font-medium text-slate-500">
+          <label className="block text-xs font-medium text-text-muted">
             {t("filters.tags")}
           </label>
           {tags.length === 0 ? (
-            <p className="text-xs text-slate-400">{t("filters.noTags")}</p>
+            <p className="text-xs text-text-faint">{t("filters.noTags")}</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {tags.map((tag) => {
@@ -698,8 +698,8 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                       rounded-full px-2.5 py-1 text-xs transition-all
                       ${
                         isSelected
-                          ? "bg-slate-900 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          ? "bg-accent text-surface"
+                          : "bg-surface-elevated text-text-secondary hover:bg-slate-200"
                       }
                     `}
                   >
@@ -713,27 +713,27 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
       </FilterPanel>
 
       {error ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
+        <div className="rounded-md border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-sm text-rose-600">
           {error}
         </div>
       ) : null}
 
       {isLoading ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <div className="rounded-lg border border-border bg-surface p-6 text-sm text-text-secondary">
           {t("stats.loading")}
         </div>
       ) : null}
 
       {!isLoading ? (
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-slate-700">
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-text-secondary">
               <div className="flex items-center gap-2">
                 <span
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: STATUS_COLORS.success }}
                 />
-                <span className="text-lg font-semibold text-slate-900">
+                <span className="text-lg font-semibold text-text-primary">
                   {statusSeries.success.reduce((sum, value) => sum + value, 0)}
                 </span>
               </div>
@@ -742,7 +742,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: STATUS_COLORS.in_progress }}
                 />
-                <span className="text-lg font-semibold text-slate-900">
+                <span className="text-lg font-semibold text-text-primary">
                   {statusSeries.in_progress.reduce(
                     (sum, value) => sum + value,
                     0,
@@ -754,15 +754,15 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: STATUS_COLORS.fail }}
                 />
-                <span className="text-lg font-semibold text-slate-900">
+                <span className="text-lg font-semibold text-text-primary">
                   {statusSeries.fail.reduce((sum, value) => sum + value, 0)}
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs uppercase tracking-wide text-slate-500">
+                <span className="text-xs uppercase tracking-wide text-text-muted">
                   {t("stats.totalTime")}
                 </span>
-                <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-900">
+                <span className="inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-sm font-semibold text-text-primary">
                   {formatMinutesWithDays(totalTrackedMinutes)}
                 </span>
               </div>
@@ -771,15 +771,15 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
 
           {/* Chart Mode Toggle */}
           <div className="flex justify-center">
-            <div className="inline-flex rounded-full border border-slate-200 bg-white p-1">
+            <div className="inline-flex rounded-full border border-border bg-surface p-1">
               <button
                 type="button"
                 onClick={() => setChartMode("contexts")}
                 className={`
                   relative rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200
                   ${chartMode === "contexts"
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-accent text-surface shadow-sm"
+                    : "text-text-secondary hover:text-text-primary"
                   }
                 `}
               >
@@ -791,8 +791,8 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                 className={`
                   relative rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200
                   ${chartMode === "tags"
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-accent text-surface shadow-sm"
+                    : "text-text-secondary hover:text-text-primary"
                   }
                 `}
               >
@@ -802,7 +802,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
           </div>
 
           {/* Stacked Bar Chart */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="rounded-xl border border-border bg-surface p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">
@@ -814,7 +814,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                   <button
                     key={item.id}
                     type="button"
-                    className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-700"
+                    className="flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-text-secondary"
                     onClick={() =>
                       setChartVisibleIds((prev) =>
                         prev.filter((id) => id !== item.id),
@@ -829,7 +829,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
                   </button>
                 ))}
                 {visibleSeries.length === 0 ? (
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-text-muted">
                     {chartMode === "contexts" ? t("stats.noContextsToShow") : t("stats.noTagsToShow")}
                   </span>
                 ) : null}
@@ -849,7 +849,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             </div>
 
             {selectedSegment ? (
-              <div className="mt-4 text-xs text-slate-600">
+              <div className="mt-4 text-xs text-text-secondary">
                 {t("stats.selected")}{" "}
                 {activeItems.find((item) => item.id === selectedSegment.itemId)
                   ?.name ?? selectedSegment.itemId}{" "}
@@ -859,7 +859,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
           </div>
 
           {/* Pie Chart */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <div className="rounded-xl border border-border bg-surface p-5">
             <div className="flex items-center justify-center">
               <h2 className="text-lg font-semibold">
                 {chartMode === "contexts" ? t("stats.contextShare") : t("stats.tagShare")}
@@ -867,7 +867,7 @@ export default function StatsPage({ params }: { params: { lng: string } }) {
             </div>
             <div className="mt-4">
               {pieSlices.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-text-muted">
                   {t("stats.noTimeData")}
                 </p>
               ) : (

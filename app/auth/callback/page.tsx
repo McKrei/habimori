@@ -32,7 +32,7 @@ function AuthCallbackContent({ lng: _lng }: { lng: string }) {
   }, [router, searchParams, t]);
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-700">
+    <div className="rounded-lg border border-border bg-surface p-6 text-sm text-text-secondary">
       {errorMessage ?? t("auth.signingIn")}
     </div>
   );
@@ -43,7 +43,7 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-700">
+        <div className="rounded-lg border border-border bg-surface p-6 text-sm text-text-secondary">
           {t("auth.signingIn")}
         </div>
       }

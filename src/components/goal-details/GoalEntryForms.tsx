@@ -49,33 +49,33 @@ export default function GoalEntryForms({
     <>
       {!goal.is_archived && goal.goal_type === "time" ? (
         <form
-          className="rounded-lg border border-slate-200 bg-white p-5"
+          className="rounded-lg border border-border bg-surface p-5"
           onSubmit={(event) => {
             event.preventDefault();
             onAddTimeEntry();
           }}
         >
           <h2 className="text-base font-semibold">{t("timeEntry.addTimeEntry")}</h2>
-          <label className="mt-3 block text-sm font-medium text-slate-700">
+          <label className="mt-3 block text-sm font-medium text-text-secondary">
             {t("timeEntry.start")}
             <input
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
               type="datetime-local"
               value={timeStart}
               onChange={(event) => onTimeStartChange(event.target.value)}
             />
           </label>
-          <label className="mt-3 block text-sm font-medium text-slate-700">
+          <label className="mt-3 block text-sm font-medium text-text-secondary">
             {t("timeEntry.end")}
             <input
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
               type="datetime-local"
               value={timeEnd}
               onChange={(event) => onTimeEndChange(event.target.value)}
             />
           </label>
           <button
-            className="mt-4 w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-4 w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-surface hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
             disabled={isSubmitting}
           >
@@ -86,17 +86,17 @@ export default function GoalEntryForms({
 
       {!goal.is_archived && goal.goal_type === "counter" ? (
         <form
-          className="rounded-lg border border-slate-200 bg-white p-5"
+          className="rounded-lg border border-border bg-surface p-5"
           onSubmit={(event) => {
             event.preventDefault();
             onAddCounterEvent();
           }}
         >
           <h2 className="text-base font-semibold">{t("counterEvent.addCounterEvent")}</h2>
-          <label className="mt-3 block text-sm font-medium text-slate-700">
+          <label className="mt-3 block text-sm font-medium text-text-secondary">
             {t("counterEvent.occurredAt")}
             <input
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
               type="datetime-local"
               value={counterOccurredAt}
               onChange={(event) =>
@@ -104,17 +104,17 @@ export default function GoalEntryForms({
               }
             />
           </label>
-          <label className="mt-3 block text-sm font-medium text-slate-700">
+          <label className="mt-3 block text-sm font-medium text-text-secondary">
             {t("counterEvent.delta")}
             <input
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
               inputMode="numeric"
               value={counterDelta}
               onChange={(event) => onCounterDeltaChange(event.target.value)}
             />
           </label>
           <button
-            className="mt-4 w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-4 w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-surface hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
             disabled={isSubmitting}
           >
@@ -125,26 +125,26 @@ export default function GoalEntryForms({
 
       {!goal.is_archived && goal.goal_type === "check" ? (
         <form
-          className="rounded-lg border border-slate-200 bg-white p-5"
+          className="rounded-lg border border-border bg-surface p-5"
           onSubmit={(event) => {
             event.preventDefault();
             onAddCheckEvent();
           }}
         >
           <h2 className="text-base font-semibold">{t("checkEvent.addCheckEvent")}</h2>
-          <label className="mt-3 block text-sm font-medium text-slate-700">
+          <label className="mt-3 block text-sm font-medium text-text-secondary">
             {t("checkEvent.occurredAt")}
             <input
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
               type="datetime-local"
               value={checkOccurredAt}
               onChange={(event) => onCheckOccurredAtChange(event.target.value)}
             />
           </label>
-          <label className="mt-3 block text-sm font-medium text-slate-700">
+          <label className="mt-3 block text-sm font-medium text-text-secondary">
             {t("checkEvent.state")}
             <select
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-border px-3 py-2 text-sm"
               value={checkState ? "done" : "not"}
               onChange={(event) =>
                 onCheckStateChange(event.target.value === "done")
@@ -155,7 +155,7 @@ export default function GoalEntryForms({
             </select>
           </label>
           <button
-            className="mt-4 w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-4 w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-surface hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
             disabled={isSubmitting}
           >

@@ -94,7 +94,7 @@ export default function AuthButton() {
 
   return (
     <button
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-white focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-accent text-surface hover:bg-accent-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
       type="button"
       onClick={user ? handleLogout : handleLogin}
       disabled={isWorking}

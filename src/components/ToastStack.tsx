@@ -29,10 +29,10 @@ export default function ToastStack({ toasts, onDismiss }: ToastStackProps) {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`rounded-md border px-4 py-2 text-sm shadow-sm ${
+          className={`rounded-md border px-4 py-2 text-sm shadow-sm transition-colors ${
             toast.tone === "error"
-              ? "border-rose-200 bg-rose-50 text-rose-700"
-              : "border-slate-200 bg-white text-slate-700"
+              ? "border-rose-500/30 bg-rose-500/10 text-rose-600"
+              : "border-border bg-surface text-text-secondary"
           }`}
         >
           {toast.message}

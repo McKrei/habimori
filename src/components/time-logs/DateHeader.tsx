@@ -23,11 +23,11 @@ export function DateHeader({ date, totalSeconds, formatSeconds }: DateHeaderProp
   }, [date, locale]);
 
   return (
-    <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
-      <span className="text-sm font-medium text-slate-700">
+    <div className="flex items-center justify-between border-b border-border bg-background px-4 py-2">
+      <span className="text-sm font-medium text-text-secondary">
         {dateLabel}
       </span>
-      <span className="text-sm font-medium text-slate-600">
+      <span className="text-sm font-medium text-text-secondary">
         {formatSeconds(totalSeconds)}
       </span>
     </div>

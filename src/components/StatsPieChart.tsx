@@ -83,14 +83,14 @@ export default function StatsPieChart({
           />
         ))}
       </svg>
-      <div className="flex flex-col gap-2 text-xs text-slate-600">
+      <div className="flex flex-col gap-2 text-xs text-text-secondary">
         {slices.map((slice) => (
           <div key={slice.id} className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full"
               style={{ backgroundColor: slice.color }}
             />
-            <span className="font-medium text-slate-700">{slice.label}</span>
+            <span className="font-medium text-text-secondary">{slice.label}</span>
             <span>{slice.meta}</span>
           </div>
         ))}

@@ -30,11 +30,11 @@ export default function CalendarDay({
     "absolute inset-0 m-auto flex flex-col items-center justify-center rounded-full transition-colors";
 
   if (isSelected) {
-    innerStyles += " bg-slate-800 text-white";
+    innerStyles += " bg-accent text-surface";
   } else if (isToday) {
-    innerStyles += " bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-300";
+    innerStyles += " bg-emerald-500/10 text-emerald-600 ring-1 ring-inset ring-emerald-500/30";
   } else {
-    innerStyles += " text-slate-700 hover:bg-slate-100";
+    innerStyles += " text-text-secondary hover:bg-surface-elevated";
   }
 
   if (disabled) {
