@@ -59,7 +59,7 @@ export default function StatsStackedBarChart({
                         <button
                           key={`${item.id}-${label}`}
                           type="button"
-                          className="w-full"
+                          className="w-full border-t border-black/70 first:border-t-0"
                           style={{
                             height: `${segmentHeight}%`,
                             backgroundColor: item.color,
