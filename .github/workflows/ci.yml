@@ -48,51 +48,6 @@ jobs:
             -d text="$TEXT" \
             -d disable_web_page_preview=true >/dev/null
 
-  deploy_dev_master:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    steps:
-      - name: Deploy DEV (from master) via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            set -e
-            cd ~/habimori-dev
-            git checkout master
-            git pull
-            make docker-dev-reload
-
-      - name: Telegram notify (dev deploy from master success)
-        if: success()
-        env:
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: |
-          set -e
-          TEXT="🧪 DEV DEPLOY OK (from master) https://dev.habimori.online | Repo: ${{ github.repository }} | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TG_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d disable_web_page_preview=true >/dev/null
-
-      - name: Telegram notify (dev deploy from master failure)
-        if: failure()
-        env:
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: |
-          set -e
-          TEXT="💥 DEV DEPLOY FAILED (from master) | Repo: ${{ github.repository }} | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TG_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d disable_web_page_preview=true >/dev/null
-
   deploy_prod:
     needs: deploy_dev_master
     runs-on: ubuntu-latest
@@ -146,6 +101,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - name: Deploy DEV (from PR) via SSH
+        id: deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -163,27 +119,22 @@ jobs:
 
             make docker-dev-reload
 
-      - name: Telegram notify (dev deploy PR success)
-        if: success()
+      - name: Telegram notify (dev deploy PR)
+        if: always()
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          OUTCOME: ${{ steps.deploy.outcome }}
+          PR: ${{ github.event.pull_request.number }}
         run: |
           set -e
-          TEXT="🧪 DEV DEPLOY OK https://dev.habimori.online (PR #${{ github.event.pull_request.number }}) | Repo: ${{ github.repository }} | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ "$OUTCOME" = "success" ]; then
+            TEXT="🧪 DEV DEPLOY OK (PR #$PR) | Repo: ${{ github.repository }} | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          else
+            TEXT="💥 DEV DEPLOY FAILED (PR #$PR) | Repo: ${{ github.repository }} | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
           curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TG_CHAT_ID}" \
             -d text="$TEXT" \
             -d disable_web_page_preview=true >/dev/null
 
-      - name: Telegram notify (dev deploy PR failure)
-        if: failure()
-        env:
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: |
-          set -e
-          TEXT="💥 DEV DEPLOY FAILED (PR #${{ github.event.pull_request.number }}) | Repo: ${{ github.repository }} | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -sS -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TG_CHAT_ID}" \
-            -d t
