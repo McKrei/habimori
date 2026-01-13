@@ -39,14 +39,17 @@ export function SummaryRow({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
-        className="flex min-w-[1.75rem] items-center justify-center rounded bg-accent px-2 py-1 text-xs font-medium text-surface"
-        onClick={onExpandToggle}
-        type="button"
-        style={{ cursor: onExpandToggle ? 'pointer' : 'default' }}
-      >
-        {entryCount}
-      </button>
+      {onExpandToggle ? (
+        <button
+          className="flex min-w-[1.75rem] items-center justify-center rounded bg-accent px-2 py-1 text-xs font-medium text-surface"
+          onClick={onExpandToggle}
+          type="button"
+        >
+          {entryCount}
+        </button>
+      ) : (
+        <div className="h-6 min-w-[1.75rem] px-2 py-1" aria-hidden />
+      )}
 
       <span className="text-sm font-medium text-text-primary">{context.name}</span>
 
