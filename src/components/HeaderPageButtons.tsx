@@ -21,8 +21,8 @@ export default function HeaderPageButtons() {
 
   const activeClassName =
     theme === "light"
-      ? "bg-accent-hover text-surface cursor-default"
-      : "bg-text-secondary text-surface cursor-default";
+      ? "bg-white text-black cursor-default"
+      : "bg-black text-white cursor-default";
 
   const inactiveClassName = "bg-accent text-surface hover:bg-accent-hover";
 
