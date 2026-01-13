@@ -165,18 +165,24 @@
     "login": "Войти",
     "logout": "Выйти"
   },
-   "errors": {
-     "goalNotFound": "Цель не найдена.",
-     "failedToLoadEvents": "Не удалось загрузить события.",
-     "timerAlreadyRunning": "Другой таймер уже запущен.",
-     "timerAlreadyStopped": "Таймер уже остановлен в другой сессии. Страница перезагрузится.",
-     "failedToStartTimer": "Не удалось запустить таймер.",
-     "noActiveTimer": "Нет активного таймера для остановки.",
-     "failedToStopTimer": "Не удалось остановить таймер.",
+  "language": {
+    "switchToEnglish": "Переключиться на английский",
+    "switchToRussian": "Переключиться на русский"
+  },
+  "errors": {
+    "goalNotFound": "Цель не найдена.",
+    "failedToLoadEvents": "Не удалось загрузить события.",
+    "timerAlreadyRunning": "Другой таймер уже запущен.",
+    "timerAlreadyStopped": "Таймер уже остановлен в другой сессии. Страница перезагрузится.",
+    "failedToStartTimer": "Не удалось запустить таймер.",
+    "noActiveTimer": "Нет активного таймера для остановки.",
+    "failedToStopTimer": "Не удалось остановить таймер.",
     "contextNameRequired": "Введите название контекста.",
+    "contextNameExists": "Контекст с таким названием уже существует.",
     "loginToCreateContext": "Войдите, чтобы создать контекст.",
     "failedToCreateContext": "Не удалось создать контекст.",
     "tagNameRequired": "Введите название тега.",
+    "tagNameExists": "Тег с таким названием уже существует.",
     "loginToCreateTag": "Войдите, чтобы создать тег.",
     "failedToCreateTag": "Не удалось создать тег.",
     "goalTypeRequired": "Выберите тип цели.",
@@ -188,7 +194,11 @@
     "loginRequired": "Войдите, чтобы продолжить.",
     "contextRequired": "Выберите контекст.",
     "goalCreatedButNoId": "Цель создана, но не удалось получить её ID.",
-    "failedToAddTag": "Не удалось добавить тег."
+    "failedToAddTag": "Не удалось добавить тег.",
+    "failedToUpdateContext": "Не удалось обновить контекст.",
+    "failedToUpdateTag": "Не удалось обновить тег.",
+    "failedToDeleteContext": "Не удалось удалить контекст.",
+    "failedToDeleteTag": "Не удалось удалить тег."
   },
   "formatters": {
     "dash": "—",
@@ -206,6 +216,16 @@
   "theme": {
     "dark": "Тёмная тема",
     "light": "Светлая тема"
+  },
+  "settings": {
+    "title": "Настройки",
+    "open": "Открыть настройки",
+    "manageContexts": "Изменить контексты",
+    "manageTags": "Изменить теги",
+    "noContexts": "Нет контекстов",
+    "noTags": "Нет тегов",
+    "deleteContextWarning": "Удаление контекста удалит связанные цели и записи времени. Они больше не будут учитываться в статистике.",
+    "deleteTagWarning": "Удаление тега удалит его из всех записей и целей. Он больше не будет учитываться в статистике."
   },
   "timeLogs": {
     "title": "Логи времени",

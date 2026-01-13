@@ -40,6 +40,15 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 
 ---
 
+## Language
+
+| Key | English |
+|-----|---------|
+| `language.switchToEnglish` | Switch to English |
+| `language.switchToRussian` | Switch to Russian |
+
+---
+
 ## Home Page
 
 | Key | English |
@@ -48,6 +57,21 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | `home.noActiveGoals` | No active goals yet. |
 | `home.createFirstGoal` | Create your first goal |
 | `home.loadingGoals` | Loading goals... |
+
+---
+
+## Settings
+
+| Key | English |
+|-----|---------|
+| `settings.title` | Settings |
+| `settings.open` | Open settings |
+| `settings.manageContexts` | Manage contexts |
+| `settings.manageTags` | Manage tags |
+| `settings.noContexts` | No contexts |
+| `settings.noTags` | No tags |
+| `settings.deleteContextWarning` | Deleting a context will remove all related goals and time entries. They will no longer appear in statistics. |
+| `settings.deleteTagWarning` | Deleting a tag will remove it from all entries and goals. It will no longer appear in statistics. |
 
 ---
 
@@ -261,9 +285,11 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | `errors.noActiveTimer` | No active timer to stop. |
 | `errors.failedToStopTimer` | Failed to stop timer. |
 | `errors.contextNameRequired` | Context name is required. |
+| `errors.contextNameExists` | A context with this name already exists. |
 | `errors.loginToCreateContext` | Please log in to create a context. |
 | `errors.failedToCreateContext` | Failed to create context. |
 | `errors.tagNameRequired` | Tag name is required. |
+| `errors.tagNameExists` | A tag with this name already exists. |
 | `errors.loginToCreateTag` | Please log in to create a tag. |
 | `errors.failedToCreateTag` | Failed to create tag. |
 | `errors.goalTypeRequired` | Goal type is required. |
@@ -276,6 +302,10 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | `errors.contextRequired` | Context is required. |
 | `errors.goalCreatedButNoId` | Goal created but could not read its ID. |
 | `errors.failedToAddTag` | Failed to add tag. |
+| `errors.failedToUpdateContext` | Failed to update context. |
+| `errors.failedToUpdateTag` | Failed to update tag. |
+| `errors.failedToDeleteContext` | Failed to delete context. |
+| `errors.failedToDeleteTag` | Failed to delete tag. |
 
 ---
 

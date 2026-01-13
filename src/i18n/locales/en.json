@@ -165,18 +165,24 @@
     "login": "Login",
     "logout": "Logout"
   },
-   "errors": {
-     "goalNotFound": "Goal not found.",
-     "failedToLoadEvents": "Failed to load events.",
-     "timerAlreadyRunning": "Another timer is already running.",
-     "timerAlreadyStopped": "Timer was already stopped in another session. Page will reload.",
-     "failedToStartTimer": "Failed to start timer.",
-     "noActiveTimer": "No active timer to stop.",
-     "failedToStopTimer": "Failed to stop timer.",
+  "language": {
+    "switchToEnglish": "Switch to English",
+    "switchToRussian": "Switch to Russian"
+  },
+  "errors": {
+    "goalNotFound": "Goal not found.",
+    "failedToLoadEvents": "Failed to load events.",
+    "timerAlreadyRunning": "Another timer is already running.",
+    "timerAlreadyStopped": "Timer was already stopped in another session. Page will reload.",
+    "failedToStartTimer": "Failed to start timer.",
+    "noActiveTimer": "No active timer to stop.",
+    "failedToStopTimer": "Failed to stop timer.",
     "contextNameRequired": "Context name is required.",
+    "contextNameExists": "A context with this name already exists.",
     "loginToCreateContext": "Please log in to create a context.",
     "failedToCreateContext": "Failed to create context.",
     "tagNameRequired": "Tag name is required.",
+    "tagNameExists": "A tag with this name already exists.",
     "loginToCreateTag": "Please log in to create a tag.",
     "failedToCreateTag": "Failed to create tag.",
     "goalTypeRequired": "Goal type is required.",
@@ -188,7 +194,11 @@
     "loginRequired": "Please log in to continue.",
     "contextRequired": "Context is required.",
     "goalCreatedButNoId": "Goal created but could not read its ID.",
-    "failedToAddTag": "Failed to add tag."
+    "failedToAddTag": "Failed to add tag.",
+    "failedToUpdateContext": "Failed to update context.",
+    "failedToUpdateTag": "Failed to update tag.",
+    "failedToDeleteContext": "Failed to delete context.",
+    "failedToDeleteTag": "Failed to delete tag."
   },
   "formatters": {
     "dash": "—",
@@ -206,6 +216,16 @@
   "theme": {
     "dark": "Dark theme",
     "light": "Light theme"
+  },
+  "settings": {
+    "title": "Settings",
+    "open": "Open settings",
+    "manageContexts": "Manage contexts",
+    "manageTags": "Manage tags",
+    "noContexts": "No contexts",
+    "noTags": "No tags",
+    "deleteContextWarning": "Deleting a context will remove all related goals and time entries. They will no longer appear in statistics.",
+    "deleteTagWarning": "Deleting a tag will remove it from all entries and goals. It will no longer appear in statistics."
   },
   "timeLogs": {
     "title": "Time Logs",
