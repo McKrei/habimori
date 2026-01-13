@@ -24,18 +24,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const manifestPath =
-  process.env.NEXT_PUBLIC_APP_VARIANT === "dev"
-    ? "/manifest.dev.json"
-    : "/manifest.json";
-
 export const metadata: Metadata = {
   title: "Habimori",
   description: "Minimal goal and time tracking",
   icons: {
     icon: "/favicon.ico",
   },
-  manifest: manifestPath,
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

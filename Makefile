@@ -42,13 +42,14 @@ IMAGE_NAME ?= habimori-app
 BIND ?= 127.0.0.1
 PORT ?= 3000
 ENV_FILE ?= ./.env
+DOCKERFILE ?= Dockerfile
 
 docker-build:
 	set -a; . $(ENV_FILE); set +a; \
 	docker build \
 	  --build-arg NEXT_PUBLIC_SUPABASE_URL \
 	  --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY \
-	  --build-arg NEXT_PUBLIC_APP_VARIANT=$(NEXT_PUBLIC_APP_VARIANT) \
+	  -f $(DOCKERFILE) \
 	  -t $(IMAGE_NAME) .
 
 docker-run:
@@ -67,7 +68,7 @@ docker-reload: docker-stop docker-build docker-run
 docker-dev-reload: APP_NAME=habimori-app-dev
 docker-dev-reload: IMAGE_NAME=habimori-app-dev
 docker-dev-reload: PORT=3001
-docker-dev-reload: NEXT_PUBLIC_APP_VARIANT=dev
+docker-dev-reload: DOCKERFILE=Dockerfile.dev
 docker-dev-reload: docker-reload
 
 docker-dev-stop: APP_NAME=habimori-app-dev
