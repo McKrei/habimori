@@ -161,7 +161,7 @@ export function ContextBlock({
 
   return (
     <>
-      <div className="bg-surface px-4 py-3 sm:px-5 sm:py-4">
+      <div className="bg-surface px-3 py-2 sm:px-4 sm:py-3">
         <SummaryRow
           context={context}
           tags={aggregatedTags}
@@ -173,7 +173,7 @@ export function ContextBlock({
         />
 
         {showSubEntries && (
-          <div className="mt-2 space-y-2 pl-6 sm:pl-10">
+          <div className="mt-1.5 space-y-1.5 pl-4 sm:pl-8">
             {sortedEntries.map((entry) => (
               <SubEntryRow
                 key={entry.id}
