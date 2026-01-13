@@ -54,7 +54,7 @@ export function InlineTimeEditor({ value, onSave, onCancel }: InlineTimeEditorPr
     <div className="inline-flex items-center">
       <input
         ref={inputRef}
-        className="w-16 rounded border border-blue-400 bg-blue-50 px-2 py-1 text-sm font-medium text-blue-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+        className="w-16 rounded-xl border border-border/70 bg-surface px-2 py-1 text-sm font-medium text-text-secondary shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         type="text"
         value={displayValue}
         onChange={handleChange}

@@ -23,8 +23,8 @@ export function DateHeader({ date, totalSeconds, formatSeconds }: DateHeaderProp
   }, [date, locale]);
 
   return (
-    <div className="flex items-center justify-between border-b border-border/60 bg-surface-elevated px-5 py-3">
-      <span className="text-sm font-semibold text-text-secondary">
+    <div className="flex items-center justify-between rounded-t-3xl border-b border-border/60 bg-surface-elevated/80 px-5 py-3">
+      <span className="text-sm font-semibold text-text-primary">
         {dateLabel}
       </span>
       <span className="text-sm font-semibold text-text-secondary">
