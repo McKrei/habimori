@@ -10,8 +10,8 @@ import { ThemeProvider } from "@/src/components/ThemeProvider";
 import GlobalTimerBar from "@/src/components/GlobalTimerBar";
 import HeaderFilterButton from "@/src/components/HeaderFilterButton";
 import HeaderPageButtons from "@/src/components/HeaderPageButtons";
+import HeaderSettingsLink from "@/src/components/HeaderSettingsLink";
 import { TranslationProvider, DEFAULT_LANGUAGE } from "@/src/i18n";
-import SettingsMenu from "@/src/components/SettingsMenu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,9 +67,11 @@ export default function RootLayout({
                           </span>
                         </Link>
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          <HeaderFilterButton />
+                          <div className="mr-2.5">
+                            <HeaderFilterButton />
+                          </div>
                           <HeaderPageButtons />
-                          <SettingsMenu />
+                          <HeaderSettingsLink />
                         </div>
                       </div>
                     </header>
