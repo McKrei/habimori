@@ -244,6 +244,8 @@
     "deleteEntryConfirm": "Delete this entry?",
     "entryCount": "{count} entries",
     "noTagsToShow": "No tags",
-    "editTags": "Tags"
+    "editTags": "Tags",
+    "changeDate": "Change date",
+    "entryMenu": "Entry menu"
   }
 }

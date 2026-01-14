@@ -244,6 +244,8 @@
     "deleteEntryConfirm": "Удалить эту запись?",
     "entryCount": "{count} записей",
     "noTagsToShow": "Нет тегов",
-    "editTags": "Теги"
+    "editTags": "Теги",
+    "changeDate": "Изменить дату",
+    "entryMenu": "Меню записи"
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "@/src/i18n/TranslationContext";
 import { TimeEntryWithDetails } from "./types";
 import { InlineTimeEditor } from "./InlineTimeEditor";
 import { InlineDatePicker } from "./InlineDatePicker";
@@ -46,6 +47,7 @@ export function SubEntryRow({
   onTimeCancel,
   onDateCancel,
 }: SubEntryRowProps) {
+  const { t } = useTranslation();
   const duration = formatDuration(calculateDuration(entry.started_at, entry.ended_at));
   const fromTime = formatTime(entry.started_at);
   const toTime = entry.ended_at ? formatTime(entry.ended_at) : "--:--";
@@ -68,7 +70,7 @@ export function SubEntryRow({
   };
 
   return (
-    <div className="flex w-full flex-nowrap items-center gap-1.5 overflow-hidden rounded-xl bg-surface-elevated/70 px-2 py-1 text-xs shadow-sm sm:text-sm">
+    <div className="flex w-full flex-nowrap items-center gap-2 rounded-2xl border border-border/60 bg-surface px-2.5 py-1.5 text-xs shadow-sm sm:text-sm">
       {isEditingFrom ? (
         <InlineTimeEditor
           value={editingTime.currentValue}
@@ -77,7 +79,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="min-w-[3.1rem] rounded-lg border border-border/60 bg-background px-2 py-0.5 text-left text-text-secondary hover:bg-surface"
+          className="min-w-[3.2rem] rounded-xl border border-border/70 bg-background px-2 py-0.5 text-left text-text-secondary shadow-sm transition hover:bg-surface"
           onClick={handleFromClick}
           type="button"
           disabled={isUpdating}
@@ -94,7 +96,7 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="min-w-[3.1rem] rounded-lg border border-border/60 bg-background px-2 py-0.5 text-left text-text-secondary hover:bg-surface"
+          className="min-w-[3.2rem] rounded-xl border border-border/70 bg-background px-2 py-0.5 text-left text-text-secondary shadow-sm transition hover:bg-surface"
           onClick={handleToClick}
           type="button"
           disabled={isUpdating}
@@ -111,11 +113,11 @@ export function SubEntryRow({
         />
       ) : (
         <button
-          className="rounded-lg border border-border/60 bg-background p-1 text-text-faint hover:text-text-secondary"
+          className="rounded-xl border border-border/70 bg-background p-1 text-text-faint shadow-sm transition hover:text-text-secondary"
           onClick={handleDateClick}
           type="button"
           disabled={isUpdating}
-          title="Change date"
+          title={t("timeLogs.changeDate")}
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />

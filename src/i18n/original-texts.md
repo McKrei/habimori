@@ -353,6 +353,8 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | `timeLogs.entryCount` | {count} entries |
 | `timeLogs.noTagsToShow` | No tags |
 | `timeLogs.editTags` | Tags |
+| `timeLogs.changeDate` | Change date |
+| `timeLogs.entryMenu` | Entry menu |
 
 ---
 

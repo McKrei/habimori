@@ -70,6 +70,12 @@ export function ContextBlock({
     onToggleExpanded(dateKey, context.id);
   };
 
+  const isSameTime = (referenceDate: Date, timeStr: string) => {
+    const [hours, minutes] = timeStr.split(":").map((value) => Number.parseInt(value, 10));
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return false;
+    return referenceDate.getHours() === hours && referenceDate.getMinutes() === minutes;
+  };
+
   const handleTimeSave = async (timeStr: string) => {
     if (!editingTime || isUpdating) return;
     setIsUpdating(true);
@@ -77,6 +83,17 @@ export function ContextBlock({
     const { entryId, field, baseDate } = editingTime;
     const entry = entries.find((e) => e.id === entryId);
     if (!entry) {
+      setEditingTime(null);
+      setIsUpdating(false);
+      return;
+    }
+
+    const referenceDate = field === "from"
+      ? new Date(entry.started_at)
+      : entry.ended_at
+        ? new Date(entry.ended_at)
+        : null;
+    if (referenceDate && isSameTime(referenceDate, timeStr)) {
       setEditingTime(null);
       setIsUpdating(false);
       return;
@@ -112,6 +129,12 @@ export function ContextBlock({
       };
     }
 
+    if (updates.started_at === entry.started_at && updates.ended_at === entry.ended_at) {
+      setEditingTime(null);
+      setIsUpdating(false);
+      return;
+    }
+
     await onUpdateEntry(entryId, updates);
     setEditingTime(null);
     setIsUpdating(false);
@@ -122,9 +145,14 @@ export function ContextBlock({
     setIsUpdating(true);
 
     const { entryId } = editingDate;
+    setEditingDate(null);
     const entry = entries.find((e) => e.id === entryId);
     if (!entry) {
-      setEditingDate(null);
+      setIsUpdating(false);
+      return;
+    }
+
+    if (entry.started_at.split("T")[0] === dateStr) {
       setIsUpdating(false);
       return;
     }
@@ -132,8 +160,12 @@ export function ContextBlock({
     const newDate = new Date(`${dateStr}T${new Date(entry.started_at).toTimeString().slice(0, 8)}`);
     const updates = { started_at: newDate.toISOString(), ended_at: entry.ended_at };
 
+    if (updates.started_at === entry.started_at) {
+      setIsUpdating(false);
+      return;
+    }
+
     await onUpdateEntry(entryId, updates);
-    setEditingDate(null);
     setIsUpdating(false);
   };
 
@@ -161,7 +193,7 @@ export function ContextBlock({
 
   return (
     <>
-      <div className="bg-surface px-3 py-2 sm:px-4 sm:py-3">
+      <div className="bg-surface/80 px-3 py-2 sm:px-5 sm:py-3">
         <SummaryRow
           context={context}
           tags={aggregatedTags}
@@ -173,7 +205,7 @@ export function ContextBlock({
         />
 
         {showSubEntries && (
-          <div className="mt-1.5 space-y-1.5 pl-4 sm:pl-8">
+          <div className="mt-2 space-y-2 pl-2 sm:pl-6">
             {sortedEntries.map((entry) => (
               <SubEntryRow
                 key={entry.id}

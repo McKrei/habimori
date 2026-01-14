@@ -44,7 +44,7 @@ export function TimeLogsList({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {dateKeys.map((dateKey) => {
         const dayData = groupedLogs[dateKey];
         const contextEntries = Object.values(dayData.contexts);
@@ -54,7 +54,7 @@ export function TimeLogsList({
         return (
           <section
             key={dateKey}
-            className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm"
+            className="rounded-3xl border border-border/70 bg-surface shadow-sm"
           >
             <DateHeader
               date={dayData.dateObj}
