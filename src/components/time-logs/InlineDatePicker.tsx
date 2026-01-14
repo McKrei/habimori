@@ -8,25 +8,42 @@ interface InlineDatePickerProps {
   onCancel: () => void;
 }
 
-export function InlineDatePicker({ value, onSave, onCancel }: InlineDatePickerProps) {
+export function InlineDatePicker({
+  value,
+  onSave,
+  onCancel,
+}: InlineDatePickerProps) {
   const [inputValue, setInputValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const input = inputRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-    input?.focus();
-    input?.showPicker?.();
+    inputRef.current?.focus();
   }, []);
 
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      onSave(inputValue);
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      onCancel();
+  const handleOpenPicker = useCallback(() => {
+    const input = inputRef.current as
+      | (HTMLInputElement & { showPicker?: () => void })
+      | null;
+    if (!input?.showPicker) return;
+    try {
+      input.showPicker();
+    } catch {
+      // Ignore browsers that block programmatic picker open.
     }
-  }, [inputValue, onSave, onCancel]);
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        onSave(inputValue);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        onCancel();
+      }
+    },
+    [inputValue, onSave, onCancel],
+  );
 
   const handleBlur = useCallback(() => {
     onSave(inputValue);
@@ -41,6 +58,7 @@ export function InlineDatePicker({ value, onSave, onCancel }: InlineDatePickerPr
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
+        onClick={handleOpenPicker}
         onBlur={handleBlur}
       />
     </div>

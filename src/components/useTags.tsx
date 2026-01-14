@@ -1,8 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
-import { getCurrentUserId } from "@/src/components/auth";
+import { useCallback } from "react";
+import {
+  useAppStore,
+  useAppTags as useStoreTags,
+  useStoreStatus,
+  ensureTag as storeEnsureTag,
+  updateTag as storeUpdateTag,
+  deleteTag as storeDeleteTag
+} from "@/src/store";
 
 export type TagOption = {
   id: string;
@@ -23,204 +29,43 @@ type DeleteTagResult = {
   error: string | null;
 };
 
-function normalizeName(value: string) {
-  return value.trim().replace(/\s+/g, " ");
-}
-
-const TAGS_UPDATED_EVENT = "habimori-tags-updated";
-
 export function useTags() {
-  const [tags, setTags] = useState<TagOption[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const notifyUpdated = useCallback(() => {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new Event(TAGS_UPDATED_EVENT));
-  }, []);
+  const store = useAppStore();
+  const { tags } = useStoreTags();
+  const { isLoading, loadError } = useStoreStatus();
 
   const refresh = useCallback(async () => {
-    setIsLoading(true);
-    const { data, error: fetchError } = await supabase
-      .from("tags")
-      .select("id, name")
-      .order("name", { ascending: true });
-
-    if (fetchError) {
-      setError(fetchError.message);
-      setTags([]);
-    } else {
-      setError(null);
-      setTags(data ?? []);
-    }
-
-    setIsLoading(false);
+    // No-op: Data is managed by the centralized store
   }, []);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      void refresh();
-    }, 0);
-    return () => window.clearTimeout(timeout);
-  }, [refresh]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const handler = () => {
-      void refresh();
-    };
-    window.addEventListener(TAGS_UPDATED_EVENT, handler);
-    return () => window.removeEventListener(TAGS_UPDATED_EVENT, handler);
-  }, [refresh]);
 
   const ensureTag = useCallback(
     async (name: string): Promise<EnsureTagResult> => {
-      const normalized = normalizeName(name);
-
-      if (!normalized) {
-        return { tag: null, error: "Tag name is required." };
-      }
-
-      const { userId, error: userError } = await getCurrentUserId();
-      if (userError) {
-        return { tag: null, error: userError };
-      }
-      if (!userId) {
-        return { tag: null, error: "Please log in to create a tag." };
-      }
-
-      const existing = tags.find(
-        (tag) => tag.name.toLowerCase() === normalized.toLowerCase(),
-      );
-
-      if (existing) {
-        return { tag: existing, error: null };
-      }
-
-      const { data, error: insertError } = await supabase
-        .from("tags")
-        .insert({ name: normalized, user_id: userId })
-        .select("id, name")
-        .single();
-
-      if (!insertError && data) {
-        setTags((prev) =>
-          [...prev, data].sort((a, b) => a.name.localeCompare(b.name)),
-        );
-        return { tag: data, error: null };
-      }
-
-      const { data: fallback } = await supabase
-        .from("tags")
-        .select("id, name")
-        .ilike("name", normalized)
-        .maybeSingle();
-
-      if (fallback) {
-        setTags((prev) => {
-          if (prev.some((tag) => tag.id === fallback.id)) {
-            return prev;
-          }
-          return [...prev, fallback].sort((a, b) =>
-            a.name.localeCompare(b.name),
-          );
-        });
-        return { tag: fallback, error: null };
-      }
-
-      return {
-        tag: null,
-        error: insertError?.message ?? "Failed to create tag.",
-      };
+      const result = await storeEnsureTag(store, name);
+      return result;
     },
-    [tags],
+    [store]
   );
 
   const updateTag = useCallback(
     async (tagId: string, name: string): Promise<UpdateTagResult> => {
-      const normalized = normalizeName(name);
-      if (!normalized) {
-        return { tag: null, error: "Tag name is required." };
-      }
-
-      const { data, error: updateError } = await supabase
-        .from("tags")
-        .update({ name: normalized })
-        .eq("id", tagId)
-        .select("id, name")
-        .single();
-
-      if (updateError || !data) {
-        return {
-          tag: null,
-          error: updateError?.message ?? "Failed to update tag.",
-        };
-      }
-
-      setTags((prev) =>
-        prev
-          .map((tag) => (tag.id === tagId ? data : tag))
-          .sort((a, b) => a.name.localeCompare(b.name)),
-      );
-      notifyUpdated();
-      return { tag: data, error: null };
+      const result = await storeUpdateTag(store, tagId, name);
+      return result;
     },
-    [notifyUpdated],
+    [store]
   );
 
   const deleteTag = useCallback(
     async (tagId: string): Promise<DeleteTagResult> => {
-      const { error: timeEntryError } = await supabase
-        .from("time_entry_tags")
-        .delete()
-        .eq("tag_id", tagId);
-      if (timeEntryError) {
-        return { error: timeEntryError.message };
-      }
-
-      const { error: goalTagError } = await supabase
-        .from("goal_tags")
-        .delete()
-        .eq("tag_id", tagId);
-      if (goalTagError) {
-        return { error: goalTagError.message };
-      }
-
-      const { error: counterError } = await supabase
-        .from("counter_event_tags")
-        .delete()
-        .eq("tag_id", tagId);
-      if (counterError) {
-        return { error: counterError.message };
-      }
-
-      const { error: checkError } = await supabase
-        .from("check_event_tags")
-        .delete()
-        .eq("tag_id", tagId);
-      if (checkError) {
-        return { error: checkError.message };
-      }
-
-      const { error: tagError } = await supabase
-        .from("tags")
-        .delete()
-        .eq("id", tagId);
-      if (tagError) {
-        return { error: tagError.message };
-      }
-
-      setTags((prev) => prev.filter((tag) => tag.id !== tagId));
-      notifyUpdated();
-      return { error: null };
+      const result = await storeDeleteTag(store, tagId);
+      return result;
     },
-    [notifyUpdated],
+    [store]
   );
 
   return {
     tags,
     isLoading,
-    error,
+    error: loadError,
     refresh,
     ensureTag,
     updateTag,

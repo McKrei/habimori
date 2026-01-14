@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { formatSecondsAsHHMMSS, formatMinutesAsHHMM } from "@/src/components/formatters";
+import {
+  formatSecondsAsHHMMSS,
+  formatMinutesAsHHMM,
+} from "@/src/components/formatters";
 import type { GoalSummary, StatusMap } from "./types";
 import PlayIcon from "@/src/components/icons/PlayIcon";
 import StopIcon from "@/src/components/icons/StopIcon";
@@ -75,9 +78,15 @@ export default function HomeGoalCard({
   const accentColor = isPositive ? "text-emerald-600" : "text-rose-500";
   const accentColorLight = isPositive ? "text-emerald-500" : "text-rose-400";
   const accentBg = isPositive ? "bg-emerald-500/10" : "bg-rose-500/10";
-  const accentBgHover = isPositive ? "hover:bg-emerald-500/15" : "hover:bg-rose-500/15";
-  const accentBorder = isPositive ? "border-emerald-500/30" : "border-rose-500/30";
-  const accentFocusRing = isPositive ? "focus:ring-emerald-500/30" : "focus:ring-rose-500/30";
+  const accentBgHover = isPositive
+    ? "hover:bg-emerald-500/15"
+    : "hover:bg-rose-500/15";
+  const accentBorder = isPositive
+    ? "border-emerald-500/30"
+    : "border-rose-500/30";
+  const accentFocusRing = isPositive
+    ? "focus:ring-emerald-500/30"
+    : "focus:ring-rose-500/30";
 
   const baseTimeSeconds =
     goal.goal_type === "time"
@@ -90,7 +99,7 @@ export default function HomeGoalCard({
     isActiveTimer && activeEntryStartedAt
       ? Math.max(
           0,
-          Math.ceil(
+          Math.floor(
             (now.getTime() - new Date(activeEntryStartedAt).getTime()) / 1000,
           ),
         )
@@ -127,7 +136,8 @@ export default function HomeGoalCard({
             {goal.period} · {contextLabel}
             {goal.tags.length > 0 && (
               <span className="opacity-70">
-                {" "}· {goal.tags.map((tag) => `#${tag.name}`).join(" ")}
+                {" "}
+                · {goal.tags.map((tag) => `#${tag.name}`).join(" ")}
               </span>
             )}
           </p>
@@ -144,7 +154,9 @@ export default function HomeGoalCard({
                     {effectiveActual}
                   </span>
                   <span className="text-text-faint">/</span>
-                  <span className={`text-lg font-medium tabular-nums ${accentColorLight}`}>
+                  <span
+                    className={`text-lg font-medium tabular-nums ${accentColorLight}`}
+                  >
                     {goal.target_value}
                   </span>
                 </div>
@@ -189,7 +201,9 @@ export default function HomeGoalCard({
           {goal.goal_type === "time" && (
             <>
               <div className="text-right">
-                <div className={`text-lg font-medium tabular-nums ${accentColor}`}>
+                <div
+                  className={`text-lg font-medium tabular-nums ${accentColor}`}
+                >
                   {isActiveTimer
                     ? formatSecondsAsHHMMSS(totalSeconds)
                     : formatSecondsAsHHMMSS(baseTimeSeconds)}

@@ -4,14 +4,16 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
-  useState,
 } from "react";
-import { supabase } from "@/lib/supabase/client";
-import { getCurrentUserId } from "@/src/components/auth";
+import {
+  useAppStore,
+  useActiveTimer as useStoreActiveTimer,
+  startTimerImmediate,
+  stopTimerImmediate
+} from "@/src/store";
 
+// Use precise types from store where possible, but mapped to old interface
 type ActiveTimeEntry = {
   id: string;
   goal_id: string | null;
@@ -34,239 +36,56 @@ type ActiveTimerContextValue = {
 
 const ActiveTimerContext = createContext<ActiveTimerContextValue | null>(null);
 
-async function fetchActiveEntry() {
-  const { data, error } = await supabase
-    .from("time_entries")
-    .select("id, goal_id, context_id, started_at, ended_at")
-    .is("ended_at", null)
-    .order("started_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    return { entry: null, error: error.message };
-  }
-
-  if (!data) {
-    return { entry: null, error: null };
-  }
-
-  return {
-    entry: {
-      id: data.id,
-      goal_id: data.goal_id ?? null,
-      context_id: data.context_id,
-      started_at: data.started_at,
-    },
-    error: null,
-  };
-}
-
 export function ActiveTimerProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [activeEntry, setActiveEntry] = useState<ActiveTimeEntry | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const pendingStartRef = useRef<Promise<{ id: string } | null> | null>(null);
-  const pendingOptimisticIdRef = useRef<string | null>(null);
+  const store = useAppStore();
+  const { activeTimer: storeEntry, isLoading } = useStoreActiveTimer();
+
+  // Map store entry to local type (should match exactly mostly)
+  const activeEntry: ActiveTimeEntry | null = useMemo(() => {
+    if (!storeEntry) return null;
+    return {
+      id: storeEntry.id,
+      goal_id: storeEntry.goal_id,
+      context_id: storeEntry.context_id,
+      started_at: storeEntry.started_at
+    };
+  }, [storeEntry]);
 
   const refresh = useCallback(async () => {
-    setIsLoading(true);
-    const { entry, error: fetchError } = await fetchActiveEntry();
-    setActiveEntry(entry);
-    setError(fetchError);
-    setIsLoading(false);
+    // No-op effectively, store handles sync
   }, []);
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      void refresh();
-    }, 0);
-    return () => window.clearTimeout(timeout);
-  }, [refresh]);
+  const startTimer = useCallback(async ({ contextId, goalId, tagIds }: { contextId: string; goalId?: string | null; tagIds?: string[] }) => {
+    const result = await startTimerImmediate(store, contextId, goalId ?? null, tagIds ?? []);
+    if (result.error) {
+       // Map string error to object if needed by consumers, or just return string if they handle generic
+       return { error: result.error };
+    }
+    return { entryId: result.entryId };
+  }, [store]);
 
-  const startTimer = useCallback(
-    async ({
-      contextId,
-      goalId,
-      tagIds,
-    }: {
-      contextId: string;
-      goalId?: string | null;
-      tagIds?: string[];
-    }) => {
-      // Check if there's already an active timer in DB
-      const { entry: existingEntry } = await fetchActiveEntry();
-      if (existingEntry) {
-        return { error: { key: "errors.timerAlreadyRunning" } };
-      }
-
-      const { userId, error: userError } = await getCurrentUserId();
-      if (userError) {
-        return { error: { key: "errors.loginRequired" } };
-      }
-      if (!userId) {
-        return { error: { key: "errors.loginRequired" } };
-      }
-
-      const startedAt = new Date().toISOString();
-      const optimisticId = `optimistic-${Date.now()}`;
-      const previousEntry = activeEntry;
-
-      setActiveEntry({
-        id: optimisticId,
-        goal_id: goalId ?? null,
-        context_id: contextId,
-        started_at: startedAt,
-      });
-
-      const insertPromise = (async () => {
-        const result = await supabase
-          .from("time_entries")
-          .insert({
-            user_id: userId,
-            context_id: contextId,
-            goal_id: goalId ?? null,
-            started_at: startedAt,
-          })
-          .select("id")
-          .single();
-        return result.error ? null : result.data;
-      })();
-
-      pendingStartRef.current = insertPromise;
-      pendingOptimisticIdRef.current = optimisticId;
-
-       const data = await insertPromise;
-
-       pendingStartRef.current = null;
-       pendingOptimisticIdRef.current = null;
-
-       if (!data?.id) {
-         // Check if another timer was started meanwhile
-         const { entry: checkEntry } = await fetchActiveEntry();
-         if (checkEntry) {
-           await refresh();
-           return { error: { key: "errors.timerAlreadyRunning" } };
-         }
-         setActiveEntry(previousEntry ?? null);
-         return { error: { key: "errors.failedToStartTimer" } };
-       }
-
-      // Insert tags for the time entry
-      if (tagIds && tagIds.length > 0) {
-        const tagInserts = tagIds.map((tagId) => ({
-          time_entry_id: data.id,
-          tag_id: tagId,
-        }));
-        await supabase.from("time_entry_tags").insert(tagInserts);
-      }
-
-      setActiveEntry({
-        id: data.id,
-        goal_id: goalId ?? null,
-        context_id: contextId,
-        started_at: startedAt,
-      });
-
-      await refresh();
-      return { entryId: data.id };
-    },
-    [activeEntry, refresh],
-  );
-
-  const stopTimer = useCallback(
-    async (endedAt?: string) => {
-      if (!activeEntry) {
-        return { error: { key: "errors.noActiveTimer" } };
-      }
-
-      const finalEndedAt = endedAt ?? new Date().toISOString();
-      const optimisticId = pendingOptimisticIdRef.current;
-      if (optimisticId && activeEntry.id === optimisticId) {
-        const pendingStart = pendingStartRef.current;
-        if (!pendingStart) {
-          setActiveEntry(null);
-          return {};
-        }
-        const data = await pendingStart;
-        if (!data?.id) {
-          setActiveEntry(null);
-          return { error: { key: "errors.failedToStopTimer" } };
-        }
-
-        // Check if already stopped
-        const { data: checkData, error: checkError } = await supabase
-          .from("time_entries")
-          .select("ended_at")
-          .eq("id", data.id)
-          .single();
-
-        if (checkError) {
-          return { error: checkError.message };
-        }
-        if (checkData?.ended_at) {
-          await refresh();
-          return { error: { key: "errors.timerAlreadyStopped" } };
-        }
-
-        const { error: updateError } = await supabase
-          .from("time_entries")
-          .update({ ended_at: finalEndedAt })
-          .eq("id", data.id);
-
-        if (updateError) {
-          return { error: updateError.message };
-        }
-
-        setActiveEntry(null);
-        await refresh();
-        return {};
-      }
-
-      // Check if already stopped
-      const { data: checkData, error: checkError } = await supabase
-        .from("time_entries")
-        .select("ended_at")
-        .eq("id", activeEntry.id)
-        .single();
-
-      if (checkError) {
-        return { error: checkError.message };
-      }
-      if (checkData?.ended_at) {
-        await refresh();
-        return { error: { key: "errors.timerAlreadyStopped" } };
-      }
-
-      const { error: updateError } = await supabase
-        .from("time_entries")
-        .update({ ended_at: finalEndedAt })
-        .eq("id", activeEntry.id);
-
-      if (updateError) {
-        return { error: updateError.message };
-      }
-
-      await refresh();
-      return {};
-    },
-    [activeEntry, refresh],
-  );
+  const stopTimer = useCallback(async (endedAt?: string) => {
+    const result = await stopTimerImmediate(store, endedAt);
+    if (result.error) {
+      return { error: result.error };
+    }
+    return {};
+  }, [store]);
 
   const value = useMemo(
     () => ({
       activeEntry,
       isLoading,
-      error,
+      error: null, // Store handles errors internally mostly
       refresh,
       startTimer,
       stopTimer,
     }),
-    [activeEntry, error, isLoading, refresh, startTimer, stopTimer],
+    [activeEntry, isLoading, refresh, startTimer, stopTimer]
   );
 
   return (

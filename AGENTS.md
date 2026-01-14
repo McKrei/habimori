@@ -14,6 +14,7 @@
 - Текущее состояние/статус: `docs/plan.md`
 - Конфиг календаря (donut ring): `docs/calendar-donut.md`
 - Система тем (светлая/тёмная): `docs/theming.md`
+- Data Layer (App Store): `docs/data-layer-store.md`
 
 ## Supabase
 * Миграции: `./supabase/migrations`
