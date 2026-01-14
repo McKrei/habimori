@@ -101,7 +101,7 @@ export default function HomeGoalCard({
   return (
     <div
       className={`
-        group relative rounded-xl border border-border-light border-l-[3px] bg-surface
+        group relative w-full min-w-0 max-w-full rounded-xl border border-border-light border-l-[3px] bg-surface
         px-4 py-3 shadow-sm transition-all duration-200
         hover:shadow-md hover:border-border
         ${statusAccent}
@@ -114,7 +114,7 @@ export default function HomeGoalCard({
         <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
       ) : null}
 
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+      <div className="flex min-w-0 items-center gap-4">
         {/* Left: Title and meta */}
         <div className="min-w-0 flex-1">
           <Link
@@ -134,7 +134,7 @@ export default function HomeGoalCard({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
+        <div className="flex shrink-0 items-center gap-2">
           {/* Counter goal */}
           {goal.goal_type === "counter" && (
             <>
