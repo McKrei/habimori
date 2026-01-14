@@ -122,9 +122,9 @@ export function ContextBlock({
     setIsUpdating(true);
 
     const { entryId } = editingDate;
+    setEditingDate(null);
     const entry = entries.find((e) => e.id === entryId);
     if (!entry) {
-      setEditingDate(null);
       setIsUpdating(false);
       return;
     }
@@ -133,7 +133,6 @@ export function ContextBlock({
     const updates = { started_at: newDate.toISOString(), ended_at: entry.ended_at };
 
     await onUpdateEntry(entryId, updates);
-    setEditingDate(null);
     setIsUpdating(false);
   };
 
