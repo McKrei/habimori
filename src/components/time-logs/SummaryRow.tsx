@@ -48,7 +48,7 @@ export function SummaryRow({
           {entryCount}
         </button>
       ) : (
-        <div className="h-10 w-10 shrink-0" aria-hidden />
+        <div className="w-0 shrink-0" aria-hidden />
       )}
 
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">

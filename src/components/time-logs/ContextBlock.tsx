@@ -172,7 +172,7 @@ export function ContextBlock({
         />
 
         {showSubEntries && (
-          <div className="mt-2 space-y-2 pl-4 sm:pl-9">
+          <div className="mt-2 space-y-2 pl-2 sm:pl-6">
             {sortedEntries.map((entry) => (
               <SubEntryRow
                 key={entry.id}
