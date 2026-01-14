@@ -70,6 +70,12 @@ export function ContextBlock({
     onToggleExpanded(dateKey, context.id);
   };
 
+  const isSameTime = (referenceDate: Date, timeStr: string) => {
+    const [hours, minutes] = timeStr.split(":").map((value) => Number.parseInt(value, 10));
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return false;
+    return referenceDate.getHours() === hours && referenceDate.getMinutes() === minutes;
+  };
+
   const handleTimeSave = async (timeStr: string) => {
     if (!editingTime || isUpdating) return;
     setIsUpdating(true);
@@ -77,6 +83,17 @@ export function ContextBlock({
     const { entryId, field, baseDate } = editingTime;
     const entry = entries.find((e) => e.id === entryId);
     if (!entry) {
+      setEditingTime(null);
+      setIsUpdating(false);
+      return;
+    }
+
+    const referenceDate = field === "from"
+      ? new Date(entry.started_at)
+      : entry.ended_at
+        ? new Date(entry.ended_at)
+        : null;
+    if (referenceDate && isSameTime(referenceDate, timeStr)) {
       setEditingTime(null);
       setIsUpdating(false);
       return;
@@ -131,6 +148,11 @@ export function ContextBlock({
     setEditingDate(null);
     const entry = entries.find((e) => e.id === entryId);
     if (!entry) {
+      setIsUpdating(false);
+      return;
+    }
+
+    if (entry.started_at.split("T")[0] === dateStr) {
       setIsUpdating(false);
       return;
     }
