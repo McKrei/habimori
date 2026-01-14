@@ -22,7 +22,6 @@ const STORAGE_KEY = "habimori-pending-mutations";
 // =============================================================================
 
 let syncTimeout: number | null = null;
-let currentStore: AppStore | null = null;
 let isSyncing = false;
 
 function readStoredMutations(): PendingMutation[] {
@@ -54,7 +53,6 @@ function persistPendingMutations(store: AppStore): void {
  * Initialize sync manager with store reference
  */
 export function initSync(store: AppStore): void {
-  currentStore = store;
   const stored = readStoredMutations();
   if (stored.length > 0) {
     store.dispatch({ type: "SET_PENDING_MUTATIONS", mutations: stored });

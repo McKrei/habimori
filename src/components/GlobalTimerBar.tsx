@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { useContexts } from "@/src/components/useContexts";
@@ -27,6 +27,17 @@ export default function GlobalTimerBar() {
   const [error, setError] = useState<string | null>(null);
   const [isWorking, setIsWorking] = useState(false);
   const [now, setNow] = useState(() => new Date());
+
+  const formatTimerError = useCallback(
+    (
+      err?: string | { key: string; params?: Record<string, string | number> },
+    ) => {
+      if (!err) return "";
+      if (typeof err === "string") return err;
+      return t(err.key as never, err.params);
+    },
+    [t],
+  );
 
   const contextLabel = useMemo(() => {
     if (!activeEntry) return null;
@@ -74,11 +85,7 @@ export default function GlobalTimerBar() {
       contextId: context.id,
     });
     if (startError || !entryId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorMessage =
-        typeof startError === "string"
-          ? startError
-          : t(startError!.key as any, startError!.params);
+      const errorMessage = formatTimerError(startError);
       setError(errorMessage);
       if (
         typeof startError === "object" &&
@@ -118,11 +125,7 @@ export default function GlobalTimerBar() {
     const endedAt = new Date().toISOString();
     const { error: stopError } = await stopTimer(endedAt);
     if (stopError) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorMessage =
-        typeof stopError === "string"
-          ? stopError
-          : t(stopError!.key as any, stopError!.params);
+      const errorMessage = formatTimerError(stopError);
       setError(errorMessage);
       if (
         typeof stopError === "object" &&
