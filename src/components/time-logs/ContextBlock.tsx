@@ -112,6 +112,12 @@ export function ContextBlock({
       };
     }
 
+    if (updates.started_at === entry.started_at && updates.ended_at === entry.ended_at) {
+      setEditingTime(null);
+      setIsUpdating(false);
+      return;
+    }
+
     await onUpdateEntry(entryId, updates);
     setEditingTime(null);
     setIsUpdating(false);
@@ -131,6 +137,11 @@ export function ContextBlock({
 
     const newDate = new Date(`${dateStr}T${new Date(entry.started_at).toTimeString().slice(0, 8)}`);
     const updates = { started_at: newDate.toISOString(), ended_at: entry.ended_at };
+
+    if (updates.started_at === entry.started_at) {
+      setIsUpdating(false);
+      return;
+    }
 
     await onUpdateEntry(entryId, updates);
     setIsUpdating(false);
