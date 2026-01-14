@@ -101,7 +101,7 @@ export default function HomeGoalCard({
   return (
     <div
       className={`
-        group relative rounded-xl border border-border-light border-l-[3px] bg-surface
+        group relative w-full min-w-0 max-w-full rounded-xl border border-border-light border-l-[3px] bg-surface
         px-4 py-3 shadow-sm transition-all duration-200
         hover:shadow-md hover:border-border
         ${statusAccent}
