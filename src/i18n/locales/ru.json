@@ -165,6 +165,24 @@
     "login": "Войти",
     "logout": "Выйти"
   },
+  "landing": {
+    "brand": "habimori",
+    "heroTagline": "Система для настоящего фокуса",
+    "heroTitle": "Твой фокус. Твой ритм.",
+    "heroTitleAccent": "Твоя система прогресса.",
+    "heroSubtitle": "Мы превращаем цели в ясные шаги и сохраняем твою энергию каждый день.",
+    "heroPitch": "Ты не теряешь время — ты превращаешь его в результат.",
+    "bulletFocus": "Фокус без шума",
+    "bulletClarity": "Ясные шаги",
+    "bulletFlow": "Ритм, который держит",
+    "loginHint": "Вход через Google в один клик.",
+    "featureGoalsTitle": "Цели",
+    "featureGoalsBody": "Разбивай на этапы и держи направление.",
+    "featureTimeTitle": "Время",
+    "featureTimeBody": "Таймеры и логи показывают реальную картину.",
+    "featureStatsTitle": "Статистика",
+    "featureStatsBody": "Понимай, где ты растёшь и что помогает."
+  },
   "language": {
     "switchToEnglish": "Переключиться на английский",
     "switchToRussian": "Переключиться на русский"

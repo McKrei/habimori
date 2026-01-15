@@ -273,6 +273,29 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 
 ---
 
+## Landing
+
+| Key | English |
+|-----|---------|
+| `landing.brand` | habimori |
+| `landing.heroTagline` | A system for real focus |
+| `landing.heroTitle` | Your focus. Your rhythm. |
+| `landing.heroTitleAccent` | Your system of progress. |
+| `landing.heroSubtitle` | We turn goals into clear steps and keep your energy every day. |
+| `landing.heroPitch` | You don’t lose time — you convert it into results. |
+| `landing.bulletFocus` | Focus without noise |
+| `landing.bulletClarity` | Clear steps |
+| `landing.bulletFlow` | A rhythm that holds |
+| `landing.loginHint` | One-click Google sign-in. |
+| `landing.featureGoalsTitle` | Goals |
+| `landing.featureGoalsBody` | Break goals into stages and keep direction. |
+| `landing.featureTimeTitle` | Time |
+| `landing.featureTimeBody` | Timers and logs show the real picture. |
+| `landing.featureStatsTitle` | Stats |
+| `landing.featureStatsBody` | See where you grow and what helps. |
+
+---
+
 ## Error Messages
 
 | Key | English |

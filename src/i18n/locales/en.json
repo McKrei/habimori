@@ -165,6 +165,24 @@
     "login": "Login",
     "logout": "Logout"
   },
+  "landing": {
+    "brand": "habimori",
+    "heroTagline": "A system for real focus",
+    "heroTitle": "Your focus. Your rhythm.",
+    "heroTitleAccent": "Your system of progress.",
+    "heroSubtitle": "We turn goals into clear steps and keep your energy every day.",
+    "heroPitch": "You don’t lose time — you convert it into results.",
+    "bulletFocus": "Focus without noise",
+    "bulletClarity": "Clear steps",
+    "bulletFlow": "A rhythm that holds",
+    "loginHint": "One-click Google sign-in.",
+    "featureGoalsTitle": "Goals",
+    "featureGoalsBody": "Break goals into stages and keep direction.",
+    "featureTimeTitle": "Time",
+    "featureTimeBody": "Timers and logs show the real picture.",
+    "featureStatsTitle": "Stats",
+    "featureStatsBody": "See where you grow and what helps."
+  },
   "language": {
     "switchToEnglish": "Switch to English",
     "switchToRussian": "Switch to Russian"
