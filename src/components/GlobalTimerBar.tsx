@@ -31,6 +31,11 @@ export default function GlobalTimerBar() {
   const minuteAlertTimeoutRef = useRef<number | null>(null);
   const minuteAlertHideTimeoutRef = useRef<number | null>(null);
   const minuteAlertAudioTimeoutRef = useRef<number | null>(null);
+  const minuteAlertAudioRef = useRef<{
+    context: AudioContext;
+    oscillators: OscillatorNode[];
+    gainNode: GainNode;
+  } | null>(null);
 
   const formatTimerError = useCallback(
     (
@@ -65,35 +70,98 @@ export default function GlobalTimerBar() {
     };
   }, [activeEntry?.started_at]);
 
+  const stopMinuteAlertSound = useCallback(() => {
+    if (minuteAlertAudioTimeoutRef.current) {
+      window.clearTimeout(minuteAlertAudioTimeoutRef.current);
+      minuteAlertAudioTimeoutRef.current = null;
+    }
+    if (!minuteAlertAudioRef.current) return;
+    const { context, oscillators, gainNode } = minuteAlertAudioRef.current;
+    oscillators.forEach((oscillator) => {
+      try {
+        oscillator.stop();
+      } catch {
+        // Ignore if already stopped.
+      }
+      oscillator.disconnect();
+    });
+    gainNode.disconnect();
+    minuteAlertAudioRef.current = null;
+    void context.close();
+  }, []);
+
+  const requestNotificationPermission = useCallback(async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "default") return;
+    try {
+      await Notification.requestPermission();
+    } catch {
+      // Ignore permission errors in restricted environments.
+    }
+  }, []);
+
+  const showMinuteAlertNotification = useCallback(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "granted") return;
+    try {
+      new Notification(t("timer.minuteAlertTitle"), {
+        body: t("timer.minuteAlertBody"),
+      });
+    } catch {
+      // Ignore notification errors.
+    }
+  }, [t]);
+
   const playMinuteAlertSound = useCallback((durationMs: number) => {
     if (typeof window === "undefined") return;
     const AudioContextConstructor =
       window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextConstructor) return;
+    stopMinuteAlertSound();
     const audioContext = new AudioContextConstructor();
-    const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.value = 880;
-    gainNode.gain.value = 0.08;
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.start();
+    const nowTime = audioContext.currentTime;
+    const durationSec = durationMs / 1000;
+    const oscillators = [
+      audioContext.createOscillator(),
+      audioContext.createOscillator(),
+    ];
+    const volume = 0.06;
 
+    oscillators[0].type = "sine";
+    oscillators[0].frequency.value = 523.25;
+    oscillators[1].type = "triangle";
+    oscillators[1].frequency.value = 659.25;
+
+    gainNode.gain.setValueAtTime(0, nowTime);
+    gainNode.gain.linearRampToValueAtTime(volume, nowTime + 0.08);
+    gainNode.gain.linearRampToValueAtTime(0, nowTime + durationSec);
+
+    oscillators.forEach((oscillator) => {
+      oscillator.connect(gainNode);
+      oscillator.start(nowTime);
+      oscillator.stop(nowTime + durationSec);
+    });
+
+    gainNode.connect(audioContext.destination);
+    minuteAlertAudioRef.current = { context: audioContext, oscillators, gainNode };
     minuteAlertAudioTimeoutRef.current = window.setTimeout(() => {
-      oscillator.stop();
-      oscillator.disconnect();
-      gainNode.disconnect();
-      void audioContext.close();
-      minuteAlertAudioTimeoutRef.current = null;
-    }, durationMs);
-  }, []);
+      stopMinuteAlertSound();
+    }, durationMs + 50);
+  }, [stopMinuteAlertSound]);
+
+  useEffect(() => {
+    return () => {
+      stopMinuteAlertSound();
+    };
+  }, [stopMinuteAlertSound]);
 
   useEffect(() => {
     if (!activeEntry?.started_at) {
       const resetTimeout = window.setTimeout(() => {
         setIsMinuteAlertVisible(false);
       }, 0);
+      stopMinuteAlertSound();
       if (minuteAlertTimeoutRef.current) {
         window.clearTimeout(minuteAlertTimeoutRef.current);
         minuteAlertTimeoutRef.current = null;
@@ -101,10 +169,6 @@ export default function GlobalTimerBar() {
       if (minuteAlertHideTimeoutRef.current) {
         window.clearTimeout(minuteAlertHideTimeoutRef.current);
         minuteAlertHideTimeoutRef.current = null;
-      }
-      if (minuteAlertAudioTimeoutRef.current) {
-        window.clearTimeout(minuteAlertAudioTimeoutRef.current);
-        minuteAlertAudioTimeoutRef.current = null;
       }
       return () => {
         window.clearTimeout(resetTimeout);
@@ -121,7 +185,8 @@ export default function GlobalTimerBar() {
 
       minuteAlertTimeoutRef.current = window.setTimeout(() => {
         setIsMinuteAlertVisible(true);
-        playMinuteAlertSound(10000);
+        playMinuteAlertSound(2000);
+        showMinuteAlertNotification();
         if (minuteAlertHideTimeoutRef.current) {
           window.clearTimeout(minuteAlertHideTimeoutRef.current);
         }
@@ -144,12 +209,13 @@ export default function GlobalTimerBar() {
         window.clearTimeout(minuteAlertHideTimeoutRef.current);
         minuteAlertHideTimeoutRef.current = null;
       }
-      if (minuteAlertAudioTimeoutRef.current) {
-        window.clearTimeout(minuteAlertAudioTimeoutRef.current);
-        minuteAlertAudioTimeoutRef.current = null;
-      }
     };
-  }, [activeEntry?.started_at, playMinuteAlertSound]);
+  }, [
+    activeEntry?.started_at,
+    playMinuteAlertSound,
+    showMinuteAlertNotification,
+    stopMinuteAlertSound,
+  ]);
 
   const elapsedSeconds = activeEntry?.started_at
     ? Math.max(
@@ -207,6 +273,7 @@ export default function GlobalTimerBar() {
     setSelectedTags([]);
     setIsSheetOpen(false);
     setIsWorking(false);
+    void requestNotificationPermission();
   };
 
   const handleStop = async () => {

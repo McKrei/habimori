@@ -110,6 +110,8 @@
     "noActiveTimer": "No active timer",
     "startTimer": "Start timer",
     "minuteAlert": "Timer running: a minute has passed",
+    "minuteAlertTitle": "Timer is active",
+    "minuteAlertBody": "Another minute has passed — keep going!",
     "anotherRunning": "Another timer is already running"
   },
   "contexts": {
