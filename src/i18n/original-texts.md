@@ -287,12 +287,19 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | `landing.bulletClarity` | Timers and logs |
 | `landing.bulletFlow` | Stats and growth |
 | `landing.loginHint` | Google sign-in — one click and you’re in. |
+| `landing.sectionInside` | What’s inside |
+| `landing.sectionImpact` | How it helps |
 | `landing.featureGoalsTitle` | Goals and steps |
 | `landing.featureGoalsBody` | Plan habits and stages so you always see the next step. |
 | `landing.featureTimeTitle` | Time and timers |
 | `landing.featureTimeBody` | Run timers, capture logs, and understand where your time goes. |
 | `landing.featureStatsTitle` | Stats and focus |
 | `landing.featureStatsBody` | See progress by periods and keep attention on what matters. |
+| `landing.featureFlowTitle` | Contexts and tags |
+| `landing.featureFlowBody` | Filter goals and keep priorities without extra effort. |
+| `landing.impactLineOne` | See the full path: from goal to today’s next step. |
+| `landing.impactLineTwo` | Stay aware of time: how much went to what matters. |
+| `landing.impactLineThree` | Keep momentum: less chaos, more results. |
 
 ---
 
