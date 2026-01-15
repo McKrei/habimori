@@ -226,6 +226,7 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 |-----|---------|
 | `timer.noActiveTimer` | No active timer |
 | `timer.startTimer` | Start timer |
+| `timer.minuteAlert` | Timer running: a minute has passed |
 | `timer.anotherRunning` | Another timer is already running |
 
 ---

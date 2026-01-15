@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { useContexts } from "@/src/components/useContexts";
@@ -27,6 +27,10 @@ export default function GlobalTimerBar() {
   const [error, setError] = useState<string | null>(null);
   const [isWorking, setIsWorking] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [isMinuteAlertVisible, setIsMinuteAlertVisible] = useState(false);
+  const minuteAlertTimeoutRef = useRef<number | null>(null);
+  const minuteAlertHideTimeoutRef = useRef<number | null>(null);
+  const minuteAlertAudioTimeoutRef = useRef<number | null>(null);
 
   const formatTimerError = useCallback(
     (
@@ -60,6 +64,92 @@ export default function GlobalTimerBar() {
       window.clearInterval(interval);
     };
   }, [activeEntry?.started_at]);
+
+  const playMinuteAlertSound = useCallback((durationMs: number) => {
+    if (typeof window === "undefined") return;
+    const AudioContextConstructor =
+      window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextConstructor) return;
+    const audioContext = new AudioContextConstructor();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = 880;
+    gainNode.gain.value = 0.08;
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.start();
+
+    minuteAlertAudioTimeoutRef.current = window.setTimeout(() => {
+      oscillator.stop();
+      oscillator.disconnect();
+      gainNode.disconnect();
+      void audioContext.close();
+      minuteAlertAudioTimeoutRef.current = null;
+    }, durationMs);
+  }, []);
+
+  useEffect(() => {
+    if (!activeEntry?.started_at) {
+      const resetTimeout = window.setTimeout(() => {
+        setIsMinuteAlertVisible(false);
+      }, 0);
+      if (minuteAlertTimeoutRef.current) {
+        window.clearTimeout(minuteAlertTimeoutRef.current);
+        minuteAlertTimeoutRef.current = null;
+      }
+      if (minuteAlertHideTimeoutRef.current) {
+        window.clearTimeout(minuteAlertHideTimeoutRef.current);
+        minuteAlertHideTimeoutRef.current = null;
+      }
+      if (minuteAlertAudioTimeoutRef.current) {
+        window.clearTimeout(minuteAlertAudioTimeoutRef.current);
+        minuteAlertAudioTimeoutRef.current = null;
+      }
+      return () => {
+        window.clearTimeout(resetTimeout);
+      };
+    }
+
+    const startedAt = new Date(activeEntry.started_at).getTime();
+
+    const scheduleNextAlert = () => {
+      const nowMs = Date.now();
+      const elapsedMs = Math.max(0, nowMs - startedAt);
+      const nextMinuteMs = (Math.floor(elapsedMs / 60000) + 1) * 60000;
+      const delay = Math.max(0, nextMinuteMs - elapsedMs);
+
+      minuteAlertTimeoutRef.current = window.setTimeout(() => {
+        setIsMinuteAlertVisible(true);
+        playMinuteAlertSound(10000);
+        if (minuteAlertHideTimeoutRef.current) {
+          window.clearTimeout(minuteAlertHideTimeoutRef.current);
+        }
+        minuteAlertHideTimeoutRef.current = window.setTimeout(() => {
+          setIsMinuteAlertVisible(false);
+          minuteAlertHideTimeoutRef.current = null;
+        }, 10000);
+        scheduleNextAlert();
+      }, delay);
+    };
+
+    scheduleNextAlert();
+
+    return () => {
+      if (minuteAlertTimeoutRef.current) {
+        window.clearTimeout(minuteAlertTimeoutRef.current);
+        minuteAlertTimeoutRef.current = null;
+      }
+      if (minuteAlertHideTimeoutRef.current) {
+        window.clearTimeout(minuteAlertHideTimeoutRef.current);
+        minuteAlertHideTimeoutRef.current = null;
+      }
+      if (minuteAlertAudioTimeoutRef.current) {
+        window.clearTimeout(minuteAlertAudioTimeoutRef.current);
+        minuteAlertAudioTimeoutRef.current = null;
+      }
+    };
+  }, [activeEntry?.started_at, playMinuteAlertSound]);
 
   const elapsedSeconds = activeEntry?.started_at
     ? Math.max(
@@ -139,6 +229,13 @@ export default function GlobalTimerBar() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-surface transition-colors">
+      {isMinuteAlertVisible ? (
+        <div className="mx-auto mb-2 w-full max-w-5xl px-4">
+          <div className="rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent">
+            {t("timer.minuteAlert")}
+          </div>
+        </div>
+      ) : null}
       <div className="mx-auto grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3">
         <div className="text-sm text-text-secondary">
           {activeEntry ? (

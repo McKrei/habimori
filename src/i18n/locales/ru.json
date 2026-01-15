@@ -109,6 +109,7 @@
   "timer": {
     "noActiveTimer": "Таймер не запущен",
     "startTimer": "Запустить таймер",
+    "minuteAlert": "Таймер работает: прошла минута",
     "anotherRunning": "Другой таймер уже запущен"
   },
   "contexts": {

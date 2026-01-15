@@ -109,6 +109,7 @@
   "timer": {
     "noActiveTimer": "No active timer",
     "startTimer": "Start timer",
+    "minuteAlert": "Timer running: a minute has passed",
     "anotherRunning": "Another timer is already running"
   },
   "contexts": {
