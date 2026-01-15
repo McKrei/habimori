@@ -6,6 +6,7 @@ import "./globals.css";
 import AuthGate from "@/src/components/AuthGate";
 import { ActiveTimerProvider } from "@/src/components/ActiveTimerProvider";
 import { FilterProvider } from "@/src/components/FilterContext";
+import { AppStoreProvider } from "@/src/store";
 import { ThemeProvider } from "@/src/components/ThemeProvider";
 import GlobalTimerBar from "@/src/components/GlobalTimerBar";
 import HeaderFilterButton from "@/src/components/HeaderFilterButton";
@@ -46,47 +47,49 @@ export default function RootLayout({
         <ThemeProvider>
           <TranslationProvider>
             <AuthGate lng={DEFAULT_LANGUAGE}>
-              <ActiveTimerProvider>
-                <FilterProvider>
-                  <div className="min-h-screen pb-24">
-                    <header className="border-b border-border bg-surface/80 backdrop-blur">
-                      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-3 py-3 sm:px-4 sm:py-4">
-                        <Link
-                          className="flex items-center gap-1.5 sm:gap-2"
-                          href="/"
-                        >
-                          <Image
-                            src="/images/logo-header.png"
-                            alt="Habimori"
-                            width={40}
-                            height={40}
-                            className="rounded sm:h-[50px] sm:w-[50px]"
-                            priority
-                          />
-                          <span className="text-base font-semibold tracking-tight text-text-primary sm:text-xl">
-                            Habimori
-                          </span>
-                        </Link>
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                          <div className="mr-2.5">
-                            <HeaderFilterButton />
+              <AppStoreProvider>
+                <ActiveTimerProvider>
+                  <FilterProvider>
+                    <div className="min-h-screen pb-24">
+                      <header className="border-b border-border bg-surface/80 backdrop-blur">
+                        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-3 py-3 sm:px-4 sm:py-4">
+                          <Link
+                            className="flex items-center gap-1.5 sm:gap-2"
+                            href="/"
+                          >
+                            <Image
+                              src="/images/logo-header.png"
+                              alt="Habimori"
+                              width={40}
+                              height={40}
+                              className="rounded sm:h-[50px] sm:w-[50px]"
+                              priority
+                            />
+                            <span className="text-base font-semibold tracking-tight text-text-primary sm:text-xl">
+                              Habimori
+                            </span>
+                          </Link>
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <div className="mr-2.5">
+                              <HeaderFilterButton />
+                            </div>
+                            <HeaderPageButtons />
+                            <HeaderSettingsLink />
                           </div>
-                          <HeaderPageButtons />
-                          <HeaderSettingsLink />
                         </div>
-                      </div>
-                    </header>
+                      </header>
 
-                    <SwipeNavigator>
-                      <main className="mx-auto w-full max-w-5xl px-4 py-3">
-                        {children}
-                      </main>
-                    </SwipeNavigator>
+                      <SwipeNavigator>
+                        <main className="mx-auto w-full max-w-5xl px-4 py-3">
+                          {children}
+                        </main>
+                      </SwipeNavigator>
 
-                    <GlobalTimerBar />
-                  </div>
-                </FilterProvider>
-              </ActiveTimerProvider>
+                      <GlobalTimerBar />
+                    </div>
+                  </FilterProvider>
+                </ActiveTimerProvider>
+              </AppStoreProvider>
             </AuthGate>
           </TranslationProvider>
         </ThemeProvider>

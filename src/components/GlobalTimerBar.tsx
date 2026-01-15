@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useActiveTimer } from "@/src/components/ActiveTimerProvider";
 import { useContexts } from "@/src/components/useContexts";
@@ -28,6 +28,17 @@ export default function GlobalTimerBar() {
   const [isWorking, setIsWorking] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
+  const formatTimerError = useCallback(
+    (
+      err?: string | { key: string; params?: Record<string, string | number> },
+    ) => {
+      if (!err) return "";
+      if (typeof err === "string") return err;
+      return t(err.key as never, err.params);
+    },
+    [t],
+  );
+
   const contextLabel = useMemo(() => {
     if (!activeEntry) return null;
     const match = contexts.find(
@@ -43,7 +54,7 @@ export default function GlobalTimerBar() {
     }, 0);
     const interval = window.setInterval(() => {
       setNow(new Date());
-    }, 500);
+    }, 1000);
     return () => {
       window.clearTimeout(timeout);
       window.clearInterval(interval);
@@ -53,7 +64,7 @@ export default function GlobalTimerBar() {
   const elapsedSeconds = activeEntry?.started_at
     ? Math.max(
         0,
-        Math.ceil(
+        Math.floor(
           (now.getTime() - new Date(activeEntry.started_at).getTime()) / 1000,
         ),
       )
@@ -74,10 +85,12 @@ export default function GlobalTimerBar() {
       contextId: context.id,
     });
     if (startError || !entryId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorMessage = typeof startError === 'string' ? startError : t(startError!.key as any, startError!.params);
+      const errorMessage = formatTimerError(startError);
       setError(errorMessage);
-      if (typeof startError === 'object' && startError.key === 'errors.timerAlreadyRunning') {
+      if (
+        typeof startError === "object" &&
+        startError.key === "errors.timerAlreadyRunning"
+      ) {
         window.location.href = window.location.href;
       }
       setIsWorking(false);
@@ -112,10 +125,12 @@ export default function GlobalTimerBar() {
     const endedAt = new Date().toISOString();
     const { error: stopError } = await stopTimer(endedAt);
     if (stopError) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorMessage = typeof stopError === 'string' ? stopError : t(stopError!.key as any, stopError!.params);
+      const errorMessage = formatTimerError(stopError);
       setError(errorMessage);
-      if (typeof stopError === 'object' && stopError.key === 'errors.timerAlreadyStopped') {
+      if (
+        typeof stopError === "object" &&
+        stopError.key === "errors.timerAlreadyStopped"
+      ) {
         window.location.href = window.location.href;
       }
     }
@@ -180,7 +195,9 @@ export default function GlobalTimerBar() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm px-4 pb-20">
           <div className="w-full max-w-xl rounded-2xl bg-surface p-6 shadow-xl border border-border transition-colors">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-text-primary">{t("timer.startTimer")}</h2>
+              <h2 className="text-lg font-semibold text-text-primary">
+                {t("timer.startTimer")}
+              </h2>
               <button
                 className="text-sm text-text-muted hover:text-text-secondary transition-colors"
                 type="button"
@@ -208,7 +225,9 @@ export default function GlobalTimerBar() {
                 ))}
               </datalist>
               {contextsLoading ? (
-                <p className="text-xs text-text-muted">{t("contexts.loading")}</p>
+                <p className="text-xs text-text-muted">
+                  {t("contexts.loading")}
+                </p>
               ) : null}
               {error ? (
                 <p className="text-xs font-medium text-rose-500">{error}</p>

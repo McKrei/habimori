@@ -10,6 +10,7 @@ export type GoalDetails = {
   context_id: string;
   is_archived: boolean;
   context: { id: string; name: string } | null;
+  tags: { id: string; name: string }[];
 };
 
 export type TimeEntry = {

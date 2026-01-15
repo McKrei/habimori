@@ -1,8 +1,15 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import {
+  useAppStore,
+  useStoreSelector,
+  AppState,
+  deleteEvent as storeDeleteEvent,
+  initializeStore,
+  Tag
+} from "@/src/store";
 import { supabase } from "@/lib/supabase/client";
-import { getCurrentUserId } from "@/src/components/auth";
 import {
   TimeEntryWithDetails,
   TimeEntryTag,
@@ -12,16 +19,6 @@ import {
 } from "./types";
 
 const MS_IN_SECOND = 1000;
-const DAYS_BACK = 7;
-
-function getDateRange() {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(start.getDate() - DAYS_BACK);
-  start.setHours(0, 0, 0, 0);
-  end.setHours(23, 59, 59, 999);
-  return { start, end };
-}
 
 function getISODateOnly(date: Date): string {
   const year = date.getFullYear();
@@ -126,66 +123,42 @@ function groupTimeEntries(
 }
 
 export function useTimeLogs() {
-  const [entries, setEntries] = useState<TimeEntryWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const store = useAppStore();
   const [filters, setFilters] = useState<TimeLogsFilters>({
     contextIds: [],
     tagIds: [],
   });
 
-  const refresh = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const isLoading = useStoreSelector((state: AppState) => !state.isInitialized);
+  const error = useStoreSelector((state: AppState) => state.loadError);
 
-    const { start, end } = getDateRange();
-    const { userId, error: userError } = await getCurrentUserId();
+  // -- Store Data Mapping --
+  const entriesRaw = useStoreSelector((state: AppState) => state.timeEntries);
+  const contextsRaw = useStoreSelector((state: AppState) => state.contexts);
+  const tagsRaw = useStoreSelector((state: AppState) => state.tags);
 
-    if (userError || !userId) {
-      setError(userError || "User not found");
-      setIsLoading(false);
-      return;
-    }
+  const entriesWithDetails = useMemo(() => {
+    const contextMap = new Map(contextsRaw.map(c => [c.id, c]));
+    const tagMap = new Map(tagsRaw.map(t => [t.id, t]));
 
-    const query = supabase
-      .from("time_entries")
-      .select(
-        `
-        id, started_at, ended_at, context_id, goal_id,
-        context:contexts(id, name),
-        time_entry_tags(tag:tags(id, name))
-      `,
-      )
-      .gte("started_at", start.toISOString())
-      .lte("started_at", end.toISOString())
-      .order("started_at", { ascending: false });
+    return entriesRaw.map(entry => {
+      const context = contextMap.get(entry.context_id) || null;
+      const tags: TimeEntryTag[] = (entry.tag_ids || [])
+        .map(tagId => tagMap.get(tagId))
+        .filter((t): t is Tag => !!t)
+        .map(t => ({ tag: t as TagOption }));
 
-    const { data, error: fetchError } = await query;
-
-    if (fetchError) {
-      setError(fetchError.message);
-      setIsLoading(false);
-      return;
-    }
-
-    const entriesWithTags: TimeEntryWithDetails[] = (data || []).map((entry) => {
-      const context = Array.isArray(entry.context)
-        ? entry.context[0] || null
-        : entry.context;
-      const tags: TimeEntryTag[] = (entry.time_entry_tags || []).map((t) => {
-        const tag = Array.isArray(t.tag) ? t.tag[0] : t.tag;
-        return { tag: tag as TagOption };
-      });
       return {
         ...entry,
         context,
-        tags,
-      };
+        tags
+      } as TimeEntryWithDetails;
     });
+  }, [entriesRaw, contextsRaw, tagsRaw]);
 
-    setEntries(entriesWithTags);
-    setIsLoading(false);
-  }, []);
+  const refresh = useCallback(async () => {
+    void initializeStore(store);
+  }, [store]);
 
   const updateEntry = useCallback(
     async (
@@ -201,27 +174,25 @@ export function useTimeLogs() {
         return { error: updateError.message };
       }
 
-      await refresh();
+      // Optimistically update store
+      store.dispatch({
+        type: "UPDATE_TIME_ENTRY", entryId, updates: {
+          started_at: updates.started_at,
+          ended_at: updates.ended_at ?? null
+        }
+      });
+
       return { error: null };
     },
-    [refresh],
+    [store],
   );
 
   const deleteEntry = useCallback(
     async (entryId: string) => {
-      const { error: deleteError } = await supabase
-        .from("time_entries")
-        .delete()
-        .eq("id", entryId);
-
-      if (deleteError) {
-        return { error: deleteError.message };
-      }
-
-      await refresh();
-      return { error: null };
+      const { error: err } = await storeDeleteEvent(store, "time", entryId);
+      return { error: err };
     },
-    [refresh],
+    [store],
   );
 
   const deleteEntriesByContextAndDate = useCallback(
@@ -240,7 +211,9 @@ export function useTimeLogs() {
         return { error: deleteError.message };
       }
 
-      await refresh();
+      // We don't have a bulk delete action in store, but we can refetch or manually remove
+      // For now, let's just refetch
+      void refresh();
       return { error: null };
     },
     [refresh],
@@ -273,21 +246,23 @@ export function useTimeLogs() {
         }
       }
 
-      await refresh();
+      // Update store
+      store.dispatch({ type: "UPDATE_TIME_ENTRY", entryId, updates: { tag_ids: tagIds } });
       return { error: null };
     },
-    [refresh],
+    [store],
   );
 
   const toggleContextExpanded = useCallback(
     (_dateKey: string, _contextId: string) => {
-      setEntries((prev) => prev);
+      // Local state expansion is usually handled in the UI component
+      // but the original hook had this as a no-op that triggered re-render via setEntries
     },
     [],
   );
 
   const filteredAndGrouped = useMemo(() => {
-    let filtered = entries;
+    let filtered = entriesWithDetails;
 
     if (filters.contextIds.length > 0) {
       filtered = filtered.filter((e) =>
@@ -302,10 +277,10 @@ export function useTimeLogs() {
     }
 
     return groupTimeEntries(filtered);
-  }, [entries, filters]);
+  }, [entriesWithDetails, filters]);
 
   return {
-    entries,
+    entries: entriesWithDetails,
     isLoading,
     error,
     filters,
