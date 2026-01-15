@@ -165,6 +165,31 @@
     "login": "Login",
     "logout": "Logout"
   },
+  "landing": {
+    "brand": "habimori",
+    "heroTagline": "Goals, timers, stats — in one rhythm",
+    "heroTitle": "A system where goals",
+    "heroTitleAccent": "turn into results.",
+    "heroSubtitle": "Create goals, run timers, track progress, and keep focus without chaos.",
+    "heroPitch": "No selling — just a tool that keeps you on course every day.",
+    "bulletFocus": "Goals and steps",
+    "bulletClarity": "Timers and logs",
+    "bulletFlow": "Stats and growth",
+    "loginHint": "Google sign-in — one click and you’re in.",
+    "sectionInside": "What’s inside",
+    "sectionImpact": "How it helps",
+    "featureGoalsTitle": "Goals and steps",
+    "featureGoalsBody": "Plan habits and stages so you always see the next step.",
+    "featureTimeTitle": "Time and timers",
+    "featureTimeBody": "Run timers, capture logs, and understand where your time goes.",
+    "featureStatsTitle": "Stats and focus",
+    "featureStatsBody": "See progress by periods and keep attention on what matters.",
+    "featureFlowTitle": "Contexts and tags",
+    "featureFlowBody": "Filter goals and keep priorities without extra effort.",
+    "impactLineOne": "See the full path: from goal to today’s next step.",
+    "impactLineTwo": "Stay aware of time: how much went to what matters.",
+    "impactLineThree": "Keep momentum: less chaos, more results."
+  },
   "language": {
     "switchToEnglish": "Switch to English",
     "switchToRussian": "Switch to Russian"
