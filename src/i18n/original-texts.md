@@ -278,21 +278,21 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | Key | English |
 |-----|---------|
 | `landing.brand` | habimori |
-| `landing.heroTagline` | A system for real focus |
-| `landing.heroTitle` | Your focus. Your rhythm. |
-| `landing.heroTitleAccent` | Your system of progress. |
-| `landing.heroSubtitle` | We turn goals into clear steps and keep your energy every day. |
-| `landing.heroPitch` | You don’t lose time — you convert it into results. |
-| `landing.bulletFocus` | Focus without noise |
-| `landing.bulletClarity` | Clear steps |
-| `landing.bulletFlow` | A rhythm that holds |
-| `landing.loginHint` | One-click Google sign-in. |
-| `landing.featureGoalsTitle` | Goals |
-| `landing.featureGoalsBody` | Break goals into stages and keep direction. |
-| `landing.featureTimeTitle` | Time |
-| `landing.featureTimeBody` | Timers and logs show the real picture. |
-| `landing.featureStatsTitle` | Stats |
-| `landing.featureStatsBody` | See where you grow and what helps. |
+| `landing.heroTagline` | Goals, timers, stats — in one rhythm |
+| `landing.heroTitle` | A system where goals |
+| `landing.heroTitleAccent` | turn into results. |
+| `landing.heroSubtitle` | Create goals, run timers, track progress, and keep focus without chaos. |
+| `landing.heroPitch` | No selling — just a tool that keeps you on course every day. |
+| `landing.bulletFocus` | Goals and steps |
+| `landing.bulletClarity` | Timers and logs |
+| `landing.bulletFlow` | Stats and growth |
+| `landing.loginHint` | Google sign-in — one click and you’re in. |
+| `landing.featureGoalsTitle` | Goals and steps |
+| `landing.featureGoalsBody` | Plan habits and stages so you always see the next step. |
+| `landing.featureTimeTitle` | Time and timers |
+| `landing.featureTimeBody` | Run timers, capture logs, and understand where your time goes. |
+| `landing.featureStatsTitle` | Stats and focus |
+| `landing.featureStatsBody` | See progress by periods and keep attention on what matters. |
 
 ---
 

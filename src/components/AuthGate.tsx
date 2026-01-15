@@ -57,11 +57,14 @@ export default function AuthGate({ children, lng: _lng }: AuthGateProps) {
   if (!user) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-slate-950 px-4 text-white">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-purple-500/30 blur-3xl" />
-          <div className="absolute -right-16 top-10 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
-          <div className="absolute bottom-10 left-1/2 h-56 w-[32rem] -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.05),transparent_55%)]" />
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          <div className="absolute -left-24 top-24 h-72 w-72 rounded-full bg-purple-500/30 blur-3xl animate-pulse" />
+          <div className="absolute -right-16 top-10 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl animate-[pulse_9s_ease-in-out_infinite]" />
+          <div className="absolute bottom-10 left-1/2 h-56 w-[32rem] -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl animate-[pulse_12s_ease-in-out_infinite]" />
+          <div className="absolute left-1/2 top-1/2 h-[38rem] w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/20 shadow-[0_0_80px_rgba(56,189,248,0.12)] animate-[spin_40s_linear_infinite]" />
+          <div className="absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-400/10 shadow-[0_0_60px_rgba(168,85,247,0.15)] animate-[spin_25s_linear_infinite]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_55%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(0deg,rgba(148,163,184,0.06)_1px,transparent_1px)] bg-[size:120px_120px] opacity-30 animate-[pulse_10s_ease-in-out_infinite]" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.6),rgba(2,6,23,0.95))]" />
         </div>
 
