@@ -60,6 +60,29 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 
 ---
 
+## Landing
+
+| Key | English |
+|-----|---------|
+| `landing.badge` | Innovative focus mode |
+| `landing.title` | Focus on what matters. Turn intention into momentum. |
+| `landing.subtitle` | Habimori helps you set goals, measure progress, and see real change without noise. |
+| `landing.note` | No sales. Just your goals and your rhythm. |
+| `landing.featureFocusTitle` | Clear focus |
+| `landing.featureFocusDesc` | One goal, one rhythm. See what matters now. |
+| `landing.featureTimerTitle` | Mindful time |
+| `landing.featureTimerDesc` | Timers and events capture progress effortlessly. |
+| `landing.featureStatsTitle` | Visible results |
+| `landing.featureStatsDesc` | Statistics turn your path into clear numbers. |
+| `landing.insideTitle` | Inside the experience |
+| `landing.insideGoals` | Goals and periods |
+| `landing.insideTimer` | Timers and check-ins |
+| `landing.insideStats` | Statistics and reports |
+| `landing.insideLogs` | Time logs |
+| `landing.motto` | Less chaos. More done. |
+
+---
+
 ## Settings
 
 | Key | English |
