@@ -126,6 +126,45 @@ body {
     }
 }
 
+@keyframes float-1 {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(18px, -24px, 0) scale(1.08);
+    }
+}
+
+@keyframes float-2 {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(-24px, 18px, 0) scale(1.05);
+    }
+}
+
+@keyframes float-3 {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(20px, 26px, 0) scale(1.1);
+    }
+}
+
+@keyframes grid-drift {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    100% {
+        transform: translate3d(40px, -40px, 0);
+    }
+}
+
 button[aria-label="Open Next.js Dev Tools"],
 button[aria-label="Open issues overlay"],
 button[aria-label="Collapse issues badge"],

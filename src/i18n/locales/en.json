@@ -165,6 +165,24 @@
     "login": "Login",
     "logout": "Logout"
   },
+  "landing": {
+    "badge": "Innovative focus mode",
+    "title": "Focus on what matters. Turn intention into momentum.",
+    "subtitle": "Habimori helps you set goals, measure progress, and see real change without noise.",
+    "note": "No sales. Just your goals and your rhythm.",
+    "featureFocusTitle": "Clear focus",
+    "featureFocusDesc": "One goal, one rhythm. See what matters now.",
+    "featureTimerTitle": "Mindful time",
+    "featureTimerDesc": "Timers and events capture progress effortlessly.",
+    "featureStatsTitle": "Visible results",
+    "featureStatsDesc": "Statistics turn your path into clear numbers.",
+    "insideTitle": "Inside the experience",
+    "insideGoals": "Goals and periods",
+    "insideTimer": "Timers and check-ins",
+    "insideStats": "Statistics and reports",
+    "insideLogs": "Time logs",
+    "motto": "Less chaos. More done."
+  },
   "language": {
     "switchToEnglish": "Switch to English",
     "switchToRussian": "Switch to Russian"
