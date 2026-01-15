@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 const SWIPE_PAGES = ["/", "/time-logs", "/stats"] as const;
@@ -40,6 +40,14 @@ function shouldIgnoreSwipe(target: EventTarget | null) {
   }
 
   return false;
+}
+
+function shouldIgnoreKeyboard(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  const interactive = target.closest(
+    "button, a, input, textarea, select, [contenteditable], [data-swipe-ignore='true']",
+  );
+  return Boolean(interactive);
 }
 
 export default function SwipeNavigator({
@@ -158,6 +166,29 @@ export default function SwipeNavigator({
   const isEnabled = SWIPE_PAGES.includes(
     pathname as (typeof SWIPE_PAGES)[number],
   );
+
+  useEffect(() => {
+    if (!isEnabled) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return;
+      }
+      if (shouldIgnoreKeyboard(event.target)) return;
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        handleNavigate("left");
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        handleNavigate("right");
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleNavigate, isEnabled]);
 
   return (
     <div
