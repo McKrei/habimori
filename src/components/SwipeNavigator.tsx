@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 const SWIPE_PAGES = ["/", "/time-logs", "/stats"] as const;
@@ -9,6 +9,8 @@ const SWIPE_MAX_VERTICAL = 80;
 const SWIPE_START_DISTANCE = 8;
 const SWIPE_MAX_OFFSET = 48;
 const SWIPE_DIRECTION_RATIO = 1.2;
+const WHEEL_MIN_DELTA = 20;
+const WHEEL_COOLDOWN_MS = 400;
 
 function getNextPath(pathname: string, direction: "left" | "right") {
   const index = SWIPE_PAGES.indexOf(pathname as (typeof SWIPE_PAGES)[number]);
@@ -42,6 +44,33 @@ function shouldIgnoreSwipe(target: EventTarget | null) {
   return false;
 }
 
+function shouldIgnoreKeyboard(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  const interactive = target.closest(
+    "button, a, input, textarea, select, [contenteditable], [data-swipe-ignore='true']",
+  );
+  return Boolean(interactive);
+}
+
+function shouldIgnoreWheel(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false;
+  if (shouldIgnoreKeyboard(target)) return true;
+
+  let node: Element | null = target;
+  while (node) {
+    const style = window.getComputedStyle(node);
+    if (
+      (style.overflowY === "auto" || style.overflowY === "scroll") &&
+      node.scrollHeight > node.clientHeight
+    ) {
+      return true;
+    }
+    node = node.parentElement;
+  }
+
+  return false;
+}
+
 export default function SwipeNavigator({
   children,
 }: {
@@ -57,6 +86,7 @@ export default function SwipeNavigator({
     null,
   );
   const [isDragging, setIsDragging] = useState(false);
+  const lastWheelAt = useRef(0);
 
   const handleNavigate = useCallback(
     (direction: "left" | "right") => {
@@ -158,6 +188,55 @@ export default function SwipeNavigator({
   const isEnabled = SWIPE_PAGES.includes(
     pathname as (typeof SWIPE_PAGES)[number],
   );
+
+  useEffect(() => {
+    if (!isEnabled) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return;
+      }
+      if (shouldIgnoreKeyboard(event.target)) return;
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        handleNavigate("left");
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        handleNavigate("right");
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleNavigate, isEnabled]);
+
+  useEffect(() => {
+    if (!isEnabled) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return;
+      }
+      if (shouldIgnoreWheel(event.target)) return;
+
+      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+      if (Math.abs(event.deltaX) < WHEEL_MIN_DELTA) return;
+
+      const now = Date.now();
+      if (now - lastWheelAt.current < WHEEL_COOLDOWN_MS) return;
+      lastWheelAt.current = now;
+
+      event.preventDefault();
+      handleNavigate(event.deltaX > 0 ? "left" : "right");
+    };
+
+    document.addEventListener("wheel", handleWheel, { passive: false });
+    return () =>
+      document.removeEventListener("wheel", handleWheel as EventListener);
+  }, [handleNavigate, isEnabled]);
 
   return (
     <div
