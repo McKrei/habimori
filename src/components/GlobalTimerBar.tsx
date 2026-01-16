@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "@/src/i18n/TranslationContext";
 import PlayIcon from "@/src/components/icons/PlayIcon";
 import StopIcon from "@/src/components/icons/StopIcon";
+import TomatoIcon from "@/src/components/icons/TomatoIcon";
 import { requestNotificationPermission } from "@/src/components/notifications";
 
 export default function GlobalTimerBar() {
@@ -29,6 +30,17 @@ export default function GlobalTimerBar() {
   const [isWorking, setIsWorking] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [isMinuteAlertVisible, setIsMinuteAlertVisible] = useState(false);
+  const [isPomodoroOpen, setIsPomodoroOpen] = useState(false);
+  const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
+  const [pomodoroPhase, setPomodoroPhase] = useState<"focus" | "break">(
+    "focus",
+  );
+  const [pomodoroRemaining, setPomodoroRemaining] = useState(0);
+  const [focusMinutes, setFocusMinutes] = useState(25);
+  const [breakMinutes, setBreakMinutes] = useState(5);
+  const [draftPomodoroEnabled, setDraftPomodoroEnabled] = useState(false);
+  const [draftFocusMinutes, setDraftFocusMinutes] = useState(25);
+  const [draftBreakMinutes, setDraftBreakMinutes] = useState(5);
   const minuteAlertTimeoutRef = useRef<number | null>(null);
   const minuteAlertHideTimeoutRef = useRef<number | null>(null);
   const minuteAlertAudioTimeoutRef = useRef<number | null>(null);
@@ -38,6 +50,7 @@ export default function GlobalTimerBar() {
     oscillators: OscillatorNode[];
     gainNode: GainNode;
   } | null>(null);
+  const pomodoroPrevRemainingRef = useRef(0);
   const originalTitleRef = useRef<string | null>(null);
   const originalIconHrefRef = useRef<string | null>(null);
   const minuteAlertStorageKey = "minute-alert:last";
@@ -115,6 +128,37 @@ export default function GlobalTimerBar() {
       // Ignore notification errors.
     }
   }, [t]);
+
+  const showPomodoroNotification = useCallback(
+    async (phase: "focus" | "break") => {
+      if (typeof window === "undefined" || !("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
+      const titleKey =
+        phase === "focus"
+          ? "timer.pomodoroFocusNotificationTitle"
+          : "timer.pomodoroBreakNotificationTitle";
+      const bodyKey =
+        phase === "focus"
+          ? "timer.pomodoroFocusNotificationBody"
+          : "timer.pomodoroBreakNotificationBody";
+      try {
+        if ("serviceWorker" in navigator) {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.showNotification(t(titleKey), {
+            body: t(bodyKey),
+            tag: `pomodoro-${phase}`,
+          });
+          return;
+        }
+        new Notification(t(titleKey), {
+          body: t(bodyKey),
+        });
+      } catch {
+        // Ignore notification errors.
+      }
+    },
+    [t],
+  );
 
   const shouldTriggerMinuteAlert = useCallback(() => {
     if (typeof window === "undefined") return true;
@@ -267,6 +311,60 @@ export default function GlobalTimerBar() {
     shouldTriggerMinuteAlert,
   ]);
 
+  useEffect(() => {
+    if (!activeEntry?.started_at || !pomodoroEnabled) {
+      setPomodoroRemaining(0);
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setPomodoroRemaining((prev) => Math.max(0, prev - 1));
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [activeEntry?.started_at, pomodoroEnabled]);
+
+  useEffect(() => {
+    if (!activeEntry?.started_at || !pomodoroEnabled) return;
+    if (pomodoroRemaining > 0) return;
+    const initialSeconds =
+      pomodoroPhase === "focus" ? focusMinutes * 60 : breakMinutes * 60;
+    setPomodoroRemaining(Math.max(60, initialSeconds));
+  }, [
+    activeEntry?.started_at,
+    breakMinutes,
+    focusMinutes,
+    pomodoroEnabled,
+    pomodoroPhase,
+    pomodoroRemaining,
+  ]);
+
+  useEffect(() => {
+    if (!activeEntry?.started_at || !pomodoroEnabled) return;
+    if (pomodoroRemaining > 0) return;
+    if (pomodoroPrevRemainingRef.current === 0) return;
+    const nextPhase = pomodoroPhase === "focus" ? "break" : "focus";
+    const nextSeconds =
+      nextPhase === "focus" ? focusMinutes * 60 : breakMinutes * 60;
+    setPomodoroPhase(nextPhase);
+    setPomodoroRemaining(Math.max(60, nextSeconds));
+    void showPomodoroNotification(nextPhase);
+  }, [
+    activeEntry?.started_at,
+    breakMinutes,
+    focusMinutes,
+    pomodoroEnabled,
+    pomodoroPhase,
+    pomodoroRemaining,
+    showPomodoroNotification,
+  ]);
+
+  useEffect(() => {
+    pomodoroPrevRemainingRef.current = pomodoroRemaining;
+  }, [pomodoroRemaining]);
+
   const elapsedSeconds = activeEntry?.started_at
     ? Math.max(
         0,
@@ -284,6 +382,13 @@ export default function GlobalTimerBar() {
     if (hours > 0) {
       return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
     }
+    return `${pad(minutes)}:${pad(secs)}`;
+  }, []);
+
+  const formatPomodoroCountdown = useCallback((seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const pad = (value: number) => value.toString().padStart(2, "0");
     return `${pad(minutes)}:${pad(secs)}`;
   }, []);
 
@@ -384,6 +489,29 @@ export default function GlobalTimerBar() {
     setIsWorking(false);
   };
 
+  const openPomodoroSettings = () => {
+    setDraftPomodoroEnabled(pomodoroEnabled);
+    setDraftFocusMinutes(focusMinutes);
+    setDraftBreakMinutes(breakMinutes);
+    setIsPomodoroOpen(true);
+  };
+
+  const handlePomodoroSave = () => {
+    const nextFocus = Math.max(1, Math.floor(draftFocusMinutes));
+    const nextBreak = Math.max(1, Math.floor(draftBreakMinutes));
+    setFocusMinutes(nextFocus);
+    setBreakMinutes(nextBreak);
+    setPomodoroEnabled(draftPomodoroEnabled);
+    setPomodoroPhase("focus");
+    setPomodoroRemaining(
+      draftPomodoroEnabled ? Math.max(60, nextFocus * 60) : 0,
+    );
+    if (draftPomodoroEnabled) {
+      void requestNotificationPermission();
+    }
+    setIsPomodoroOpen(false);
+  };
+
   const handleStop = async () => {
     setIsWorking(true);
     setError(null);
@@ -414,10 +542,20 @@ export default function GlobalTimerBar() {
       <div className="mx-auto grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3">
         <div className="text-sm text-text-secondary">
           {activeEntry ? (
-            <span>
-              {formatSecondsAsHHMMSS(elapsedSeconds)}
-              {contextLabel ? ` · ${contextLabel}` : ""}
-            </span>
+            <div className="space-y-1">
+              <div>
+                {formatSecondsAsHHMMSS(elapsedSeconds)}
+                {contextLabel ? ` · ${contextLabel}` : ""}
+              </div>
+              {pomodoroEnabled && pomodoroRemaining > 0 ? (
+                <div className="text-xs font-medium text-text-muted">
+                  {pomodoroPhase === "focus"
+                    ? t("timer.pomodoroFocusLabel")
+                    : t("timer.pomodoroBreakLabel")}{" "}
+                  · {formatPomodoroCountdown(pomodoroRemaining)}
+                </div>
+              ) : null}
+            </div>
           ) : (
             <span>{t("timer.noActiveTimer")}</span>
           )}
@@ -446,14 +584,26 @@ export default function GlobalTimerBar() {
         </div>
 
         <div className="flex items-center justify-end">
-          {pathname !== "/goals/new" && (
-            <Link
-              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-surface shadow-sm hover:bg-accent-hover transition-colors"
-              href="/goals/new"
-            >
-              {t("goalForm.addGoal")}
-            </Link>
-          )}
+          <div className="flex items-center gap-2">
+            {activeEntry ? (
+              <button
+                className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-xs font-semibold text-text-secondary hover:border-text-faint hover:text-text-primary transition-colors"
+                type="button"
+                onClick={openPomodoroSettings}
+              >
+                <TomatoIcon size={16} />
+                {t("timer.pomodoroSettings")}
+              </button>
+            ) : null}
+            {pathname !== "/goals/new" && (
+              <Link
+                className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-surface shadow-sm hover:bg-accent-hover transition-colors"
+                href="/goals/new"
+              >
+                {t("goalForm.addGoal")}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
@@ -607,6 +757,83 @@ export default function GlobalTimerBar() {
               >
                 <PlayIcon size={16} />
                 {t("timer.startTimer")}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isPomodoroOpen ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm px-4 pb-20">
+          <div className="w-full max-w-xl rounded-2xl bg-surface p-6 shadow-xl border border-border transition-colors">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-text-primary">
+                {t("timer.pomodoroSettings")}
+              </h2>
+              <button
+                className="text-sm text-text-muted hover:text-text-secondary transition-colors"
+                type="button"
+                onClick={() => setIsPomodoroOpen(false)}
+              >
+                {t("common.close")}
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              <label className="flex items-center justify-between gap-4 text-sm font-medium text-text-secondary">
+                <span>{t("timer.pomodoroEnabled")}</span>
+                <input
+                  className="h-4 w-4 accent-accent"
+                  type="checkbox"
+                  checked={draftPomodoroEnabled}
+                  onChange={(event) =>
+                    setDraftPomodoroEnabled(event.target.checked)
+                  }
+                />
+              </label>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm font-medium text-text-secondary">
+                  {t("timer.pomodoroFocusMinutes")}
+                  <input
+                    className="mt-2 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-colors"
+                    type="number"
+                    min={1}
+                    value={draftFocusMinutes}
+                    onChange={(event) =>
+                      setDraftFocusMinutes(Number(event.target.value))
+                    }
+                  />
+                </label>
+                <label className="text-sm font-medium text-text-secondary">
+                  {t("timer.pomodoroBreakMinutes")}
+                  <input
+                    className="mt-2 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 transition-colors"
+                    type="number"
+                    min={1}
+                    value={draftBreakMinutes}
+                    onChange={(event) =>
+                      setDraftBreakMinutes(Number(event.target.value))
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                className="rounded-md border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:border-text-faint hover:text-text-primary transition-colors"
+                type="button"
+                onClick={() => setIsPomodoroOpen(false)}
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-surface hover:bg-accent-hover transition-colors"
+                type="button"
+                onClick={handlePomodoroSave}
+              >
+                {t("timer.pomodoroSave")}
               </button>
             </div>
           </div>
