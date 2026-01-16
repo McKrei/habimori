@@ -222,11 +222,8 @@ export default function SwipeNavigator({
       }
       if (shouldIgnoreWheel(event.target)) return;
 
-      const dominantDelta =
-        Math.abs(event.deltaY) >= Math.abs(event.deltaX)
-          ? event.deltaY
-          : event.deltaX;
-
+      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+      const dominantDelta = event.deltaX;
       if (Math.abs(dominantDelta) < WHEEL_MIN_DELTA) return;
 
       const now = Date.now();

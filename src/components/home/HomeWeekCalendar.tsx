@@ -133,10 +133,8 @@ export default function HomeWeekCalendar({
     const handleWheel = (event: WheelEvent) => {
       const now = Date.now();
       if (now - wheelLockRef.current < 120) return;
-      const delta =
-        Math.abs(event.deltaX) > Math.abs(event.deltaY)
-          ? event.deltaX
-          : event.deltaY;
+      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+      const delta = event.deltaX;
       if (Math.abs(delta) < 8) return;
       event.preventDefault();
       wheelLockRef.current = now;
