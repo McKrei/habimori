@@ -13,6 +13,7 @@ import HeaderFilterButton from "@/src/components/HeaderFilterButton";
 import HeaderPageButtons from "@/src/components/HeaderPageButtons";
 import HeaderSettingsLink from "@/src/components/HeaderSettingsLink";
 import SwipeNavigator from "@/src/components/SwipeNavigator";
+import ServiceWorkerRegistrar from "@/src/components/ServiceWorkerRegistrar";
 import { TranslationProvider, DEFAULT_LANGUAGE } from "@/src/i18n";
 
 const geistSans = Geist({
@@ -45,6 +46,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground`}
       >
         <ThemeProvider>
+          <ServiceWorkerRegistrar />
           <TranslationProvider>
             <AuthGate lng={DEFAULT_LANGUAGE}>
               <AppStoreProvider>

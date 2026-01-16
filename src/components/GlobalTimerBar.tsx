@@ -31,11 +31,13 @@ export default function GlobalTimerBar() {
   const minuteAlertTimeoutRef = useRef<number | null>(null);
   const minuteAlertHideTimeoutRef = useRef<number | null>(null);
   const minuteAlertAudioTimeoutRef = useRef<number | null>(null);
+  const minuteAlertChannelRef = useRef<BroadcastChannel | null>(null);
   const minuteAlertAudioRef = useRef<{
     context: AudioContext;
     oscillators: OscillatorNode[];
     gainNode: GainNode;
   } | null>(null);
+  const minuteAlertStorageKey = "minute-alert:last";
 
   const formatTimerError = useCallback(
     (
@@ -100,10 +102,18 @@ export default function GlobalTimerBar() {
     }
   }, []);
 
-  const showMinuteAlertNotification = useCallback(() => {
+  const showMinuteAlertNotification = useCallback(async () => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission !== "granted") return;
     try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(t("timer.minuteAlertTitle"), {
+          body: t("timer.minuteAlertBody"),
+          tag: "minute-alert",
+        });
+        return;
+      }
       new Notification(t("timer.minuteAlertTitle"), {
         body: t("timer.minuteAlertBody"),
       });
@@ -111,6 +121,22 @@ export default function GlobalTimerBar() {
       // Ignore notification errors.
     }
   }, [t]);
+
+  const shouldTriggerMinuteAlert = useCallback(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const lastAlertRaw = window.localStorage.getItem(minuteAlertStorageKey);
+      const lastAlert = lastAlertRaw ? Number(lastAlertRaw) : 0;
+      const nowMs = Date.now();
+      if (nowMs - lastAlert < 30000) {
+        return false;
+      }
+      window.localStorage.setItem(minuteAlertStorageKey, String(nowMs));
+      return true;
+    } catch {
+      return true;
+    }
+  }, [minuteAlertStorageKey]);
 
   const playMinuteAlertSound = useCallback((durationMs: number) => {
     if (typeof window === "undefined") return;
@@ -157,6 +183,28 @@ export default function GlobalTimerBar() {
   }, [stopMinuteAlertSound]);
 
   useEffect(() => {
+    if (typeof window === "undefined" || !("BroadcastChannel" in window)) {
+      return;
+    }
+    const channel = new BroadcastChannel("minute-alert");
+    minuteAlertChannelRef.current = channel;
+    channel.addEventListener("message", () => {
+      setIsMinuteAlertVisible(true);
+      if (minuteAlertHideTimeoutRef.current) {
+        window.clearTimeout(minuteAlertHideTimeoutRef.current);
+      }
+      minuteAlertHideTimeoutRef.current = window.setTimeout(() => {
+        setIsMinuteAlertVisible(false);
+        minuteAlertHideTimeoutRef.current = null;
+      }, 10000);
+    });
+    return () => {
+      channel.close();
+      minuteAlertChannelRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!activeEntry?.started_at) {
       const resetTimeout = window.setTimeout(() => {
         setIsMinuteAlertVisible(false);
@@ -184,9 +232,14 @@ export default function GlobalTimerBar() {
       const delay = Math.max(0, nextMinuteMs - elapsedMs);
 
       minuteAlertTimeoutRef.current = window.setTimeout(() => {
+        if (!shouldTriggerMinuteAlert()) {
+          scheduleNextAlert();
+          return;
+        }
         setIsMinuteAlertVisible(true);
         playMinuteAlertSound(2000);
-        showMinuteAlertNotification();
+        void showMinuteAlertNotification();
+        minuteAlertChannelRef.current?.postMessage({ type: "minute-alert" });
         if (minuteAlertHideTimeoutRef.current) {
           window.clearTimeout(minuteAlertHideTimeoutRef.current);
         }
@@ -215,6 +268,7 @@ export default function GlobalTimerBar() {
     playMinuteAlertSound,
     showMinuteAlertNotification,
     stopMinuteAlertSound,
+    shouldTriggerMinuteAlert,
   ]);
 
   const elapsedSeconds = activeEntry?.started_at
