@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "@/src/i18n/TranslationContext";
 import PlayIcon from "@/src/components/icons/PlayIcon";
 import StopIcon from "@/src/components/icons/StopIcon";
+import { requestNotificationPermission } from "@/src/components/notifications";
 
 export default function GlobalTimerBar() {
   const pathname = usePathname();
@@ -91,16 +92,6 @@ export default function GlobalTimerBar() {
     gainNode.disconnect();
     minuteAlertAudioRef.current = null;
     void context.close();
-  }, []);
-
-  const requestNotificationPermission = useCallback(async () => {
-    if (typeof window === "undefined" || !("Notification" in window)) return;
-    if (Notification.permission !== "default") return;
-    try {
-      await Notification.requestPermission();
-    } catch {
-      // Ignore permission errors in restricted environments.
-    }
   }, []);
 
   const showMinuteAlertNotification = useCallback(async () => {

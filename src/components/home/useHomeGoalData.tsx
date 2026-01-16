@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Toast } from "@/src/components/ToastStack";
 import type { GoalSummary, StatusMap } from "./types";
+import { requestNotificationPermission } from "@/src/components/notifications";
 import {
   useAppStore,
   useGoalsForDate,
@@ -103,6 +104,7 @@ export function useHomeGoalData(selectedDate: Date) {
   }, []);
 
   const handleStartTimer = async (goal: GoalSummary) => {
+    void requestNotificationPermission();
     const result = await startTimerImmediate(
       store,
       goal.context_id,
