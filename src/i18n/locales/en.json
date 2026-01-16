@@ -109,7 +109,6 @@
   "timer": {
     "noActiveTimer": "No active timer",
     "startTimer": "Start timer",
-    "minuteAlert": "Timer running: a minute has passed",
     "pomodoroSettings": "Pomodoro settings",
     "pomodoroEnabled": "Enable Pomodoro",
     "pomodoroFocusMinutes": "Focus (minutes)",
@@ -121,8 +120,6 @@
     "pomodoroFocusNotificationBody": "Time to focus on your task.",
     "pomodoroBreakNotificationTitle": "Break started",
     "pomodoroBreakNotificationBody": "Time to take a short break.",
-    "minuteAlertTitle": "Timer is active",
-    "minuteAlertBody": "Another minute has passed — keep going!",
     "anotherRunning": "Another timer is already running"
   },
   "contexts": {

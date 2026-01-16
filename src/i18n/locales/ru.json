@@ -109,7 +109,6 @@
   "timer": {
     "noActiveTimer": "Таймер не запущен",
     "startTimer": "Запустить таймер",
-    "minuteAlert": "Таймер работает: прошла минута",
     "pomodoroSettings": "Настройка помидора",
     "pomodoroEnabled": "Включить помидор",
     "pomodoroFocusMinutes": "Фокус (минуты)",
@@ -121,8 +120,6 @@
     "pomodoroFocusNotificationBody": "Время работать в фокусе.",
     "pomodoroBreakNotificationTitle": "Перерыв начался",
     "pomodoroBreakNotificationBody": "Время отдыха.",
-    "minuteAlertTitle": "Таймер активен",
-    "minuteAlertBody": "Прошла ещё одна минута — продолжайте!",
     "anotherRunning": "Другой таймер уже запущен"
   },
   "contexts": {
