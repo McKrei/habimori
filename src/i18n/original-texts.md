@@ -226,6 +226,19 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 |-----|---------|
 | `timer.noActiveTimer` | No active timer |
 | `timer.startTimer` | Start timer |
+| `timer.pomodoroSettings` | Pomodoro settings |
+| `timer.pomodoroToggle` | Toggle Pomodoro |
+| `timer.pomodoroNotifications` | Notifications |
+| `timer.pomodoroSound` | Sound |
+| `timer.pomodoroFocusMinutes` | Focus (minutes) |
+| `timer.pomodoroBreakMinutes` | Break (minutes) |
+| `timer.pomodoroSave` | Save |
+| `timer.pomodoroFocusLabel` | Focus |
+| `timer.pomodoroBreakLabel` | Break |
+| `timer.pomodoroFocusNotificationTitle` | Focus started |
+| `timer.pomodoroFocusNotificationBody` | Time to focus on your task. |
+| `timer.pomodoroBreakNotificationTitle` | Break started |
+| `timer.pomodoroBreakNotificationBody` | Time to take a short break. |
 | `timer.anotherRunning` | Another timer is already running |
 
 ---

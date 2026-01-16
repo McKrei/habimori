@@ -109,6 +109,19 @@
   "timer": {
     "noActiveTimer": "Таймер не запущен",
     "startTimer": "Запустить таймер",
+    "pomodoroSettings": "Настройка помидора",
+    "pomodoroToggle": "Переключить помидор",
+    "pomodoroNotifications": "Уведомления",
+    "pomodoroSound": "Звук",
+    "pomodoroFocusMinutes": "Фокус (минуты)",
+    "pomodoroBreakMinutes": "Отдых (минуты)",
+    "pomodoroSave": "Сохранить",
+    "pomodoroFocusLabel": "Фокус",
+    "pomodoroBreakLabel": "Отдых",
+    "pomodoroFocusNotificationTitle": "Фокус начался",
+    "pomodoroFocusNotificationBody": "Время работать в фокусе.",
+    "pomodoroBreakNotificationTitle": "Перерыв начался",
+    "pomodoroBreakNotificationBody": "Время отдыха.",
     "anotherRunning": "Другой таймер уже запущен"
   },
   "contexts": {

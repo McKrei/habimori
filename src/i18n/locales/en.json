@@ -109,6 +109,19 @@
   "timer": {
     "noActiveTimer": "No active timer",
     "startTimer": "Start timer",
+    "pomodoroSettings": "Pomodoro settings",
+    "pomodoroToggle": "Toggle Pomodoro",
+    "pomodoroNotifications": "Notifications",
+    "pomodoroSound": "Sound",
+    "pomodoroFocusMinutes": "Focus (minutes)",
+    "pomodoroBreakMinutes": "Break (minutes)",
+    "pomodoroSave": "Save",
+    "pomodoroFocusLabel": "Focus",
+    "pomodoroBreakLabel": "Break",
+    "pomodoroFocusNotificationTitle": "Focus started",
+    "pomodoroFocusNotificationBody": "Time to focus on your task.",
+    "pomodoroBreakNotificationTitle": "Break started",
+    "pomodoroBreakNotificationBody": "Time to take a short break.",
     "anotherRunning": "Another timer is already running"
   },
   "contexts": {

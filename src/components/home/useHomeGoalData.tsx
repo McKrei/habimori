@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Toast } from "@/src/components/ToastStack";
 import type { GoalSummary, StatusMap } from "./types";
+import { requestNotificationPermission } from "@/src/components/notifications";
 import {
   useAppStore,
   useGoalsForDate,
@@ -18,6 +19,7 @@ import {
 
 export function useHomeGoalData(selectedDate: Date) {
   const store = useAppStore();
+  const pomodoroSettingsStorageKey = "pomodoro:settings";
 
   // -- Store Data --
   const { goals: rawGoals, isLoading } = useGoalsForDate(selectedDate);
@@ -103,6 +105,22 @@ export function useHomeGoalData(selectedDate: Date) {
   }, []);
 
   const handleStartTimer = async (goal: GoalSummary) => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem(pomodoroSettingsStorageKey);
+        const parsed = raw
+          ? (JSON.parse(raw) as {
+              enabled?: boolean;
+              notificationsEnabled?: boolean;
+            })
+          : null;
+        if (parsed?.enabled && parsed?.notificationsEnabled) {
+          void requestNotificationPermission();
+        }
+      } catch {
+        // Ignore storage errors.
+      }
+    }
     const result = await startTimerImmediate(
       store,
       goal.context_id,
