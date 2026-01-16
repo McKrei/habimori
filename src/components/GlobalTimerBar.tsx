@@ -38,6 +38,7 @@ export default function GlobalTimerBar() {
     gainNode: GainNode;
   } | null>(null);
   const minuteAlertStorageKey = "minute-alert:last";
+  const alertIntervalMs = 30000;
 
   const formatTimerError = useCallback(
     (
@@ -128,7 +129,7 @@ export default function GlobalTimerBar() {
       const lastAlertRaw = window.localStorage.getItem(minuteAlertStorageKey);
       const lastAlert = lastAlertRaw ? Number(lastAlertRaw) : 0;
       const nowMs = Date.now();
-      if (nowMs - lastAlert < 30000) {
+      if (nowMs - lastAlert < alertIntervalMs / 2) {
         return false;
       }
       window.localStorage.setItem(minuteAlertStorageKey, String(nowMs));
@@ -136,7 +137,7 @@ export default function GlobalTimerBar() {
     } catch {
       return true;
     }
-  }, [minuteAlertStorageKey]);
+  }, [alertIntervalMs, minuteAlertStorageKey]);
 
   const playMinuteAlertSound = useCallback((durationMs: number) => {
     if (typeof window === "undefined") return;
@@ -228,8 +229,9 @@ export default function GlobalTimerBar() {
     const scheduleNextAlert = () => {
       const nowMs = Date.now();
       const elapsedMs = Math.max(0, nowMs - startedAt);
-      const nextMinuteMs = (Math.floor(elapsedMs / 60000) + 1) * 60000;
-      const delay = Math.max(0, nextMinuteMs - elapsedMs);
+      const nextTickMs =
+        (Math.floor(elapsedMs / alertIntervalMs) + 1) * alertIntervalMs;
+      const delay = Math.max(0, nextTickMs - elapsedMs);
 
       minuteAlertTimeoutRef.current = window.setTimeout(() => {
         if (!shouldTriggerMinuteAlert()) {
@@ -265,6 +267,7 @@ export default function GlobalTimerBar() {
     };
   }, [
     activeEntry?.started_at,
+    alertIntervalMs,
     playMinuteAlertSound,
     showMinuteAlertNotification,
     stopMinuteAlertSound,
@@ -283,6 +286,7 @@ export default function GlobalTimerBar() {
   const handleStart = async () => {
     setIsWorking(true);
     setError(null);
+    void requestNotificationPermission();
     const { context, error: contextError } = await ensureContext(contextName);
 
     if (contextError || !context) {
@@ -327,7 +331,6 @@ export default function GlobalTimerBar() {
     setSelectedTags([]);
     setIsSheetOpen(false);
     setIsWorking(false);
-    void requestNotificationPermission();
   };
 
   const handleStop = async () => {
