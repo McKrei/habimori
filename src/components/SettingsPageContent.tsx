@@ -37,6 +37,11 @@ export default function SettingsPageContent() {
   const [deletingTagId, setDeletingTagId] = useState<string | null>(null);
   const [workingTagId, setWorkingTagId] = useState<string | null>(null);
 
+  const openPomodoroSettings = useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new Event("pomodoro:open-settings"));
+  }, []);
+
   const resetContextError = useCallback(() => {
     setContextError(null);
   }, []);
@@ -262,8 +267,9 @@ export default function SettingsPageContent() {
                               {t("common.delete")}
                             </button>
                           </>
-                        )}
-                      </div>
+        )}
+      </div>
+
                     </div>
                     {isDeleting ? (
                       <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-600">
@@ -430,6 +436,18 @@ export default function SettingsPageContent() {
             ) : null}
           </div>
         ) : null}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+        <div className="flex justify-center">
+          <button
+            className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-text-primary hover:border-text-faint hover:text-text-secondary transition-colors"
+            type="button"
+            onClick={openPomodoroSettings}
+          >
+            {t("timer.pomodoroSettings")}
+          </button>
+        </div>
       </div>
     </div>
   );

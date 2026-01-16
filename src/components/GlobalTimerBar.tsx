@@ -334,6 +334,7 @@ export default function GlobalTimerBar() {
     pomodoroSoundEnabled,
   ]);
 
+
   const elapsedSeconds = activeEntry?.started_at
     ? Math.max(
         0,
@@ -468,6 +469,17 @@ export default function GlobalTimerBar() {
     setIsPomodoroOpen(true);
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleOpen = () => {
+      openPomodoroSettings();
+    };
+    window.addEventListener("pomodoro:open-settings", handleOpen);
+    return () => {
+      window.removeEventListener("pomodoro:open-settings", handleOpen);
+    };
+  }, [openPomodoroSettings]);
+
   const handlePomodoroToggle = () => {
     const nextEnabled = !pomodoroEnabled;
     setPomodoroEnabled(nextEnabled);
@@ -552,7 +564,19 @@ export default function GlobalTimerBar() {
           )}
         </div>
 
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-4 sm:gap-8">
+          <button
+            className={`inline-flex h-12 w-12 items-center justify-center rounded-full border transition-colors ${
+              pomodoroEnabled
+                ? "border-rose-500 text-rose-500 bg-rose-500/10"
+                : "border-border text-text-secondary hover:border-text-faint hover:text-text-primary"
+            }`}
+            type="button"
+            onClick={handlePomodoroToggle}
+            aria-label={t("timer.pomodoroToggle")}
+          >
+            <TomatoIcon size={18} />
+          </button>
           {activeEntry ? (
             <button
               className="flex h-14 w-14 items-center justify-center rounded-full bg-accent text-surface shadow-lg hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
@@ -576,28 +600,6 @@ export default function GlobalTimerBar() {
 
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <button
-                className={`inline-flex h-16 w-16 items-center justify-center rounded-full border transition-colors ${
-                  pomodoroEnabled
-                    ? "border-rose-500 text-rose-500 bg-rose-500/10"
-                    : "border-border text-text-secondary hover:border-text-faint hover:text-text-primary"
-                }`}
-                type="button"
-                onClick={handlePomodoroToggle}
-                aria-label={t("timer.pomodoroToggle")}
-              >
-                <TomatoIcon size={20} />
-              </button>
-              <button
-                className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-2 text-xs font-semibold text-text-secondary hover:border-text-faint hover:text-text-primary transition-colors"
-                type="button"
-                onClick={openPomodoroSettings}
-              >
-                <TomatoIcon size={16} />
-                {t("timer.pomodoroSettings")}
-              </button>
-            </div>
             {pathname !== "/goals/new" && (
               <Link
                 className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-surface shadow-sm hover:bg-accent-hover transition-colors"
@@ -767,8 +769,17 @@ export default function GlobalTimerBar() {
       ) : null}
 
       {isPomodoroOpen ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm px-4 pb-20">
-          <div className="w-full max-w-xl rounded-2xl bg-surface p-6 shadow-xl border border-border transition-colors">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm px-4 pb-20"
+          role="presentation"
+          onClick={() => setIsPomodoroOpen(false)}
+        >
+          <div
+            className="w-full max-w-xl rounded-2xl bg-surface p-6 shadow-xl border border-border transition-colors"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-text-primary">
                 {t("timer.pomodoroSettings")}
@@ -783,30 +794,38 @@ export default function GlobalTimerBar() {
             </div>
 
             <div className="mt-4 space-y-4">
-              <label className="flex items-center justify-between gap-4 text-sm font-medium text-text-secondary">
-                <span>{t("timer.pomodoroNotifications")}</span>
-                <input
-                  className="h-4 w-4 accent-accent"
-                  type="checkbox"
-                  checked={draftPomodoroNotificationsEnabled}
-                  onChange={(event) =>
-                    setDraftPomodoroNotificationsEnabled(event.target.checked)
+              <div className="flex flex-col gap-3">
+                <button
+                  className={`w-full rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                    draftPomodoroNotificationsEnabled
+                      ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/40"
+                      : "bg-rose-500/15 text-rose-600 border border-rose-500/40"
+                  }`}
+                  type="button"
+                  onClick={() =>
+                    setDraftPomodoroNotificationsEnabled((prev) => !prev)
                   }
-                />
-              </label>
-              <label className="flex items-center justify-between gap-4 text-sm font-medium text-text-secondary">
-                <span>{t("timer.pomodoroSound")}</span>
-                <input
-                  className="h-4 w-4 accent-accent"
-                  type="checkbox"
-                  checked={draftPomodoroSoundEnabled}
-                  onChange={(event) =>
-                    setDraftPomodoroSoundEnabled(event.target.checked)
+                  aria-pressed={draftPomodoroNotificationsEnabled}
+                >
+                  {t("timer.pomodoroNotifications")}
+                </button>
+                <button
+                  className={`w-full rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                    draftPomodoroSoundEnabled
+                      ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/40"
+                      : "bg-rose-500/15 text-rose-600 border border-rose-500/40"
+                  }`}
+                  type="button"
+                  onClick={() =>
+                    setDraftPomodoroSoundEnabled((prev) => !prev)
                   }
-                />
-              </label>
+                  aria-pressed={draftPomodoroSoundEnabled}
+                >
+                  {t("timer.pomodoroSound")}
+                </button>
+              </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-3">
                 <label className="text-sm font-medium text-text-secondary">
                   {t("timer.pomodoroFocusMinutes")}
                   <input
