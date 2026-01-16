@@ -19,6 +19,7 @@ import {
 
 export function useHomeGoalData(selectedDate: Date) {
   const store = useAppStore();
+  const pomodoroSettingsStorageKey = "pomodoro:settings";
 
   // -- Store Data --
   const { goals: rawGoals, isLoading } = useGoalsForDate(selectedDate);
@@ -104,7 +105,22 @@ export function useHomeGoalData(selectedDate: Date) {
   }, []);
 
   const handleStartTimer = async (goal: GoalSummary) => {
-    void requestNotificationPermission();
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem(pomodoroSettingsStorageKey);
+        const parsed = raw
+          ? (JSON.parse(raw) as {
+              enabled?: boolean;
+              notificationsEnabled?: boolean;
+            })
+          : null;
+        if (parsed?.enabled && parsed?.notificationsEnabled) {
+          void requestNotificationPermission();
+        }
+      } catch {
+        // Ignore storage errors.
+      }
+    }
     const result = await startTimerImmediate(
       store,
       goal.context_id,

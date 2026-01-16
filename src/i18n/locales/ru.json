@@ -110,6 +110,7 @@
     "noActiveTimer": "Таймер не запущен",
     "startTimer": "Запустить таймер",
     "pomodoroSettings": "Настройка помидора",
+    "pomodoroToggle": "Переключить помидор",
     "pomodoroEnabled": "Включить помидор",
     "pomodoroNotifications": "Уведомления",
     "pomodoroSound": "Звук",
