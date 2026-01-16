@@ -50,7 +50,7 @@ export default function GlobalTimerBar() {
     oscillators: OscillatorNode[];
     gainNode: GainNode;
   } | null>(null);
-  const pomodoroPrevRemainingRef = useRef(0);
+  const pomodoroPhaseRef = useRef<"focus" | "break">("focus");
   const originalTitleRef = useRef<string | null>(null);
   const originalIconHrefRef = useRef<string | null>(null);
   const minuteAlertStorageKey = "minute-alert:last";
@@ -311,59 +311,58 @@ export default function GlobalTimerBar() {
     shouldTriggerMinuteAlert,
   ]);
 
+  const getPomodoroPhaseSeconds = useCallback(
+    (phase: "focus" | "break") => {
+      const minutes = phase === "focus" ? focusMinutes : breakMinutes;
+      return Math.max(60, minutes * 60);
+    },
+    [breakMinutes, focusMinutes],
+  );
+
+  useEffect(() => {
+    pomodoroPhaseRef.current = pomodoroPhase;
+  }, [pomodoroPhase]);
+
   useEffect(() => {
     if (!activeEntry?.started_at || !pomodoroEnabled) {
-      setPomodoroRemaining(0);
-      return;
+      const resetTimeout = window.setTimeout(() => {
+        setPomodoroRemaining(0);
+      }, 0);
+      return () => {
+        window.clearTimeout(resetTimeout);
+      };
     }
 
+    const initTimeout = window.setTimeout(() => {
+      setPomodoroRemaining((prev) =>
+        prev > 0 ? prev : getPomodoroPhaseSeconds(pomodoroPhaseRef.current),
+      );
+    }, 0);
+
     const interval = window.setInterval(() => {
-      setPomodoroRemaining((prev) => Math.max(0, prev - 1));
+      setPomodoroRemaining((prev) => {
+        if (prev <= 1) {
+          const nextPhase =
+            pomodoroPhaseRef.current === "focus" ? "break" : "focus";
+          pomodoroPhaseRef.current = nextPhase;
+          setPomodoroPhase(nextPhase);
+          void showPomodoroNotification(nextPhase);
+          return getPomodoroPhaseSeconds(nextPhase);
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => {
+      window.clearTimeout(initTimeout);
       window.clearInterval(interval);
     };
-  }, [activeEntry?.started_at, pomodoroEnabled]);
-
-  useEffect(() => {
-    if (!activeEntry?.started_at || !pomodoroEnabled) return;
-    if (pomodoroRemaining > 0) return;
-    const initialSeconds =
-      pomodoroPhase === "focus" ? focusMinutes * 60 : breakMinutes * 60;
-    setPomodoroRemaining(Math.max(60, initialSeconds));
   }, [
     activeEntry?.started_at,
-    breakMinutes,
-    focusMinutes,
+    getPomodoroPhaseSeconds,
     pomodoroEnabled,
-    pomodoroPhase,
-    pomodoroRemaining,
-  ]);
-
-  useEffect(() => {
-    if (!activeEntry?.started_at || !pomodoroEnabled) return;
-    if (pomodoroRemaining > 0) return;
-    if (pomodoroPrevRemainingRef.current === 0) return;
-    const nextPhase = pomodoroPhase === "focus" ? "break" : "focus";
-    const nextSeconds =
-      nextPhase === "focus" ? focusMinutes * 60 : breakMinutes * 60;
-    setPomodoroPhase(nextPhase);
-    setPomodoroRemaining(Math.max(60, nextSeconds));
-    void showPomodoroNotification(nextPhase);
-  }, [
-    activeEntry?.started_at,
-    breakMinutes,
-    focusMinutes,
-    pomodoroEnabled,
-    pomodoroPhase,
-    pomodoroRemaining,
     showPomodoroNotification,
   ]);
-
-  useEffect(() => {
-    pomodoroPrevRemainingRef.current = pomodoroRemaining;
-  }, [pomodoroRemaining]);
 
   const elapsedSeconds = activeEntry?.started_at
     ? Math.max(
