@@ -38,6 +38,8 @@ export default function GlobalTimerBar() {
     oscillators: OscillatorNode[];
     gainNode: GainNode;
   } | null>(null);
+  const originalTitleRef = useRef<string | null>(null);
+  const originalIconHrefRef = useRef<string | null>(null);
   const minuteAlertStorageKey = "minute-alert:last";
   const alertIntervalMs = 30000;
 
@@ -273,6 +275,64 @@ export default function GlobalTimerBar() {
         ),
       )
     : 0;
+
+  const formatTimerTitle = useCallback((seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    const pad = (value: number) => value.toString().padStart(2, "0");
+    if (hours > 0) {
+      return `${pad(hours)}:${pad(minutes)}:${pad(secs)}`;
+    }
+    return `${pad(minutes)}:${pad(secs)}`;
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const iconLink = document.querySelector<HTMLLinkElement>(
+      "link[rel~='icon']",
+    );
+    if (originalTitleRef.current === null) {
+      originalTitleRef.current = document.title;
+    }
+    if (iconLink && originalIconHrefRef.current === null) {
+      originalIconHrefRef.current = iconLink.href;
+    }
+
+    if (!activeEntry?.started_at) {
+      if (originalTitleRef.current) {
+        document.title = originalTitleRef.current;
+      }
+      if (iconLink && originalIconHrefRef.current) {
+        iconLink.href = originalIconHrefRef.current;
+      }
+      return;
+    }
+
+    const baseTitle = originalTitleRef.current ?? "Habimori";
+    document.title = `${formatTimerTitle(elapsedSeconds)} · ${baseTitle}`;
+
+    if (!iconLink) return;
+    const size = 64;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      ctx.clearRect(0, 0, size, size);
+      ctx.drawImage(img, 0, 0, size, size);
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(size - 12, 12, 7, 0, Math.PI * 2);
+      ctx.fill();
+      iconLink.href = canvas.toDataURL("image/png");
+    };
+    img.src = originalIconHrefRef.current ?? iconLink.href;
+  }, [activeEntry?.started_at, elapsedSeconds, formatTimerTitle]);
 
   const handleStart = async () => {
     setIsWorking(true);
