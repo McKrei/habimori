@@ -111,6 +111,8 @@
     "startTimer": "Запустить таймер",
     "pomodoroSettings": "Настройка помидора",
     "pomodoroEnabled": "Включить помидор",
+    "pomodoroNotifications": "Уведомления",
+    "pomodoroSound": "Звук",
     "pomodoroFocusMinutes": "Фокус (минуты)",
     "pomodoroBreakMinutes": "Отдых (минуты)",
     "pomodoroSave": "Сохранить",

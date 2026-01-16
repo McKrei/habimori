@@ -111,6 +111,8 @@
     "startTimer": "Start timer",
     "pomodoroSettings": "Pomodoro settings",
     "pomodoroEnabled": "Enable Pomodoro",
+    "pomodoroNotifications": "Notifications",
+    "pomodoroSound": "Sound",
     "pomodoroFocusMinutes": "Focus (minutes)",
     "pomodoroBreakMinutes": "Break (minutes)",
     "pomodoroSave": "Save",

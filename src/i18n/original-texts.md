@@ -228,6 +228,8 @@ Note: `common.start` and `common.stop` were removed and replaced with icon butto
 | `timer.startTimer` | Start timer |
 | `timer.pomodoroSettings` | Pomodoro settings |
 | `timer.pomodoroEnabled` | Enable Pomodoro |
+| `timer.pomodoroNotifications` | Notifications |
+| `timer.pomodoroSound` | Sound |
 | `timer.pomodoroFocusMinutes` | Focus (minutes) |
 | `timer.pomodoroBreakMinutes` | Break (minutes) |
 | `timer.pomodoroSave` | Save |

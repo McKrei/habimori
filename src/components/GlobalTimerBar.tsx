@@ -37,10 +37,23 @@ export default function GlobalTimerBar() {
   const [pomodoroRemaining, setPomodoroRemaining] = useState(0);
   const [focusMinutes, setFocusMinutes] = useState(25);
   const [breakMinutes, setBreakMinutes] = useState(5);
+  const [pomodoroSoundEnabled, setPomodoroSoundEnabled] = useState(true);
+  const [pomodoroNotificationsEnabled, setPomodoroNotificationsEnabled] =
+    useState(true);
   const [draftPomodoroEnabled, setDraftPomodoroEnabled] = useState(false);
   const [draftFocusMinutes, setDraftFocusMinutes] = useState(25);
   const [draftBreakMinutes, setDraftBreakMinutes] = useState(5);
+  const [draftPomodoroSoundEnabled, setDraftPomodoroSoundEnabled] =
+    useState(true);
+  const [draftPomodoroNotificationsEnabled, setDraftPomodoroNotificationsEnabled] =
+    useState(true);
   const pomodoroPhaseRef = useRef<"focus" | "break">("focus");
+  const pomodoroSoundRef = useRef<{
+    context: AudioContext;
+    oscillators: OscillatorNode[];
+    gainNode: GainNode;
+  } | null>(null);
+  const pomodoroSoundTimeoutRef = useRef<number | null>(null);
   const originalTitleRef = useRef<string | null>(null);
   const originalIconHrefRef = useRef<string | null>(null);
 
@@ -76,6 +89,66 @@ export default function GlobalTimerBar() {
       window.clearInterval(interval);
     };
   }, [activeEntry?.started_at]);
+
+  const stopPomodoroSound = useCallback(() => {
+    if (pomodoroSoundTimeoutRef.current) {
+      window.clearTimeout(pomodoroSoundTimeoutRef.current);
+      pomodoroSoundTimeoutRef.current = null;
+    }
+    if (!pomodoroSoundRef.current) return;
+    const { context, oscillators, gainNode } = pomodoroSoundRef.current;
+    oscillators.forEach((oscillator) => {
+      try {
+        oscillator.stop();
+      } catch {
+        // Ignore if already stopped.
+      }
+      oscillator.disconnect();
+    });
+    gainNode.disconnect();
+    pomodoroSoundRef.current = null;
+    void context.close();
+  }, []);
+
+  const playPomodoroSound = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const AudioContextConstructor =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!AudioContextConstructor) return;
+    stopPomodoroSound();
+    const audioContext = new AudioContextConstructor();
+    const gainNode = audioContext.createGain();
+    const nowTime = audioContext.currentTime;
+    const durationSec = 2;
+    const oscillators = [
+      audioContext.createOscillator(),
+      audioContext.createOscillator(),
+    ];
+    const volume = 0.06;
+
+    oscillators[0].type = "sine";
+    oscillators[0].frequency.value = 523.25;
+    oscillators[1].type = "triangle";
+    oscillators[1].frequency.value = 659.25;
+
+    gainNode.gain.setValueAtTime(0, nowTime);
+    gainNode.gain.linearRampToValueAtTime(volume, nowTime + 0.08);
+    gainNode.gain.linearRampToValueAtTime(0, nowTime + durationSec);
+
+    oscillators.forEach((oscillator) => {
+      oscillator.connect(gainNode);
+      oscillator.start(nowTime);
+      oscillator.stop(nowTime + durationSec);
+    });
+
+    gainNode.connect(audioContext.destination);
+    pomodoroSoundRef.current = { context: audioContext, oscillators, gainNode };
+    pomodoroSoundTimeoutRef.current = window.setTimeout(() => {
+      stopPomodoroSound();
+    }, durationSec * 1000 + 50);
+  }, [stopPomodoroSound]);
 
   const showPomodoroNotification = useCallback(
     async (phase: "focus" | "break") => {
@@ -144,7 +217,12 @@ export default function GlobalTimerBar() {
             pomodoroPhaseRef.current === "focus" ? "break" : "focus";
           pomodoroPhaseRef.current = nextPhase;
           setPomodoroPhase(nextPhase);
-          void showPomodoroNotification(nextPhase);
+          if (pomodoroNotificationsEnabled) {
+            void showPomodoroNotification(nextPhase);
+          }
+          if (pomodoroSoundEnabled) {
+            playPomodoroSound();
+          }
           return getPomodoroPhaseSeconds(nextPhase);
         }
         return prev - 1;
@@ -159,8 +237,23 @@ export default function GlobalTimerBar() {
     activeEntry?.started_at,
     getPomodoroPhaseSeconds,
     pomodoroEnabled,
+    pomodoroNotificationsEnabled,
+    pomodoroSoundEnabled,
+    playPomodoroSound,
     showPomodoroNotification,
   ]);
+
+  useEffect(() => {
+    return () => {
+      stopPomodoroSound();
+    };
+  }, [stopPomodoroSound]);
+
+  useEffect(() => {
+    if (!pomodoroEnabled || !pomodoroSoundEnabled) {
+      stopPomodoroSound();
+    }
+  }, [pomodoroEnabled, pomodoroSoundEnabled, stopPomodoroSound]);
 
   const elapsedSeconds = activeEntry?.started_at
     ? Math.max(
@@ -290,6 +383,8 @@ export default function GlobalTimerBar() {
     setDraftPomodoroEnabled(pomodoroEnabled);
     setDraftFocusMinutes(focusMinutes);
     setDraftBreakMinutes(breakMinutes);
+    setDraftPomodoroSoundEnabled(pomodoroSoundEnabled);
+    setDraftPomodoroNotificationsEnabled(pomodoroNotificationsEnabled);
     setIsPomodoroOpen(true);
   };
 
@@ -299,12 +394,17 @@ export default function GlobalTimerBar() {
     setFocusMinutes(nextFocus);
     setBreakMinutes(nextBreak);
     setPomodoroEnabled(draftPomodoroEnabled);
+    setPomodoroSoundEnabled(draftPomodoroSoundEnabled);
+    setPomodoroNotificationsEnabled(draftPomodoroNotificationsEnabled);
     setPomodoroPhase("focus");
     setPomodoroRemaining(
       draftPomodoroEnabled ? Math.max(60, nextFocus * 60) : 0,
     );
-    if (draftPomodoroEnabled) {
+    if (draftPomodoroEnabled && draftPomodoroNotificationsEnabled) {
       void requestNotificationPermission();
+    }
+    if (!draftPomodoroEnabled || !draftPomodoroSoundEnabled) {
+      stopPomodoroSound();
     }
     setIsPomodoroOpen(false);
   };
@@ -578,6 +678,28 @@ export default function GlobalTimerBar() {
                   checked={draftPomodoroEnabled}
                   onChange={(event) =>
                     setDraftPomodoroEnabled(event.target.checked)
+                  }
+                />
+              </label>
+              <label className="flex items-center justify-between gap-4 text-sm font-medium text-text-secondary">
+                <span>{t("timer.pomodoroNotifications")}</span>
+                <input
+                  className="h-4 w-4 accent-accent"
+                  type="checkbox"
+                  checked={draftPomodoroNotificationsEnabled}
+                  onChange={(event) =>
+                    setDraftPomodoroNotificationsEnabled(event.target.checked)
+                  }
+                />
+              </label>
+              <label className="flex items-center justify-between gap-4 text-sm font-medium text-text-secondary">
+                <span>{t("timer.pomodoroSound")}</span>
+                <input
+                  className="h-4 w-4 accent-accent"
+                  type="checkbox"
+                  checked={draftPomodoroSoundEnabled}
+                  onChange={(event) =>
+                    setDraftPomodoroSoundEnabled(event.target.checked)
                   }
                 />
               </label>
